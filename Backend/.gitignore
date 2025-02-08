@@ -1,0 +1,34 @@
+# Node modules (Avoid committing dependencies)
+node_modules/
+
+# Logs (Application and npm logs)
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files (Store secrets safely)
+.env
+.env.local
+.env.production
+.env.development
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Dependency lock files (optional, keep only one if required)
+package-lock.json
+yarn.lock
+
+# Build files
+dist/
+build/
+
+# IDE settings (VS Code, JetBrains, etc.)
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp

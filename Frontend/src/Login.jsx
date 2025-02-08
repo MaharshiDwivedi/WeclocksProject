@@ -11,7 +11,7 @@ const LoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://192.168.29.142:5000/login", { username, password });
+      const res = await axios.post("http://localhost:5000/api/login", { username, password });
       setMessage(res.data.message);
     } catch (err) {
       setMessage(err.response?.data?.error || "Login failed");
