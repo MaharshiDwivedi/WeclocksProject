@@ -18,7 +18,7 @@ const LoginForm = () => {
       console.log("Server Response:", res.data); // Debugging
       
       if (res.data.message === "Login successful") {
-        console.log("Redirecting to /home..."); 
+        
         navigate("/home");
       } else {
         console.log("Login failed:", res.data.message);
