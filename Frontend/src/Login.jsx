@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
-import { User, Lock, Eye, EyeOff } from "lucide-react"; // Importing Lucide icons
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { User, Lock, Eye, EyeOff } from "lucide-react";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -8,12 +9,23 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       const res = await axios.post("http://localhost:5000/api/login", { username, password });
-      setMessage(res.data.message);
+      console.log("Server Response:", res.data); // Debugging
+      
+      if (res.data.message === "Login successful") {
+        console.log("Redirecting to /home..."); 
+        navigate("/home");
+      } else {
+        console.log("Login failed:", res.data.message);
+        setMessage(res.data.message);
+      }
     } catch (err) {
+      console.log("Login request failed:", err);
       setMessage(err.response?.data?.error || "Login failed");
     }
   };
@@ -23,7 +35,6 @@ const LoginForm = () => {
       <h2 className="text-center text-2xl font-semibold mb-4">Login</h2>
 
       <form onSubmit={handleLogin}>
-
         <div className="mb-4 relative">
           <span className="absolute left-3 top-3 text-gray-500">
             <User size={18} />
@@ -37,8 +48,6 @@ const LoginForm = () => {
           />
         </div>
 
-      
-      
         <div className="mb-4 relative">
           <span className="absolute left-3 top-3 text-gray-500">
             <Lock size={18} />
@@ -52,7 +61,6 @@ const LoginForm = () => {
             className="w-full pl-10 pr-12 py-2 border border-red-400 rounded-lg outline-none focus:border-red-600"
           />
 
-          {/* Eye Toggle Button */}
           <button
             type="button"
             className="absolute right-0 top-0 h-full bg-[#e3535c] px-3 rounded-r-lg flex items-center justify-center hover:bg-[#8fbd56e6] hover:cursor-pointer"
@@ -62,7 +70,6 @@ const LoginForm = () => {
           </button>
         </div>
 
-        {/* Login Button */}
         <button
           type="submit"
           className="w-full bg-[#e3535c] text-white py-2 rounded-lg font-semibold hover:bg-[#8fbd56e6] hover:cursor-pointer"
@@ -71,7 +78,6 @@ const LoginForm = () => {
         </button>
       </form>
 
-      {/* Display Login Message */}
       {message && <p className="text-center mt-4 text-red-500">{message}</p>}
     </div>
   );
