@@ -14,8 +14,7 @@ const Home = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Navigation Bar */}
-      <nav className="bg-gray-800 p-4 flex justify-center space-x-4 gap-[90px]">
+      <nav className="bg-blue-950 p-4 flex justify-center space-x-4 gap-[90px]">
         <Link
           to="/home/meetings"
           className={`text-white pb-2 ${
