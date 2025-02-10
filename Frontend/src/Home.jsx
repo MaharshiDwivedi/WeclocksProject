@@ -1,9 +1,16 @@
-import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Meetings from "./Meetings";
 import Dashboard from "./Dashboard";
 
 const Home = () => {
   const location = useLocation(); // Get current URL path
+  const navigate = useNavigate(); // Navigation hook
+
+  // Logout Function
+  const handleLogout = () => {
+    localStorage.removeItem("token"); // Remove JWT token
+    navigate("/login"); // Redirect to login page
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -26,6 +33,14 @@ const Home = () => {
         >
           Dashboard
         </Link>
+
+        {/* Logout Button */}
+        <button 
+          onClick={handleLogout}
+          className="text-white ml-auto bg-red-500 px-4 py-2 rounded hover:bg-red-600"
+        >
+          Logout
+        </button>
       </nav>
 
       {/* Page Content */}

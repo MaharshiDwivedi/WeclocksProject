@@ -14,15 +14,21 @@ const LoginForm = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/login", { username, password });
+      const res = await axios.post("http://localhost:5000/api/login", {
+        username,
+        password,
+      });
+
       console.log("Server Response:", res.data); // Debugging
-      
-      if (res.data.message === "Login successful") {
+
+      if (res.data.token) {
+        // ✅ Save token to localStorage (or sessionStorage)
+        localStorage.setItem("token", res.data.token);
         
+        // ✅ Redirect user after successful login
         navigate("/home");
       } else {
-        console.log("Login failed:", res.data.message);
-        setMessage(res.data.message);
+        setMessage(res.data.message || "Login failed");
       }
     } catch (err) {
       console.log("Login request failed:", err);
@@ -66,7 +72,11 @@ const LoginForm = () => {
             className="absolute right-0 top-0 h-full bg-[#e3535c] px-3 rounded-r-lg flex items-center justify-center hover:bg-[#8fbd56e6] hover:cursor-pointer"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? <EyeOff size={18} color="white" /> : <Eye size={18} color="white" />}
+            {showPassword ? (
+              <EyeOff size={18} color="white" />
+            ) : (
+              <Eye size={18} color="white" />
+            )}
           </button>
         </div>
 
