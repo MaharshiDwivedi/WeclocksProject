@@ -2,12 +2,14 @@ import { useState } from "react";
 import BarGraph from "./BarGraph";
 
 const Dashboard = () => {
-  const [values, setValues] = useState({ actualExpense: 100000, expectedExpense: 251000 });
+  // Store the actual and expected expense values
+  const [values, setValues] = useState({ actualExpense: 1, expectedExpense: 1.9 });
 
   return (
-    <div className="flex  px-10 mb-[180px] mr-[400px] gap-[100px]">
+    <div className="flex px-10 mb-[180px] mr-[400px] gap-[100px]">
+      {/* Graph Section */}
       <div className="w-[500px] h-[400px] -ml-[300px]">
-        <BarGraph width="600px" height="400px" setValues={setValues} />
+        <BarGraph width="600px" height="400px" actualExpense={values.actualExpense} expectedExpense={values.expectedExpense} />
       </div>
 
       {/* Expense Section */}
@@ -21,7 +23,7 @@ const Dashboard = () => {
               Actual Exp
             </p>
             <p className="text-3xl font-bold text-blue-950">
-              {values.actualExpense.toLocaleString()+"Lakh"}
+              {values.actualExpense.toLocaleString()} Lakh
             </p>
           </div>
 
@@ -31,7 +33,7 @@ const Dashboard = () => {
               Expected Exp
             </p>
             <p className="text-3xl font-bold text-blue-950">
-              {values.expectedExpense.toLocaleString()+"Lakh"}
+              {values.expectedExpense.toLocaleString()} Lakh
             </p>
           </div>
         </div>
