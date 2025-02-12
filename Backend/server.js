@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const testRoutes = require('./Routes/testRoutes');
+const expenceRoute = require('./Routes/expenceRoute')
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api', testRoutes);
+app.use('/api', expenceRoute);
 
 app.get('/', (req, res) => {
     res.send("Server is running");
