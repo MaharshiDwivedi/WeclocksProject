@@ -1,6 +1,8 @@
 import { Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Meetings from "./Meetings";
 import Dashboard from "./Dashboard";
+import NewMember from "./NewMember";
+import { Plus } from "lucide-react";
 
 const Home = () => {
   const location = useLocation(); // Get current URL path
@@ -33,6 +35,25 @@ const Home = () => {
           Dashboard
         </Link>
 
+        <Link
+  to="/home/newmember"
+  className={`flex items-center text-blue-950 bg-white pl-2 pr-2 rounded-[5px] ${
+    location.pathname === "/home/newmember" ? "border-[2px] border-[#00FFFF]" : ""
+  }`}
+>
+  <Plus className="mr-2" /> {/* Adds spacing to the right of the icon */}
+  Add Committee Member
+</Link>
+
+
+
+
+
+
+
+
+
+
         {/* Logout Button */}
         <button 
           onClick={handleLogout}
@@ -48,6 +69,7 @@ const Home = () => {
           <Route path="/" element={<Navigate to="meetings" />} /> {/* Default to Meetings */}
           <Route path="meetings" element={<Meetings />} />
           <Route path="dashboard" element={<Dashboard />} />
+          <Route path="newmember" element={<NewMember/>}/>
         </Routes>
       </div>
     </div>
