@@ -26,3 +26,9 @@ const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
+
+app.post("/api/expenceData", (req, res) => {
+    console.log("Received request:", req.body);
+    res.json({ message: "API working" });
+  });
+  

@@ -67,11 +67,13 @@ const expenceController = {
                 };
             });
 
+            console.log("Response sent to frontend:", response); // Debugging log
             res.status(200).json({
                 success: true,
-                data: response,
+                data: response || [], // Ensure it returns an array
                 message: 'Data fetched successfully'
             });
+            
 
         } catch (error) {
             console.error(error);

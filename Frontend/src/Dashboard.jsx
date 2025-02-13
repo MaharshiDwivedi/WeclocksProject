@@ -16,30 +16,41 @@ const Dashboard = () => {
       const response = await axios.post("http://localhost:5000/api/expenceData", {
         month: selectedDate.month.toString(),
         year: selectedDate.year.toString(),
+        category_id: "4",  // Added
+        school_id: "14"    // Added
       });
   
-      console.log("API Response:", response.data); // Debugging
+      console.log("🚀 API Response:", response.data);
   
-      // Extract values from response
-      const totalActual = response.data.reduce(
-        (sum, head) => sum + (parseFloat(head.andajit_kharch) || 0),
+      if (!response.data || !Array.isArray(response.data.data)) {
+        console.error("❌ API response is not an array:", response.data);
+        return;
+      }
+  
+      const expenseData = response.data.data;
+  
+      console.log("✅ Processed Expense Data:", expenseData);
+  
+      const totalActual = expenseData.reduce(
+        (sum, head) => sum + (parseFloat(head.actual_cost) || 0),
         0
       );
-      const totalExpected = response.data.reduce(
-        (sum, head) => sum + (parseFloat(head.prateksh_kelela_kharch) || 0),
+      const totalExpected = expenseData.reduce(
+        (sum, head) => sum + (parseFloat(head.expected_cost) || 0),
         0
       );
   
-      // Convert to Lakhs and update state
+      // Convert to Lakhs but keep as numbers
       setValues({
-        actualExpense: totalActual / 100000,
-        expectedExpense: totalExpected / 100000,
+        actualExpense: Number((totalActual / 100000).toFixed(2)),
+        expectedExpense: Number((totalExpected / 100000).toFixed(2))
       });
   
     } catch (error) {
-      console.error("Error fetching expense data:", error);
+      console.error("❌ Error fetching expense data:", error);
     }
   };
+  
   
   // Effect to fetch data when date changes
   useEffect(() => {
@@ -48,10 +59,14 @@ const Dashboard = () => {
 
   const handleDateChange = (e) => {
     const [year, month] = e.target.value.split("-");
-    setSelectedDate({
+    const newDate = {
       month: parseInt(month),
-      year: parseInt(year)
-    });
+      year: parseInt(year),
+    };
+    
+    console.log("Selected Date:", newDate); // Debugging: Check selected date in frontend
+  
+    setSelectedDate(newDate);
   };
 
   return (

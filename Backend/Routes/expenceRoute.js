@@ -4,6 +4,7 @@ const expenceController = require('../controllers/expenceController');
 
 const router = express.Router();
 
-router.get('/expenceData', expenceController.getData);
+router.post('/expenceData', expenceController.getData);
+
 
 module.exports = router;
