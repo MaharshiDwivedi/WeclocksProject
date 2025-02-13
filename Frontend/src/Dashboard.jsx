@@ -70,16 +70,22 @@ const Dashboard = () => {
   };
 
   return (
+
+    
     <div className="flex flex-col px-10 mb-[180px] gap-[50px]">
       {/* Date Selector */}
       <div className="w-full flex justify-start">
-        <input
-          type="month"
-          value={`${selectedDate.year}-${selectedDate.month.toString().padStart(2, "0")}`}
-          onChange={handleDateChange}
-          className="p-2 border border-blue-950 rounded-lg"
-        />
-      </div>
+    <label className="text-lg font-semibold text-blue-950 mt-[26px]">Choose Month:</label>
+    <input
+      type="month"
+      value={`${selectedDate.year}-${selectedDate.month.toString().padStart(2, "0")}`}
+      onChange={handleDateChange}
+      className="ml-4 px-4 py-2 border-2 border-blue-950 rounded-lg shadow-md 
+                 text-lg text-blue-950 cursor-pointer transition-all duration-300 
+                 focus:ring-2 focus:ring-blue-500 focus:outline-none 
+                 hover:border-blue-700 hover:shadow-lg mt-[20px]"
+    />
+  </div>
 
       {/* Main Bar Graph & Expense Cards */}
       <div className="flex justify-center gap-12">
@@ -123,8 +129,10 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <div className="text-2xl font-bold mb-5 text-blue-950 mt-1.5 ml-[41%]"> Head Wise Expense :</div>
+
       {/* 9 Small Graphs Section */}
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-3 gap-6 -mt-[15px]">
         {[
           "शैक्षणिक बाबी",
           "पाणी स्वच्छता इ. बाबी",
@@ -141,12 +149,13 @@ const Dashboard = () => {
             <div className="border-t-2 border-blue-950 my-2"></div>
             {/* Placeholder for Graphs */}
             <div className="h-40 flex items-center justify-center text-gray-500">
-              Graph Placeholder
+              Graph Coming Soon...
             </div>
           </div>
         ))}
       </div>
     </div>
+   
   );
 };
 
