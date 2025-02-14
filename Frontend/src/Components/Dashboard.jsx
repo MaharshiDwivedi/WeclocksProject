@@ -4,33 +4,34 @@ import axios from "axios";
 
 const Dashboard = () => {
   const [values, setValues] = useState({ actualExpense: 1, expectedExpense: 1.9 });
+  const [headwiseData, setHeadwiseData] = useState([]); // Stores headwise data
 
   const [selectedDate, setSelectedDate] = useState({
     month: new Date().getMonth() + 1, // Current month
     year: new Date().getFullYear() // Current year
   });
 
-  
+  // Fetch Expense Data
   const fetchExpenseData = async () => {
     try {
       const response = await axios.post("http://localhost:5000/api/expenceData", {
         month: selectedDate.month.toString(),
         year: selectedDate.year.toString(),
-        category_id: "4",  // Added
-        school_id: "14"    // Added
+        category_id: "4",
+        school_id: "14",
       });
-  
+
       console.log("🚀 API Response:", response.data);
-  
+
       if (!response.data || !Array.isArray(response.data.data)) {
         console.error("❌ API response is not an array:", response.data);
         return;
       }
-  
+
       const expenseData = response.data.data;
-  
+
       console.log("✅ Processed Expense Data:", expenseData);
-  
+
       const totalActual = expenseData.reduce(
         (sum, head) => sum + (parseFloat(head.actual_cost) || 0),
         0
@@ -39,53 +40,44 @@ const Dashboard = () => {
         (sum, head) => sum + (parseFloat(head.expected_cost) || 0),
         0
       );
-  
-      // Convert to Lakhs but keep as numbers
+
+      // Update total values
       setValues({
         actualExpense: Number((totalActual / 100000).toFixed(2)),
-        expectedExpense: Number((totalExpected / 100000).toFixed(2))
+        expectedExpense: Number((totalExpected / 100000).toFixed(2)),
       });
-  
+
+      // Set head-wise data for the 9 graphs
+      setHeadwiseData(expenseData);
     } catch (error) {
       console.error("❌ Error fetching expense data:", error);
     }
   };
-  
-  
-  // Effect to fetch data when date changes
+
   useEffect(() => {
     fetchExpenseData();
   }, [selectedDate]);
 
   const handleDateChange = (e) => {
     const [year, month] = e.target.value.split("-");
-    const newDate = {
-      month: parseInt(month),
-      year: parseInt(year),
-    };
-    
-    console.log("Selected Date:", newDate); // Debugging: Check selected date in frontend
-  
-    setSelectedDate(newDate);
+    setSelectedDate({ month: parseInt(month), year: parseInt(year) });
   };
 
   return (
-
-    
     <div className="flex flex-col px-10 mb-[180px] gap-[50px]">
       {/* Date Selector */}
       <div className="w-full flex justify-start">
-    <label className="text-lg font-semibold text-blue-950 mt-[26px]">Choose Month:</label>
-    <input
-      type="month"
-      value={`${selectedDate.year}-${selectedDate.month.toString().padStart(2, "0")}`}
-      onChange={handleDateChange}
-      className="ml-4 px-4 py-2 border-2 border-blue-950 rounded-lg shadow-md 
-                 text-lg text-blue-950 cursor-pointer transition-all duration-300 
-                 focus:ring-2 focus:ring-blue-500 focus:outline-none 
-                 hover:border-blue-700 hover:shadow-lg mt-[20px]"
-    />
-  </div>
+        <label className="text-lg font-semibold text-blue-950 mt-[26px]">Choose Month:</label>
+        <input
+          type="month"
+          value={`${selectedDate.year}-${selectedDate.month.toString().padStart(2, "0")}`}
+          onChange={handleDateChange}
+          className="ml-4 px-4 py-2 border-2 border-blue-950 rounded-lg shadow-md 
+                    text-lg text-blue-950 cursor-pointer transition-all duration-300 
+                    focus:ring-2 focus:ring-blue-500 focus:outline-none 
+                    hover:border-blue-700 hover:shadow-lg mt-[20px]"
+        />
+      </div>
 
       {/* Main Bar Graph & Expense Cards */}
       <div className="flex justify-center gap-12">
@@ -101,10 +93,7 @@ const Dashboard = () => {
 
         {/* Expense Cards */}
         <div className="flex flex-col items-center">
-          <h2 className="text-2xl font-bold mb-5 text-blue-950">
-            Total Expense
-          </h2>
-
+          <h2 className="text-2xl font-bold mb-5 text-blue-950">Total Expense</h2>
           <div className="flex gap-8">
             {/* Actual Expense Card */}
             <div className="relative border-2 border-blue-950 rounded-lg p-6 w-44 text-center">
@@ -129,33 +118,28 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="text-2xl font-bold mb-5 text-blue-950 mt-1.5 ml-[41%]"> Head Wise Expense :</div>
+      {/* Head-wise Expense Section */}
+      <div className="text-2xl font-bold mb-5 text-blue-950 mt-1.5 ml-[41%]">
+        Head Wise Expense :
+      </div>
 
-      {/* 9 Small Graphs Section */}
+      {/* 9 Head-wise Graphs */}
       <div className="grid grid-cols-3 gap-6 -mt-[15px]">
-        {[
-          "शैक्षणिक बाबी",
-          "पाणी स्वच्छता इ. बाबी",
-          "सुरक्षितता",
-          "किचन अन्न व पोषण",
-          "आरोग्य तपासण्या",
-          "आजारपण व अपघात",
-          "क्रीडा व कला",
-          "शाळेचे शुशोभीकरण",
-          "अन्य खर्च",
-        ].map((title, index) => (
+        {headwiseData.map((head, index) => (
           <div key={index} className="p-4 border rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold text-center">{title}</h3>
+            <h3 className="text-lg font-semibold text-center">{head.head_name}</h3>
             <div className="border-t-2 border-blue-950 my-2"></div>
-            {/* Placeholder for Graphs */}
-            <div className="h-40 flex items-center justify-center text-gray-500">
-              Graph Coming Soon...
-            </div>
+            {/* Individual Graphs */}
+            <BarGraph 
+              width="250px" 
+              height="200px" 
+              actualExpense={head.actual_cost / 100000} 
+              expectedExpense={head.expected_cost / 100000} 
+            />
           </div>
         ))}
       </div>
     </div>
-   
   );
 };
 
