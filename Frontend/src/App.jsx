@@ -1,12 +1,11 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
-import './App.css';
-import Bg from './download.jpg';
-import Logo from './logo.jpeg';
-import LoginForm from './Login';
-import Home from './Home';
+
+import Bg from './Assets/download.jpg';
+import Logo from './Assets/logo.jpeg';
+import LoginForm from './Components/Login';
+import Home from './Components/Home';
+
 
 function App() {
   return (
