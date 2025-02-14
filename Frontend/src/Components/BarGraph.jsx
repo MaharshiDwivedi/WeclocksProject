@@ -40,7 +40,6 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense }) => {
 
   return (
     <div style={{ width, height }}>
-      <h2 className="text-2xl font-bold text-blue-950">Total SMC Expense</h2>
       <Bar data={chartData} options={options} />
     </div>
   );
