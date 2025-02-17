@@ -9,7 +9,7 @@ const Meetings = () => {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
-  const [photo, setPhoto] = useState(null);
+  const [photo, setPhoto] = useState(null);   
   const videoRef = useRef(null);
 
   const committeeMembers = [
@@ -35,37 +35,60 @@ const Meetings = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLatitude(position.coords.latitude);
-          setLongitude(position.coords.longitude);
-          getAddressFromGoogle(position.coords.latitude, position.coords.longitude);
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+  
+          console.log(`📍 Detected Latitude: ${lat}, Longitude: ${lon}`);
+  
+          setLatitude(lat);
+          setLongitude(lon);
+          getAddressFromGoogle(lat, lon);
         },
         (error) => {
           console.error("Geolocation error:", error);
-          alert("Please enable location permissions.");
-        }
+          alert("⚠️ Please enable location permissions.");
+        },
+        { enableHighAccuracy: true } // <-- Add this to improve GPS accuracy
       );
     } else {
-      alert("Geolocation is not supported by this browser.");
+      alert("❌ Geolocation is not supported by this browser.");
     }
   };
-
-  // 📌 Convert Latitude & Longitude to Address using Google Maps API
+  
+  // 📌 Convert Latitude & Longitude to Address 
   const getAddressFromGoogle = async (lat, lon) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=AIzaSyAdQtawF-PcOQhYYLL-y2Mm9DvY5rVcW8s`
+        `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${lat},${lon}&key=AlzaSyW1XwD8LsAfdMByNty5EViuSIOjCDsNWtg`
       );
       const data = await response.json();
+  
+      console.log("📍 Full API Response:", JSON.stringify(data, null, 2));
+  
       if (data.status === "OK" && data.results.length > 0) {
-        setAddress(data.results[0].formatted_address);
+        let formattedAddress = "";
+  
+        // 🔹 Prioritize "street_address" (most accurate)
+        for (let result of data.results) {
+          if (result.types.includes("street_address")) {
+            formattedAddress = result.formatted_address;
+            break;
+          } else if (result.types.includes("route")) {
+            formattedAddress = result.formatted_address;
+          }
+        }
+  
+        // If nothing found, use the first result
+        setAddress(formattedAddress || data.results[0].formatted_address);
       } else {
-        setAddress("Address not found");
+        setAddress("⚠️ Address not found");
       }
     } catch (error) {
       console.error("Error fetching address:", error);
-      setAddress("Unable to fetch address");
+      setAddress("❌ Unable to fetch address");
     }
   };
+  
 
   // 📸 Open Camera
   const openCamera = async () => {
@@ -96,7 +119,7 @@ const Meetings = () => {
       <div className="mb-[400px] flex justify-start pl-4 pr-4 mr-[1200px]">
         <button 
           onClick={toggleModal} 
-          className="flex items-center text-white bg-blue-950 pl-2 pr-2 rounded-[3px] pb-1 text-2xl hover:shadow lg"
+          className="flex items-center text-white bg-blue-950 pl-2 pr-2 rounded-[3px] pb-1 text-2xl"
         >
           <Plus className="mr-2" />
           New Meeting
