@@ -4,7 +4,7 @@ import { Menu } from "@headlessui/react";
 import { FaEllipsisV, FaTrash, FaEdit } from "react-icons/fa";
 
 export default function Ui() {
-    const API_URL = "http://localhost:5000/api/member";
+    const API_URL = "http://localhost:5000/members";
     const [members, setMembers] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);

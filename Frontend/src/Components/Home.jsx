@@ -31,7 +31,7 @@ const Home = () => {
           <Link
             to="/home/newmember"
             className={`flex items-center text-blue-950 bg-white px-3 py-1 rounded-md shadow-md transition 
-              ${location.pathname === "/home/newmember" ? "border-2 border-blue-500" : "hover:bg-gray-100"}`}
+              ${location.pathname === "/home/Newmember" ? "border-2 border-blue-500" : "hover:bg-gray-100"}`}
           >
             <Plus className="mr-1" size={18} />
             Add Committee Member
@@ -55,7 +55,7 @@ const Home = () => {
           <Route path="/" element={<Navigate to="meetings" />} /> {/* Default to Meetings */}
           <Route path="meetings" element={<Meetings />} />
           <Route path="dashboard" element={<Dashboard />} />
-          <Route path="newmember" element={<NewMember />} />
+          <Route path="Newmember" element={<NewMember />} />
         </Routes>
       </div>
     </div>

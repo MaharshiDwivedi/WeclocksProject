@@ -7,10 +7,10 @@ const Meetings = () => {
       <h2 className="text-4xl font-bold text-center">SMC Meetings</h2>
       </div>
       
-      <div className="mb-[400px] flex justify-start pl-4 pr-4 mr-[1200px]"> 
+      <div className=" flex justify-start pl-4 pr-4"> 
 
       
-        <button className="flex items-center text-white bg-blue-950 pl-2 pr-2 rounded-[3px] pb-1 text-2xl ">
+        <button className="flex items-center text-white bg-blue-950 p-2 rounded-[4px] text-2xl ">
           <Plus className="mr-2" />
           New Meeting
         </button>
