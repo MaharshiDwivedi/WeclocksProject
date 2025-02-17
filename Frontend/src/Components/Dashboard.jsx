@@ -21,16 +21,12 @@ const Dashboard = () => {
         school_id: "14",
       });
 
-      console.log("🚀 API Response:", response.data);
-
       if (!response.data || !Array.isArray(response.data.data)) {
         console.error("❌ API response is not an array:", response.data);
         return;
       }
 
       const expenseData = response.data.data;
-
-      console.log("✅ Processed Expense Data:", expenseData);
 
       const totalActual = expenseData.reduce(
         (sum, head) => sum + (parseFloat(head.actual_cost) || 0),
