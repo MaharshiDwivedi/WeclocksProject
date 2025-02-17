@@ -1,11 +1,13 @@
 import { useState, useRef } from "react";
-import { Plus, X, Camera } from "lucide-react";
+import { Plus, X, Camera, MapPin } from "lucide-react";
 
 const Meetings = () => {
-  const [isOpen, setIsOpen] = useState(false); // Controls modal visibility
-  const [selectedMembers, setSelectedMembers] = useState([]); // Stores selected members
-  const [date, setDate] = useState(""); // Stores date input
-  const [address, setAddress] = useState(""); // Stores address input
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [date, setDate] = useState("");
+  const [address, setAddress] = useState("");
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
   const [photo, setPhoto] = useState(null);
   const videoRef = useRef(null);
@@ -14,24 +16,58 @@ const Meetings = () => {
     { name: "Jayraj Kalsariya", role: "Principal Ex (प्राचार्य माजी) | अध्यक्ष" },
     { name: "Mayur Wagh", role: "Parent Representative (पालक प्रतिनिधी) | सदस्य" },
     { name: "Nitin Dube", role: "Member" },
-  ]; // Example names with roles
+  ];
 
-  // Toggle modal
   const toggleModal = () => setIsOpen(!isOpen);
 
-  // Handle member selection
   const handleMemberChange = (member) => {
     if (!selectedMembers.find((m) => m.name === member.name)) {
       setSelectedMembers([...selectedMembers, member]);
     }
   };
 
-  // Remove selected member
   const removeMember = (member) => {
     setSelectedMembers(selectedMembers.filter((m) => m.name !== member.name));
   };
 
-  // Open Camera
+  // 📌 Get User's Location (Latitude & Longitude)
+  const getUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setLatitude(position.coords.latitude);
+          setLongitude(position.coords.longitude);
+          getAddressFromGoogle(position.coords.latitude, position.coords.longitude);
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          alert("Please enable location permissions.");
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  };
+
+  // 📌 Convert Latitude & Longitude to Address using Google Maps API
+  const getAddressFromGoogle = async (lat, lon) => {
+    try {
+      const response = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=AIzaSyAdQtawF-PcOQhYYLL-y2Mm9DvY5rVcW8s`
+      );
+      const data = await response.json();
+      if (data.status === "OK" && data.results.length > 0) {
+        setAddress(data.results[0].formatted_address);
+      } else {
+        setAddress("Address not found");
+      }
+    } catch (error) {
+      console.error("Error fetching address:", error);
+      setAddress("Unable to fetch address");
+    }
+  };
+
+  // 📸 Open Camera
   const openCamera = async () => {
     try {
       setShowCamera(true);
@@ -43,13 +79,13 @@ const Meetings = () => {
     }
   };
 
-  // Capture Photo
+  // 📸 Capture Photo
   const capturePhoto = () => {
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
-    setPhoto(canvas.toDataURL("image/png")); // Convert to Base64 image
+    setPhoto(canvas.toDataURL("image/png"));
     setShowCamera(false);
   };
 
@@ -57,23 +93,20 @@ const Meetings = () => {
     <div className="h-screen pt-1 flex flex-col relative mt-[60px]">
       <h2 className="text-4xl font-bold text-center">SMC Meetings</h2>
 
-      {/* New Meeting Button */}
       <div className="mb-[400px] flex justify-start pl-4 pr-4 mr-[1200px]">
         <button 
           onClick={toggleModal} 
-          className="flex items-center text-white bg-blue-950 pl-2 pr-2 rounded-[3px] pb-1 text-2xl"
+          className="flex items-center text-white bg-blue-950 pl-2 pr-2 rounded-[3px] pb-1 text-2xl hover:shadow lg"
         >
           <Plus className="mr-2" />
           New Meeting
         </button>
       </div>
 
-      {/* Modal */}
       {isOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-transparent">
-          <div className="bg-white p-6 rounded-lg border-blue-950 shadow-2xl w-[600px]">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
             
-            {/* Modal Header */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-blue-950">Add Meeting</h3>
               <button onClick={toggleModal} className="text-gray-600 hover:text-red-600">
@@ -81,7 +114,6 @@ const Meetings = () => {
               </button>
             </div>
 
-            {/* Date Field */}
             <label className="block text-blue-950 font-medium">Date:</label>
             <input 
               type="date" 
@@ -90,10 +122,9 @@ const Meetings = () => {
               className="w-full p-2 border border-gray-300 rounded mb-3"
             />
 
-            {/* Selected Committee Members as Pills */}
             <div className="flex flex-wrap gap-2 mb-3">
               {selectedMembers.map((member, index) => (
-                <div key={index} className="flex items-center bg-blue-700 text-white px-3 py-1 rounded-full">
+                <div key={index} className="flex items-center bg-purple-700 text-white px-3 py-1 rounded-full">
                   {member.name}
                   <button onClick={() => removeMember(member)} className="ml-2">
                     <X size={14} />
@@ -102,7 +133,6 @@ const Meetings = () => {
               ))}
             </div>
 
-            {/* Committee Members Dropdown */}
             <label className="block text-blue-950 font-medium">Committee Members:</label>
             <div className="border border-gray-300 rounded p-2 max-h-40 overflow-y-auto">
               {committeeMembers.map((member, index) => (
@@ -120,7 +150,16 @@ const Meetings = () => {
               ))}
             </div>
 
-            {/* Address Field */}
+            {/* 📍 Get Location Button */}
+            <button 
+              className="w-full flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 mt-3"
+              onClick={getUserLocation}
+            >
+              <MapPin className="mr-2" size={20} />
+              Detect My Location
+            </button>
+
+            {/* 🏡 Address Field (Auto-filled) */}
             <label className="block text-blue-950 font-medium mt-3">Address:</label>
             <input 
               type="text" 
@@ -130,40 +169,17 @@ const Meetings = () => {
               className="w-full p-2 border border-gray-300 rounded mb-3"
             />
 
-            {/* Take Picture Button */}
+            {/* 📸 Take Picture Button */}
             <button 
-              className="w-full flex items-center justify-center bg-blue-950 text-white px-3 py-2 rounded-md hover:bg-blue-700"
-              onClick={openCamera} // Opens camera
+              className="w-full flex items-center justify-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700"
+              onClick={openCamera}
             >
               <Camera className="mr-2" size={20} />
               Take Meeting’s Photo
             </button>
 
-            {/* Camera Preview */}
-            {showCamera && (
-              <div className="mt-3">
-                <video ref={videoRef} autoPlay className="w-full h-48"></video>
-                <button 
-                  className="mt-2 bg-green-500 text-white px-3 py-2 rounded-md"
-                  onClick={capturePhoto}
-                >
-                  Capture Photo
-                </button>
-              </div>
-            )}
-
-            {/* Display Captured Photo */}
-            {photo && (
-              <div className="mt-3">
-                <p className="text-sm font-semibold">Captured Image:</p>
-                <img src={photo} alt="Captured" className="mt-2 w-full rounded-md" />
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button className="w-full bg-blue-950 text-white py-2 rounded-md mt-3">
-              Submit Meeting
-            </button>
+            {showCamera && <video ref={videoRef} autoPlay className="w-full h-48"></video>}
+            {photo && <img src={photo} alt="Captured" className="mt-3 w-full rounded-md" />}
           </div>
         </div>
       )}
@@ -172,4 +188,3 @@ const Meetings = () => {
 };
 
 export default Meetings;
-
