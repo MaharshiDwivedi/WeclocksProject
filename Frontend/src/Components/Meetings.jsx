@@ -8,8 +8,10 @@ const Meetings = () => {
   const [address, setAddress] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
-  const [showCamera, setShowCamera] = useState(false);
-  const [photo, setPhoto] = useState(null);   
+  const [loading, setLoading] = useState(false); // Loader State
+
+  const [photo, setPhoto] = useState(null);
+  const [meetings, setMeetings] = useState([]);
   const videoRef = useRef(null);
 
   const committeeMembers = [
@@ -30,16 +32,13 @@ const Meetings = () => {
     setSelectedMembers(selectedMembers.filter((m) => m.name !== member.name));
   };
 
-  // 📌 Get User's Location (Latitude & Longitude)
   const getUserLocation = () => {
     if (navigator.geolocation) {
+      setLoading(true); // Start Loader
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
-  
-          console.log(`📍 Detected Latitude: ${lat}, Longitude: ${lon}`);
-  
           setLatitude(lat);
           setLongitude(lon);
           getAddressFromGoogle(lat, lon);
@@ -47,28 +46,23 @@ const Meetings = () => {
         (error) => {
           console.error("Geolocation error:", error);
           alert("⚠️ Please enable location permissions.");
+          
         },
-        { enableHighAccuracy: true } // <-- Add this to improve GPS accuracy
+        { enableHighAccuracy: true }
       );
     } else {
       alert("❌ Geolocation is not supported by this browser.");
     }
   };
-  
-  // 📌 Convert Latitude & Longitude to Address 
+
   const getAddressFromGoogle = async (lat, lon) => {
     try {
       const response = await fetch(
         `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${lat},${lon}&key=AlzaSyW1XwD8LsAfdMByNty5EViuSIOjCDsNWtg`
       );
       const data = await response.json();
-  
-      console.log("📍 Full API Response:", JSON.stringify(data, null, 2));
-  
       if (data.status === "OK" && data.results.length > 0) {
         let formattedAddress = "";
-  
-        // 🔹 Prioritize "street_address" (most accurate)
         for (let result of data.results) {
           if (result.types.includes("street_address")) {
             formattedAddress = result.formatted_address;
@@ -77,8 +71,6 @@ const Meetings = () => {
             formattedAddress = result.formatted_address;
           }
         }
-  
-        // If nothing found, use the first result
         setAddress(formattedAddress || data.results[0].formatted_address);
       } else {
         setAddress("⚠️ Address not found");
@@ -88,10 +80,8 @@ const Meetings = () => {
       setAddress("❌ Unable to fetch address");
     }
   };
-  
 
-  // 📸 Open Camera
-  const openCamera = async () => {
+ /* const openCamera = async () => {
     try {
       setShowCamera(true);
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -102,7 +92,6 @@ const Meetings = () => {
     }
   };
 
-  // 📸 Capture Photo
   const capturePhoto = () => {
     const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
@@ -110,6 +99,21 @@ const Meetings = () => {
     canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
     setPhoto(canvas.toDataURL("image/png"));
     setShowCamera(false);
+  };*/
+
+  const handleSubmit = () => {
+    const newMeeting = {
+      date,
+      members: selectedMembers,
+      address,
+      photo,
+    };
+    setMeetings([...meetings, newMeeting]);
+    toggleModal();
+    setDate("");
+    setSelectedMembers([]);
+    setAddress("");
+    setPhoto(null);
   };
 
   return (
@@ -129,7 +133,6 @@ const Meetings = () => {
       {isOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-transparent">
           <div className="bg-white p-6 rounded-lg shadow-lg w-[400px]">
-            
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-blue-950">Add Meeting</h3>
               <button onClick={toggleModal} className="text-gray-600 hover:text-red-600">
@@ -173,7 +176,6 @@ const Meetings = () => {
               ))}
             </div>
 
-            {/* 📍 Get Location Button */}
             <button 
               className="w-full flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 mt-3"
               onClick={getUserLocation}
@@ -182,7 +184,6 @@ const Meetings = () => {
               Detect My Location
             </button>
 
-            {/* 🏡 Address Field (Auto-filled) */}
             <label className="block text-blue-950 font-medium mt-3">Address:</label>
             <input 
               type="text" 
@@ -192,20 +193,46 @@ const Meetings = () => {
               className="w-full p-2 border border-gray-300 rounded mb-3"
             />
 
-            {/* 📸 Take Picture Button */}
-            <button 
-              className="w-full flex items-center justify-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700"
-              onClick={openCamera}
-            >
-              <Camera className="mr-2" size={20} />
-              Take Meeting’s Photo
-            </button>
+<button 
+  className="w-full flex items-center justify-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700"
+  onClick={() => document.getElementById("cameraInput").click()} // Triggers hidden file input
+>
+  <Camera className="mr-2" size={20} />
+  Take Meeting’s Photo
+</button>
 
-            {showCamera && <video ref={videoRef} autoPlay className="w-full h-48"></video>}
-            {photo && <img src={photo} alt="Captured" className="mt-3 w-full rounded-md" />}
+{/* Hidden File Input for Camera */}
+<input 
+  type="file" 
+  accept="image/*" 
+  capture="environment" // Opens the back camera on mobile
+  id="cameraInput"
+  style={{ display: "none" }} 
+  onChange={(e) => console.log("Captured image:", e.target.files[0])} // Handle the selected image
+/>
+
+
+            <button 
+              className="w-full flex items-center justify-center bg-blue-950 text-white px-3 py-2 rounded-md hover:bg-blue-900 mt-3"
+              onClick={handleSubmit}
+            >
+              Submit
+            </button>
           </div>
         </div>
       )}
+
+<div className="mt-4">
+  {meetings.map((meeting, index) => (
+    <div key={index} className="bg-white p-4 rounded-lg border border-blue-950 mb-3">
+      <p className="font-bold">Meeting Number: {index + 1}</p>
+      <p className="font-bold">Date: {meeting.date}</p>
+      <p>Number of Members: {meeting.members.length}</p>
+      <p>Tharav: 0</p>
+    </div>
+  ))}
+</div>
+
     </div>
   );
 };
