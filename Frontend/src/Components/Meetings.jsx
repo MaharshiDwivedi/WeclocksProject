@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Plus, X, Camera, MapPin } from "lucide-react";
+import { Link } from "react-router-dom"; // Import Link
 
 const Meetings = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -9,7 +10,6 @@ const Meetings = () => {
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [loading, setLoading] = useState(false); // Loader State
-
   const [photo, setPhoto] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const videoRef = useRef(null);
@@ -46,7 +46,7 @@ const Meetings = () => {
         (error) => {
           console.error("Geolocation error:", error);
           alert("⚠️ Please enable location permissions.");
-          
+          setLoading(false); // Stop Loader on error
         },
         { enableHighAccuracy: true }
       );
@@ -78,28 +78,10 @@ const Meetings = () => {
     } catch (error) {
       console.error("Error fetching address:", error);
       setAddress("❌ Unable to fetch address");
+    } finally {
+      setLoading(false); // Stop Loader after fetching address
     }
   };
-
- /* const openCamera = async () => {
-    try {
-      setShowCamera(true);
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      videoRef.current.srcObject = stream;
-    } catch (error) {
-      console.error("Camera access error:", error);
-      alert("Unable to access camera. Please allow camera permissions.");
-    }
-  };
-
-  const capturePhoto = () => {
-    const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-    canvas.getContext("2d").drawImage(videoRef.current, 0, 0);
-    setPhoto(canvas.toDataURL("image/png"));
-    setShowCamera(false);
-  };*/
 
   const handleSubmit = () => {
     const newMeeting = {
@@ -108,13 +90,14 @@ const Meetings = () => {
       address,
       photo,
     };
-    setMeetings([...meetings, newMeeting]);
+    setMeetings([newMeeting, ...meetings]); // Add new meeting at the top
     toggleModal();
     setDate("");
     setSelectedMembers([]);
     setAddress("");
     setPhoto(null);
   };
+  
 
   return (
     <div className="h-screen pt-1 flex flex-col relative mt-[60px]">
@@ -179,9 +162,19 @@ const Meetings = () => {
             <button 
               className="w-full flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 mt-3"
               onClick={getUserLocation}
+              disabled={loading} // Disable button when loading
             >
-              <MapPin className="mr-2" size={20} />
-              Detect My Location
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span className="ml-2">Just a moment....</span>
+                </div>
+              ) : (
+                <>
+                  <MapPin className="mr-2" size={20} />
+                  Auto-Detect Location
+                </>
+              )}
             </button>
 
             <label className="block text-blue-950 font-medium mt-3">Address:</label>
@@ -193,24 +186,22 @@ const Meetings = () => {
               className="w-full p-2 border border-gray-300 rounded mb-3"
             />
 
-<button 
-  className="w-full flex items-center justify-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700"
-  onClick={() => document.getElementById("cameraInput").click()} // Triggers hidden file input
->
-  <Camera className="mr-2" size={20} />
-  Take Meeting’s Photo
-</button>
+            <button 
+              className="w-full flex items-center justify-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700"
+              onClick={() => document.getElementById("cameraInput").click()}
+            >
+              <Camera className="mr-2" size={20} />
+              Take Meeting’s Photo
+            </button>
 
-{/* Hidden File Input for Camera */}
-<input 
-  type="file" 
-  accept="image/*" 
-  capture="environment" // Opens the back camera on mobile
-  id="cameraInput"
-  style={{ display: "none" }} 
-  onChange={(e) => console.log("Captured image:", e.target.files[0])} // Handle the selected image
-/>
-
+            <input 
+              type="file" 
+              accept="image/*" 
+              capture="environment" 
+              id="cameraInput"
+              style={{ display: "none" }} 
+              onChange={(e) => console.log("Captured image:", e.target.files[0])}
+            />
 
             <button 
               className="w-full flex items-center justify-center bg-blue-950 text-white px-3 py-2 rounded-md hover:bg-blue-900 mt-3"
@@ -221,18 +212,31 @@ const Meetings = () => {
           </div>
         </div>
       )}
-
-<div className="mt-4">
-  {meetings.map((meeting, index) => (
-    <div key={index} className="bg-white p-4 rounded-lg border border-blue-950 mb-3">
-      <p className="font-bold">Meeting Number: {index + 1}</p>
-      <p className="font-bold">Date: {meeting.date}</p>
-      <p>Number of Members: {meeting.members.length}</p>
-      <p>Tharav: 0</p>
-    </div>
-  ))}
-</div>
-
+      <div className="mt-4 space-y-6">
+        {meetings.map((meeting, index) => (
+          <Link to={`/home/meetings/tharav/${index}`} key={index}>
+            <div className="flex items-center justify-between bg-white rounded-[30px] border-2 border-blue-950 p-4 cursor-pointer hover:shadow-md transition-shadow ">
+              <div className="flex items-center space-x-6 ">
+                <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
+                  {meeting.date}
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Meeting No</div>
+                  <div className="text-xl font-bold text-gray-800">{index + 1}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Member's</div>
+                  <div className="text-xl font-bold text-gray-800">{meeting.members.length}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-sm text-gray-600">Total Tharav</div>
+                  <div className="text-xl font-bold text-gray-800">-</div>
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 };

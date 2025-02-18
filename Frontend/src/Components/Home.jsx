@@ -2,6 +2,8 @@ import { Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-r
 import Meetings from "./Meetings";
 import Dashboard from "./Dashboard";
 import NewMember from "./NewMember";
+import Tharav from "./Tharav"; // Import Tharav Component
+
 import { Plus } from "lucide-react";
 
 const Home = () => {
@@ -53,6 +55,7 @@ const Home = () => {
         <Routes>
           <Route path="/" element={<Navigate to="meetings" />} />
           <Route path="meetings" element={<Meetings />} />
+          <Route path="meetings/tharav/:index" element={<Tharav />} /> 
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="newmember" element={<NewMember />} />
         </Routes>
