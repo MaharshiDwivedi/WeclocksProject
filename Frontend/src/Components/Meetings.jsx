@@ -85,18 +85,21 @@ const Meetings = () => {
 
   const handleSubmit = () => {
     const newMeeting = {
+      number: meetings.length + 1, // Assign a fixed number based on the length
       date,
       members: selectedMembers,
       address,
       photo,
     };
-    setMeetings([newMeeting, ...meetings]); // Add new meeting at the top
+  
+    setMeetings([...meetings, newMeeting]); // Add at the bottom so Meeting 1 stays on top
     toggleModal();
     setDate("");
     setSelectedMembers([]);
     setAddress("");
     setPhoto(null);
   };
+  
   
 
   return (
@@ -213,29 +216,29 @@ const Meetings = () => {
         </div>
       )}
       <div className="mt-4 space-y-6">
-        {meetings.map((meeting, index) => (
-          <Link to={`/home/meetings/tharav/${index}`} key={index}>
-            <div className="flex items-center justify-between bg-white rounded-[30px] border-2 border-blue-950 p-4 cursor-pointer hover:shadow-md transition-shadow ">
-              <div className="flex items-center space-x-6 ">
-                <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
-                  {meeting.date}
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Meeting No</div>
-                  <div className="text-xl font-bold text-gray-800">{index + 1}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Member's</div>
-                  <div className="text-xl font-bold text-gray-800">{meeting.members.length}</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm text-gray-600">Total Tharav</div>
-                  <div className="text-xl font-bold text-gray-800">-</div>
-                </div>
-              </div>
-            </div>
-          </Link>
-        ))}
+      {meetings.map((meeting, index) => (
+  <Link to={`/home/meetings/tharav/${index}`} key={index}>
+    <div className="flex items-center justify-between bg-white rounded-[30px] border-2 border-blue-950 p-4 cursor-pointer hover:shadow-md transition-shadow">
+      <div className="flex items-center space-x-6">
+        <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
+          {meeting.date}
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Meeting No</div>
+          <div className="text-xl font-bold text-gray-800">{meeting.number}</div> {/* Corrected numbering */}        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Member's</div>
+          <div className="text-xl font-bold text-gray-800">{meeting.members.length}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Total Tharav</div>
+          <div className="text-xl font-bold text-gray-800">-</div>
+        </div>
+      </div>
+    </div>
+  </Link>
+))}
+
       </div>
     </div>
   );
