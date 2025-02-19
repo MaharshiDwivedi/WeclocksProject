@@ -1,5 +1,5 @@
-import { useState, useRef } from "react";
-import { Plus, X, Camera, MapPin } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Plus, X, Camera } from "lucide-react";
 import { Link } from "react-router-dom"; // Import Link
 
 const Meetings = () => {
@@ -9,7 +9,7 @@ const Meetings = () => {
   const [address, setAddress] = useState("");
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
-  const [loading, setLoading] = useState(false); // Loader State
+  const [loading, setLoading] = useState(true); // Loader starts when popup opens
   const [photo, setPhoto] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const videoRef = useRef(null);
@@ -20,7 +20,12 @@ const Meetings = () => {
     { name: "Nitin Dube", role: "Member" },
   ];
 
-  const toggleModal = () => setIsOpen(!isOpen);
+  const toggleModal = () => {
+    setIsOpen(!isOpen);
+    if (!isOpen) {
+      detectLocation(); // Auto-detect location when the popup opens
+    }
+  };
 
   const handleMemberChange = (member) => {
     if (!selectedMembers.find((m) => m.name === member.name)) {
@@ -32,9 +37,9 @@ const Meetings = () => {
     setSelectedMembers(selectedMembers.filter((m) => m.name !== member.name));
   };
 
-  const getUserLocation = () => {
+  const detectLocation = () => {
     if (navigator.geolocation) {
-      setLoading(true); // Start Loader
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const lat = position.coords.latitude;
@@ -46,7 +51,7 @@ const Meetings = () => {
         (error) => {
           console.error("Geolocation error:", error);
           alert("⚠️ Please enable location permissions.");
-          setLoading(false); // Stop Loader on error
+          setLoading(false);
         },
         { enableHighAccuracy: true }
       );
@@ -62,16 +67,7 @@ const Meetings = () => {
       );
       const data = await response.json();
       if (data.status === "OK" && data.results.length > 0) {
-        let formattedAddress = "";
-        for (let result of data.results) {
-          if (result.types.includes("street_address")) {
-            formattedAddress = result.formatted_address;
-            break;
-          } else if (result.types.includes("route")) {
-            formattedAddress = result.formatted_address;
-          }
-        }
-        setAddress(formattedAddress || data.results[0].formatted_address);
+        setAddress(data.results[0].formatted_address);
       } else {
         setAddress("⚠️ Address not found");
       }
@@ -79,7 +75,7 @@ const Meetings = () => {
       console.error("Error fetching address:", error);
       setAddress("❌ Unable to fetch address");
     } finally {
-      setLoading(false); // Stop Loader after fetching address
+      setLoading(false);
     }
   };
 
@@ -88,27 +84,29 @@ const Meetings = () => {
       number: meetings.length + 1, // Assign a fixed number based on the length
       date,
       members: selectedMembers,
+      latitude,
+      longitude,
       address,
       photo,
     };
-  
+
     setMeetings([...meetings, newMeeting]); // Add at the bottom so Meeting 1 stays on top
     toggleModal();
     setDate("");
     setSelectedMembers([]);
+    setLatitude(null);
+    setLongitude(null);
     setAddress("");
     setPhoto(null);
   };
-  
-  
 
   return (
     <div className="h-screen pt-1 flex flex-col relative mt-[60px]">
       <h2 className="text-4xl font-bold text-center">SMC Meetings</h2>
 
       <div className="mb-[400px] flex justify-start pl-4 pr-4 mr-[1200px]">
-        <button 
-          onClick={toggleModal} 
+        <button
+          onClick={toggleModal}
           className="flex items-center text-white bg-blue-950 pl-2 pr-2 rounded-[3px] pb-1 text-2xl"
         >
           <Plus className="mr-2" />
@@ -127,10 +125,10 @@ const Meetings = () => {
             </div>
 
             <label className="block text-blue-950 font-medium">Date:</label>
-            <input 
-              type="date" 
-              value={date} 
-              onChange={(e) => setDate(e.target.value)} 
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
               className="w-full p-2 border border-gray-300 rounded mb-3"
             />
 
@@ -148,9 +146,9 @@ const Meetings = () => {
             <label className="block text-blue-950 font-medium">Committee Members:</label>
             <div className="border border-gray-300 rounded p-2 max-h-40 overflow-y-auto">
               {committeeMembers.map((member, index) => (
-                <div 
-                  key={index} 
-                  onClick={() => handleMemberChange(member)} 
+                <div
+                  key={index}
+                  onClick={() => handleMemberChange(member)}
                   className="flex justify-between items-center p-2 hover:bg-gray-100 cursor-pointer"
                 >
                   <div>
@@ -162,34 +160,26 @@ const Meetings = () => {
               ))}
             </div>
 
-            <button 
-              className="w-full flex items-center justify-center bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 mt-3"
-              onClick={getUserLocation}
-              disabled={loading} // Disable button when loading
-            >
-              {loading ? (
-                <div className="flex items-center">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span className="ml-2">Just a moment....</span>
+            {/* Latitude & Longitude - Each field has its own loader */}
+            <div className="flex space-x-2 mt-3">
+              <div className="w-1/2">
+                <label className="block text-blue-950 font-medium">Latitude:</label>
+                <div className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-center">
+                  {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-950 mx-auto"></div> : latitude}
                 </div>
-              ) : (
-                <>
-                  <MapPin className="mr-2" size={20} />
-                  Auto-Detect Location
-                </>
-              )}
-            </button>
+              </div>
+              <div className="w-1/2">
+                <label className="block text-blue-950 font-medium">Longitude:</label>
+                <div className="w-full p-2 border border-gray-300 rounded bg-gray-100 text-center">
+                  {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-950 mx-auto"></div> : longitude}
+                </div>
+              </div>
+            </div>
 
             <label className="block text-blue-950 font-medium mt-3">Address:</label>
-            <input 
-              type="text" 
-              value={address} 
-              onChange={(e) => setAddress(e.target.value)} 
-              placeholder="Enter meeting address" 
-              className="w-full p-2 border border-gray-300 rounded mb-3"
-            />
+            <input type="text" value={address} readOnly className="w-full p-2 border border-gray-300 rounded mb-3" />
 
-            <button 
+            <button
               className="w-full flex items-center justify-center bg-purple-600 text-white px-3 py-2 rounded-md hover:bg-purple-700"
               onClick={() => document.getElementById("cameraInput").click()}
             >
@@ -197,16 +187,9 @@ const Meetings = () => {
               Take Meeting’s Photo
             </button>
 
-            <input 
-              type="file" 
-              accept="image/*" 
-              capture="environment" 
-              id="cameraInput"
-              style={{ display: "none" }} 
-              onChange={(e) => console.log("Captured image:", e.target.files[0])}
-            />
+            <input type="file" accept="image/*" capture="environment" id="cameraInput" style={{ display: "none" }} />
 
-            <button 
+            <button
               className="w-full flex items-center justify-center bg-blue-950 text-white px-3 py-2 rounded-md hover:bg-blue-900 mt-3"
               onClick={handleSubmit}
             >
@@ -215,31 +198,6 @@ const Meetings = () => {
           </div>
         </div>
       )}
-      <div className="mt-4 space-y-6">
-      {meetings.map((meeting, index) => (
-  <Link to={`/home/meetings/tharav/${index}`} key={index}>
-    <div className="flex items-center justify-between bg-white rounded-[30px] border-2 border-blue-950 p-4 cursor-pointer hover:shadow-md transition-shadow">
-      <div className="flex items-center space-x-6">
-        <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
-          {meeting.date}
-        </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-600">Meeting No</div>
-          <div className="text-xl font-bold text-gray-800">{meeting.number}</div> {/* Corrected numbering */}        </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-600">Member's</div>
-          <div className="text-xl font-bold text-gray-800">{meeting.members.length}</div>
-        </div>
-        <div className="text-center">
-          <div className="text-sm text-gray-600">Total Tharav</div>
-          <div className="text-xl font-bold text-gray-800">-</div>
-        </div>
-      </div>
-    </div>
-  </Link>
-))}
-
-      </div>
     </div>
   );
 };

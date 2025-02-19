@@ -60,6 +60,7 @@ const Tharav = () => {
       <div className="mt-4">
         <h2 className="text-xl font-semibold">Resolutions:</h2>
         <p>Content of resolutions will be displayed here.</p>
+       
       </div>
     </div>
     </>
