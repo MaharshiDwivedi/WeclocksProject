@@ -3,8 +3,7 @@ import Meetings from "./Meetings";
 import Dashboard from "./Dashboard";
 import NewMember from "./NewMember";
 import Tharav from "./Tharav"; // Import Tharav Component
-
-import { Plus } from "lucide-react";
+import { Plus, LogOut, CalendarCheck, ChartColumnIncreasing } from "lucide-react";
 
 const Home = () => {
   const location = useLocation();
@@ -17,41 +16,58 @@ const Home = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Fixed Navbar */}
-      <nav className="fixed top-0 w-full z-50 bg-blue-950 px-6 py-2 flex items-center justify-between shadow-md">
+    <div className="flex h-screen bg-white">
+      {/* Sidebar - Full Height */}
+      <aside className="w-64 bg-blue-950 text-white flex flex-col min-h-screen h-screen shadow-lg relative">
         
-        {/* Left Side - Navigation Links */}
-        <div className="flex space-x-10">
-          <NavLink to="/home/meetings" label="Meetings" path={location.pathname} />
-          <NavLink to="/home/dashboard" label="Dashboard" path={location.pathname} />
+        {/* Sidebar Header - Full Width */}
+        <div className="w-full  bg-blue-200 text-blue-950 text-4xl font-bold text-center py-4 realfont shadow-md">
+          ITDP-Nandurbar
         </div>
 
-        {/* Right Side - Add Member & Logout */}
-        <div className="flex items-center space-x-4">
-          
-          {/* Add Committee Member */}
+        {/* Sidebar Links */}
+        <div className="flex flex-col space-y-4 flex-1 px-3 pt-4">
+          <NavLink 
+            to="/home/dashboard" 
+            label="Dashboard" 
+            path={location.pathname} 
+            icon={<ChartColumnIncreasing size={20} />} 
+          />
+
+          <NavLink 
+            to="/home/meetings" 
+            label="Meetings" 
+            path={location.pathname} 
+            icon={<CalendarCheck size={20} />} 
+          />
+        </div>
+
+        {/* Bottom Buttons - Add Member & Logout */}
+        <div className="mt-auto px-3 pb-4">
+          {/* Add Member Button */}
           <Link
             to="/home/newmember"
-            className={`flex items-center text-blue-950 bg-white px-3 py-1.5 rounded-md shadow-md transition 
+            className={`flex items-center text-blue-950 bg-white px-3 py-2 rounded-md shadow-md transition 
               ${location.pathname === "/home/newmember" ? "border-2 border-blue-500" : "hover:bg-gray-100"}`}
           >
             <Plus className="mr-2" size={18} />
-            Add Committee Member
+            Comittee Members
           </Link>
 
           {/* Logout Button */}
           <button 
             onClick={handleLogout}
-            className="text-white bg-red-500 px-4 py-1.5 rounded-md transition hover:bg-red-600"
+            className="flex items-center justify-center mt-4 text-white bg-red-500 px-4 py-2 rounded-md transition hover:bg-red-600 w-full"
           >
+            <LogOut className="mr-2" size={18} />
             Logout
           </button>
         </div>
-      </nav>
 
-      {/* Page Content (Adds Padding to Avoid Overlap) */}
-      <div className="flex-1 flex items-center justify-center pt-14"> 
+      </aside>
+
+      {/* Page Content */}
+      <div className="flex-1 p-6 ml-64">
         <Routes>
           <Route path="/" element={<Navigate to="meetings" />} />
           <Route path="meetings" element={<Meetings />} />
@@ -65,15 +81,18 @@ const Home = () => {
 };
 
 // Custom NavLink Component
-const NavLink = ({ to, label, path }) => (
+const NavLink = ({ to, label, path, icon }) => (
   <Link
     to={to}
-    className={`text-white pb-2 transition border-b-2 
-      ${path === to ? "border-white font-semibold" : "border-transparent hover:border-gray-400"}`}
+    className={`flex items-center px-4 py-2 rounded-md transition font-medium 
+      ${path === to 
+        ? "bg-white text-blue-950 font-semibold shadow-md"  // ✅ Dark text when active
+        : "text-white hover:bg-gray-700 hover:text-gray-300" // ✅ Normal & hover states
+      }`}
   >
-    {label}
+    {icon}
+    <span className="ml-2">{label}</span>
   </Link>
 );
 
 export default Home;
-
