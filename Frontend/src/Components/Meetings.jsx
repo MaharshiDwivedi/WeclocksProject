@@ -11,7 +11,7 @@ const Meetings = () => {
   const [longitude, setLongitude] = useState(null);
   const [loading, setLoading] = useState(true); // Loader starts when popup opens
   const [photo, setPhoto] = useState(null);
-  const [meetings, setMeetings] = useState([]);
+  const [meetings, setMeetings] = useState([]); // Store meetings in a list
   const videoRef = useRef(null);
 
   const committeeMembers = [
@@ -90,7 +90,7 @@ const Meetings = () => {
       photo,
     };
 
-    setMeetings([...meetings, newMeeting]); // Add at the bottom so Meeting 1 stays on top
+    setMeetings([newMeeting, ...meetings]); // Add new meeting at the **TOP** of the list
     toggleModal();
     setDate("");
     setSelectedMembers([]);
@@ -101,6 +101,7 @@ const Meetings = () => {
   };
 
   return (
+    <>
     <div className="h-screen pt-1 flex flex-col relative mt-[60px]">
       <h2 className="text-4xl font-bold text-center">SMC Meetings</h2>
 
@@ -132,17 +133,7 @@ const Meetings = () => {
               className="w-full p-2 border border-gray-300 rounded mb-3"
             />
 
-            <div className="flex flex-wrap gap-2 mb-3">
-              {selectedMembers.map((member, index) => (
-                <div key={index} className="flex items-center bg-purple-700 text-white px-3 py-1 rounded-full">
-                  {member.name}
-                  <button onClick={() => removeMember(member)} className="ml-2">
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
+            {/* Committee Members List */}
             <label className="block text-blue-950 font-medium">Committee Members:</label>
             <div className="border border-gray-300 rounded p-2 max-h-40 overflow-y-auto">
               {committeeMembers.map((member, index) => (
@@ -160,7 +151,7 @@ const Meetings = () => {
               ))}
             </div>
 
-            {/* Latitude & Longitude - Each field has its own loader */}
+            {/* Latitude & Longitude Fields with Loaders */}
             <div className="flex space-x-2 mt-3">
               <div className="w-1/2">
                 <label className="block text-blue-950 font-medium">Latitude:</label>
@@ -197,8 +188,38 @@ const Meetings = () => {
             </button>
           </div>
         </div>
+
       )}
+
+
+<div className="mt-4 space-y-6">
+          {meetings.map((meeting, index) => (
+          <Link to={`/home/meetings/tharav/${index}`} key={index}>
+         <div className="flex items-center justify-between bg-white rounded-[30px] border-2 border-blue-950 p-4 cursor-pointer hover:shadow-md transition-shadow">
+           <div className="flex items-center space-x-6">
+           <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
+          {meeting.date}
+           </div>
+          <div className="text-center">
+          <div className="text-sm text-gray-600">Meeting No</div>
+          <div className="text-xl font-bold text-gray-800">{meeting.number}</div> {/* Corrected numbering */}        </div>
+          <div className="text-center">
+          <div className="text-sm text-gray-600">Member's</div>
+          <div className="text-xl font-bold text-gray-800">{meeting.members.length}</div>
+          </div>
+          <div className="text-center">
+          <div className="text-sm text-gray-600">Total Tharav</div>
+          <div className="text-xl font-bold text-gray-800">-</div>
+           </div>
+              </div>
+               </div>
+              </Link>
+             ))}
+
+         </div>
     </div>
+
+    </>
   );
 };
 
