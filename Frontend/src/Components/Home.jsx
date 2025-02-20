@@ -18,7 +18,7 @@ const Home = () => {
   return (
     <div className="flex h-screen bg-white">
       {/* Sidebar - Full Height */}
-      <aside className="w-64 bg-blue-950 text-white flex flex-col min-h-screen h-screen shadow-lg relative">
+      <aside className="w-64 bg-blue-950 text-white flex flex-col min-h-screen h-screen shadow-lg fixed">
         
         {/* Sidebar Header - Full Width */}
         <div className="w-full  bg-blue-200 text-blue-950 text-4xl font-bold text-center py-4 realfont shadow-md">
