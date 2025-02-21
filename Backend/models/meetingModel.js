@@ -27,19 +27,20 @@ async function getAllMeetings() {
       };
     });
   } catch (error) {
-    throw error;
+    console.error("Error in getAllMeetings:", error.message);
+    return { error: "Unable to fetch meetings. Please try again later." };
   }
 }
-
 // Add a new meeting
 async function addMeeting(meeting) {
   try {
+
     const {
-      meeting_id,
-      meeting_number = meeting_id,
-      school_id,
-      user_id,
+      meeting_number = 1, // Default to meeting_id if not provided
+      school_id = null,
+      user_id = null,
       meeting_date = new Date().toISOString().split("T")[0],
+      selected_member_length: joined_member_length = "0",
       image_url = "default.jpg",
       latitude = "0.0000",
       longitude = "0.0000",
@@ -49,21 +50,37 @@ async function addMeeting(meeting) {
       member_id = "",
     } = meeting;
 
+    // Ensure all values are either valid or explicitly set to null
     const newMeetingRecord = [
-      meeting_number, school_id, user_id, meeting_date, "", image_url,
-      latitude, longitude, address, created_at, updated_at, member_id
+      meeting_number ?? null,
+      school_id ?? null,
+      user_id ?? null,
+      meeting_date ?? null,
+      joined_member_length ?? "0",
+      image_url ?? "default.jpg",
+      latitude ?? "0.0000",
+      longitude ?? "0.0000",
+      address ?? "Unknown",
+      created_at ?? null,
+      updated_at ?? null, // Use null instead of undefined
+      member_id ?? "",
     ].join("|");
+    
+    console.log("New meeting record:", newMeetingRecord);
 
     const [result] = await connection.execute(
-      "INSERT INTO tbl_new_smc (meeting_id, meeting_record, status) VALUES (?, ?, 'Active')",
-      [meeting_id, newMeetingRecord]
+      "INSERT INTO tbl_new_smc (meeting_record, status) VALUES (?, 'Active')",
+      [newMeetingRecord]
     );
+    
 
     return result;
   } catch (error) {
-    throw error;
+    console.error("Error in addMeeting:", error.message);
+    return { error: "Failed to add meeting. Please check your input and try again." };
   }
 }
+
 
 // Update a meeting
 async function updateMeeting(meeting_id, updatedData) {
@@ -82,7 +99,7 @@ async function updateMeeting(meeting_id, updatedData) {
     parts[6] = updatedData.latitude || parts[6];
     parts[7] = updatedData.longitude || parts[7];
     parts[8] = updatedData.address || parts[8];
-    parts[10] = new Date().toISOString().replace("T", " ").split(".")[0];
+    parts[10] = new Date().toISOString().replace("T", " ").split(".")[0]; // Corrected update time
 
     const updatedMeetingRecord = parts.join("|");
 
@@ -93,21 +110,44 @@ async function updateMeeting(meeting_id, updatedData) {
 
     return result;
   } catch (error) {
-    throw error;
+    console.error("Error in updateMeeting:", error.message);
+    return { error: "Failed to update meeting. Please try again later." };
   }
 }
 
 // Delete a meeting (Soft Delete)
 async function deleteMeeting(meeting_id) {
   try {
+    console.log("Deleting meeting with ID:", meeting_id); // Debugging log
+
+    // Check if meeting exists
+    const [rows] = await connection.execute(
+      "SELECT meeting_id FROM tbl_new_smc WHERE meeting_id = ? AND status='Active'",
+      [meeting_id]
+    );
+
+    if (rows.length === 0) {
+      console.log("Meeting not found or already deleted"); // Debugging log
+      return { error: "Meeting not found or already deleted" };
+    }
+
+    // Soft delete (set status to 'Inactive')
     const [result] = await connection.execute(
       "UPDATE tbl_new_smc SET status='Inactive' WHERE meeting_id = ? AND status='Active'",
       [meeting_id]
     );
 
+    console.log("SQL query result:", result); // Debugging log
+    console.log("Affected rows:", result.affectedRows); // Debugging log
+
+    if (result.affectedRows === 0) {
+      return { error: "Meeting not found or already deleted" };
+    }
+
     return result;
   } catch (error) {
-    throw error;
+    console.error("Error in deleteMeeting:", error.message);
+    return { error: "Failed to delete meeting. Please try again later." };
   }
 }
 

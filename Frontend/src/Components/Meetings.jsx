@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { Plus, X, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
+import axios from "axios"; 
+
 
 
 const Meetings = () => {
@@ -14,9 +16,13 @@ const Meetings = () => {
   const [photo, setPhoto] = useState(null);
   const [meetings, setMeetings] = useState([]);
   const [committeeMembers, setCommitteeMembers] = useState([]);
+  const [meetingNumber, setMeetingNumber] = useState(1); // Initial meeting number
+
+
 
   useEffect(() => {
     fetchCommitteeMembers();
+    fetchMeetings(); 
   }, []);
 
   const fetchCommitteeMembers = async () => {
@@ -36,6 +42,31 @@ const Meetings = () => {
       console.error("Error fetching committee members:", error);
     }
   };
+
+  const fetchMeetings = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/api/meeting");
+      const meetingsData = response.data.map((meeting) => ({
+        id: meeting.meeting_id,
+        date: meeting.meeting_date,
+        number: meeting.meeting_number,
+        members: meeting.member_id ? meeting.member_id.split(",") : [],
+      }));
+      setMeetings(meetingsData);
+    } catch (error) {
+      console.error("Error fetching meetings:", error);
+    }
+  };
+
+
+
+
+
+
+
+
+
+
 
   const toggleModal = () => {
     setIsOpen(!isOpen);
@@ -102,25 +133,50 @@ const Meetings = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (!date || selectedMembers.length === 0) {
-      alert("Please fill in all required fields");
-      return;
-    }
+  const handleSubmit = async () => {
+  if (!date || selectedMembers.length === 0) {
+    alert("Please fill in all required fields");
+    return;
+  }
 
-    const newMeeting = {
-      number: meetings.length + 1,
-      date,
-      members: selectedMembers,
-      latitude,
-      longitude,
-      address,
-      photo,
-    };
-
-    setMeetings([...meetings, newMeeting]);
-    resetForm();
+  const newMeeting = {
+    meeting_number: meetingNumber, // Use meetingNumber here
+    school_id: localStorage.getItem("school_id") || "",
+    user_id: localStorage.getItem("user_id") || "",
+    meeting_date: date,
+    selected_member_length: selectedMembers.length,
+    image_url: photo || "default.jpg",
+    latitude: latitude || "0.0000",
+    longitude: longitude || "0.0000",
+    address: address || "Unknown",
+    created_at: new Date().toISOString().replace("T", " ").split(".")[0],
+    updated_at: null,
+    member_id: selectedMembers.map((m) => m.name).join(","),
   };
+
+  console.log("Sending new meeting data:", newMeeting); // Debugging log
+
+  try {
+    const response = await axios.post("http://localhost:5000/api/meeting", newMeeting, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    console.log("Meeting created successfully:", response.data); // Debugging log
+
+    // Refetch meetings to ensure the state is up-to-date
+    await fetchMeetings();
+
+    // Increment the meeting number for the next meeting
+    setMeetingNumber(meetingNumber + 1);
+
+    // Reset the form
+    resetForm();
+  } catch (error) {
+    console.error("Error creating meeting:", error);
+    alert("Failed to create meeting");
+  }
+};
+
 
   const resetForm = () => {
     setIsOpen(false);
@@ -131,6 +187,41 @@ const Meetings = () => {
     setAddress("");
     setPhoto(null);
   };
+
+
+  const handleDeleteMeeting = async (meetingId, event) => {
+    event.stopPropagation(); // Stop event propagation
+  
+    if (window.confirm("Are you sure you want to delete this meeting?")) {
+      try {
+        console.log("Deleting meeting with ID:", meetingId); // Debugging log
+  
+        const response = await axios.delete(`http://localhost:5000/api/meeting/${meetingId}`);
+        console.log("Backend response:", response.data); // Debugging log
+  
+        if (response.data.error) {
+          alert(response.data.error); // Show error message from backend
+          return;
+        }
+  
+        // Update the meetings state to remove the deleted meeting
+        setMeetings((prevMeetings) =>
+          prevMeetings.filter((meeting) => meeting.id !== meetingId)
+        );
+      } catch (error) {
+        console.error("Error deleting meeting:", error);
+        alert("Failed to delete meeting");
+      }
+    }
+  };
+
+
+
+
+
+
+
+
 
   return (
     <div className="min-h-screen p-6 space-y-6">
@@ -287,37 +378,49 @@ const Meetings = () => {
 )}
 
 
-
 <div className="space-y-6 mt-[30px]">
-  {meetings.map((meeting, index) => (
-    <Link to={`/home/meetings/tharav/${index}`} key={index}>
-<div className="relative flex items-center justify-between bg-white rounded-[20px] border-2 border-blue-950 p-2 cursor-pointer hover:shadow-md transition-shadow mb-9 w-2xl">
-        <div className="flex items-center space-x-[90px]">
-          {/* Date with relative positioning */}
-          <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
-            {meeting.date}
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-600">Meeting No</div>
-            <div className="text-xl font-bold text-gray-800">{meeting.number}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-600">Member's</div>
-            <div className="text-xl font-bold text-gray-800">{meeting.members.length}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-sm text-gray-600">Total Tharav</div>
-            <div className="text-xl font-bold text-gray-800">-</div>
-          </div>
+  {meetings && meetings.map((meeting, index) => (
+    <div
+      key={meeting.id || index}
+      className="relative flex items-center justify-between bg-white rounded-[20px] border-2 border-blue-950 p-2 cursor-pointer hover:shadow-md transition-shadow mb-9 w-2xl"
+      onClick={() => {
+        // Navigate to the meeting details page (if needed)
+        window.location.href = `/home/meetings/tharav/${index}`;
+      }}
+    >
+      <div className="flex items-center space-x-[90px]">
+        <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
+          {meeting.date}
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Meeting No</div>
+          <div className="text-xl font-bold text-gray-800">{meeting.number}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Member's</div>
+          <div className="text-xl font-bold text-gray-800">{meeting.members?.length || 0}</div>
+        </div>
+        <div className="text-center">
+          <div className="text-sm text-gray-600">Total Tharav</div>
+          <div className="text-xl font-bold text-gray-800">-</div>
         </div>
       </div>
-    </Link>
+
+      {/* Delete Button */}
+      <button
+        onClick={(event) => {
+          event.stopPropagation(); // Stop event propagation
+          handleDeleteMeeting(meeting.id, event); // Pass event here
+        }}
+        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors"
+      >
+        Delete
+      </button>
+    </div>
   ))}
 </div>
-
-
-    </div>
-  );
+  </div>
+);
 };
 
 export default Meetings;
