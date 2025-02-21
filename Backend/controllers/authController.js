@@ -49,7 +49,7 @@ exports.login = async (req, res) => {
             }
 
             const token = jwt.sign(
-                { username: user.username, status: user.status }, 
+                { username: user.username,  user_id: user.user_id, school_id: user.school_id	 }, 
                 SECRET_KEY, 
                 { expiresIn: '1h' }
             );
@@ -57,9 +57,11 @@ exports.login = async (req, res) => {
             res.json({
                 message: 'Login successful',
                 token,
+                user_id: user.user_id, 
+                school_id: user.school_id,
                 user: {
                     username: user.username,
-                    status: user.status
+                   
                 }
             });
 

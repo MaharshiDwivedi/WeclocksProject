@@ -3,12 +3,13 @@
     const loginRoute = require('./Routes/loginRoute');
     const expenceRoute = require('./Routes/expenceRoute')
     const committeeRoutes = require("./Routes/committeeRoute");
+    const meetingRoute = require("./Routes/meetingRoute")
 
     const app = express();
 
     // CORS configuration
     app.use(cors({
-        origin: 'http://localhost:5173',
+        origin: 'http://localhost:5174',
         methods: ['GET', 'POST', 'PUT', 'DELETE'],
         allowedHeaders: ['Content-Type', 'Authorization']
     }));
@@ -19,6 +20,7 @@
     app.use('/api', loginRoute);
     app.use('/api', expenceRoute);
     app.use('/api/member', committeeRoutes);
+    app.use('/api/meeting', meetingRoute);
 
 
     app.get('/', (req, res) => {

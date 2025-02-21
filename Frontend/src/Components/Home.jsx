@@ -26,7 +26,7 @@ const Home = () => {
         </div>
 
         {/* Sidebar Links */}
-        <div className="flex flex-col space-y-4 flex-1 px-3 pt-4">
+        <div className="flex flex-col space-y-4 flex-1 px-3 pt-4 realfont">
           <NavLink 
             to="/home/dashboard" 
             label="Dashboard" 

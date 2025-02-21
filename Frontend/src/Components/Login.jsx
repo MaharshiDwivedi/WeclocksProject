@@ -18,20 +18,21 @@ const LoginForm = () => {
         username,
         password,
       });
+  
+      const data = res.data;
+      if (data.token) {
 
-      console.log("Server Response:", res.data); // Debugging
-
-      if (res.data.token) {
-        // ✅ Save token to localStorage (or sessionStorage)
-        localStorage.setItem("token", res.data.token);
-        
-        // ✅ Redirect user after successful login
+        // ✅ Store values properly
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user_id", data.user_id);
+        localStorage.setItem("school_id", data.school_id);
+        localStorage.setItem("username", data.user.username); 
         navigate("/home");
       } else {
-        setMessage(res.data.message || "Login failed");
+        setMessage(data.message || "Login failed");
       }
     } catch (err) {
-      console.log("Login request failed:", err);
+      console.error("Login request failed:", err);
       setMessage(err.response?.data?.error || "Login failed");
     }
   };
