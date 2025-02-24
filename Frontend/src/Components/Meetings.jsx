@@ -176,55 +176,55 @@ const Meetings = () => {
       return;
     }
   
-    // Ensure member_id is a comma-separated string of member IDs
-    const memberIds = selectedMembers.map((m) => m.id).join(",");
-  
-    const meetingData = {
-      meeting_date: date,
-      image_url: photoName,
-      latitude: latitude || "0.0000",
-      longitude: longitude || "0.0000",
-      address: address || "Unknown",
-      member_id: memberIds, // Ensure member_id is included
-      selected_member_length: selectedMembers.length, // Update member length
-    };
+    // Create FormData for file upload
+    const formData = new FormData();
+    formData.append("meeting_date", date);
+    formData.append("latitude", latitude || "0.0000");
+    formData.append("longitude", longitude || "0.0000");
+    formData.append("address", address || "Unknown");
+    formData.append("member_id", selectedMembers.map((m) => m.id).join(","));
+    formData.append("selected_member_length", selectedMembers.length);
+    
+    // Add file if available
+    if (document.getElementById("fileInput")?.files[0]) {
+      formData.append("image", document.getElementById("fileInput").files[0]);
+    } else if (photoName) {
+      formData.append("image_url", photoName);
+    }
+    
+    // Add additional fields for new meetings
+    if (!isEditing) {
+      formData.append("meeting_number", meetingNumber);
+      formData.append("school_id", localStorage.getItem("school_id") || "");
+      formData.append("user_id", localStorage.getItem("user_id") || "");
+      formData.append("created_at", new Date().toISOString().replace("T", " ").split(".")[0]);
+      formData.append("updated_at", "0000-00-00 00:00:00");
+    }
   
     try {
       let response;
-  
+      
       if (isEditing) {
-        // Update the meeting with the edited data
+        // Update existing meeting
         response = await axios.put(
           `http://localhost:5000/api/meeting/${editingMeetingId}`,
-          meetingData,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
-        console.log("Meeting updated successfully:", response.data);
       } else {
-        // Create a new meeting
-        meetingData.meeting_number = meetingNumber;
-        meetingData.school_id = localStorage.getItem("school_id") || "";
-        meetingData.user_id = localStorage.getItem("user_id") || "";
-        meetingData.created_at = new Date()
-          .toISOString()
-          .replace("T", " ")
-          .split(".")[0];
-        meetingData.updated_at = "0000-00-00 00:00:00"; // Default value for new meetings
-  
+        // Create new meeting
         response = await axios.post(
           "http://localhost:5000/api/meeting",
-          meetingData,
-          {
-            headers: { "Content-Type": "application/json" },
-          }
+          formData,
+          { headers: { "Content-Type": "multipart/form-data" } }
         );
-        console.log("Meeting created successfully:", response.data);
+        
+        // Increment meeting number after successful creation
         setMeetingNumber(meetingNumber + 1);
       }
   
-      await fetchMeetings(); // Refresh the meeting list
+      console.log("Meeting saved successfully:", response.data);
+      await fetchMeetings(); // Refresh meetings
       resetForm();
       setIsEditing(false);
       setEditingMeetingId(null);
