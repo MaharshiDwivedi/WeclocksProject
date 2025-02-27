@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     // Create a unique filename to avoid overwriting
-    const uniqueName = `${Date.now()}-${file.originalname}`;
+    const uniqueName = `${file.originalname}`;
     cb(null, uniqueName);
   }
 });

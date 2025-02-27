@@ -5,21 +5,22 @@ import Bg from './Assets/download.jpg';
 import Logo from './Assets/logo.jpeg';
 import LoginForm from './Components/Login';
 import Home from './Components/Home';
-
+import AOHome from './Components/AOHome'; // ✅ Import AOHOME Component
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<LoginPage />} /> {/* Login Page */}
-        <Route path="/home/*" element={<Home />} /> {/* Home Page (Meetings & Dashboard) */}
+        <Route path="/home/*" element={<Home />} /> {/* Home Page */}
+        <Route path="/aohome/*" element={<AOHome />} />{/* ✅ AOHOME Page */}
         <Route path="*" element={<Navigate to="/" />} /> {/* Redirect unknown paths */}
       </Routes>
     </Router>
   );
 }
 
-// Login Page UI (Same as before)
+// ✅ Modified Login Page UI (Now Handles Redirect)
 const LoginPage = () => {
   return (
     <div className="flex h-screen">

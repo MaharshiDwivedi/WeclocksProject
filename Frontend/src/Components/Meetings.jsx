@@ -7,7 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 const Meetings = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [selectedMembers, setSelectedMembers] = useState([]); 
+  const [selectedMembers, setSelectedMembers] = useState([]);
   const [date, setDate] = useState("");
   const [selectedDate, setSelectedDate] = useState(null);
   const [address, setAddress] = useState("");
@@ -20,7 +20,7 @@ const Meetings = () => {
   const [committeeMembers, setCommitteeMembers] = useState([]);
   const [meetingNumber, setMeetingNumber] = useState(1);
   const [editingMeetingId, setEditingMeetingId] = useState(null);
-  
+
   // Camera functionality
   const [showCamera, setShowCamera] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
@@ -51,7 +51,7 @@ const Meetings = () => {
   const handleDateChange = (date) => {
     setSelectedDate(date);
     // Convert the Date object to ISO string format for the backend
-    setDate(date.toISOString().split('T')[0]);
+    setDate(date.toISOString().split("T")[0]);
   };
 
   const fetchCommitteeMembers = async () => {
@@ -104,13 +104,27 @@ const Meetings = () => {
     setLongitude(meeting.longitude);
     setAddress(meeting.address);
     setPhotoName(meeting.image_url);
-    
+
+// Set the photo URL to the full path of the image in the uploads folder
+if (meeting.image_url) {
+  if (meeting.image_url === "default.jpg") {
+    setPhoto(null); // Reset photo for default image
+  } else if (meeting.image_url.startsWith('http')) {
+    setPhoto(meeting.image_url); // Use as-is if it's already a full URL
+  } else {
+    // Construct URL for images in the uploads folder
+    setPhoto(`http://localhost:5000/uploads/${meeting.image_url}`);
+  }
+} else {
+  setPhoto(null);
+}
+
     // Map member IDs to their corresponding member objects
     const selectedMemberObjects = committeeMembers.filter((member) =>
       meeting.members.includes(member.id.toString())
     );
     setSelectedMembers(selectedMemberObjects);
-  
+
     console.log("Editing meeting with members:", selectedMemberObjects); // Debug log
     setIsOpen(true);
   };
@@ -179,10 +193,10 @@ const Meetings = () => {
   // Camera functions
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
@@ -193,32 +207,37 @@ const Meetings = () => {
       alert("Could not access camera. Please check permissions.");
     }
   };
-  
+
   const stopCamera = () => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
       setCameraActive(false);
     }
   };
-  
+
   const capturePhoto = () => {
     if (videoRef.current && cameraActive) {
-      const canvas = document.createElement('canvas');
+      const canvas = document.createElement("canvas");
       canvas.width = videoRef.current.videoWidth;
       canvas.height = videoRef.current.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
+
+      const ctx = canvas.getContext("2d");
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-      
+
       // Convert to data URL with selected format
       const imageDataURL = canvas.toDataURL(`image/${fileExtension}`);
       setPhoto(imageDataURL);
-      
+
       // Create a unique filename based on date and meeting
-      const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
-      setPhotoName(`meeting_${meetingNumber || 'new'}_${timestamp}.${fileExtension}`);
-      
+      const timestamp = new Date()
+        .toISOString()
+        .replace(/:/g, "-")
+        .split(".")[0];
+      setPhotoName(
+        `meeting_${meetingNumber || "new"}_${timestamp}.${fileExtension}`
+      );
+
       // Stop camera after capturing
       stopCamera();
       setShowCamera(false);
@@ -227,16 +246,16 @@ const Meetings = () => {
 
   // Convert base64 to file for form submission
   const dataURLtoFile = (dataurl, filename) => {
-    const arr = dataurl.split(',');
+    const arr = dataurl.split(",");
     const mime = arr[0].match(/:(.*?);/)[1];
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-    
+
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
-    
+
     return new File([u8arr], filename, { type: mime });
   };
 
@@ -266,7 +285,7 @@ const Meetings = () => {
       alert("Please fill in all required fields");
       return;
     }
-  
+
     // Create FormData for file upload
     const formData = new FormData();
     formData.append("meeting_date", date);
@@ -275,30 +294,33 @@ const Meetings = () => {
     formData.append("address", address || "Unknown");
     formData.append("member_id", selectedMembers.map((m) => m.id).join(","));
     formData.append("selected_member_length", selectedMembers.length);
-    
+
     // Add file if available
     if (document.getElementById("fileInput")?.files[0]) {
       formData.append("image", document.getElementById("fileInput").files[0]);
-    } else if (photo && photo.startsWith('data:image')) {
+    } else if (photo && photo.startsWith("data:image")) {
       // Convert base64 data URL to file and append
       const imageFile = dataURLtoFile(photo, photoName);
       formData.append("image", imageFile);
     } else if (photoName) {
       formData.append("image_url", photoName);
     }
-    
+
     // Add additional fields for new meetings
     if (!isEditing) {
       formData.append("meeting_number", meetingNumber);
       formData.append("school_id", localStorage.getItem("school_id") || "");
       formData.append("user_id", localStorage.getItem("user_id") || "");
-      formData.append("created_at", new Date().toISOString().replace("T", " ").split(".")[0]);
+      formData.append(
+        "created_at",
+        new Date().toISOString().replace("T", " ").split(".")[0]
+      );
       formData.append("updated_at", "0000-00-00 00:00:00");
     }
-  
+
     try {
       let response;
-      
+
       if (isEditing) {
         // Update existing meeting
         response = await axios.put(
@@ -313,11 +335,11 @@ const Meetings = () => {
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
-        
+
         // Increment meeting number after successful creation
         setMeetingNumber(meetingNumber + 1);
       }
-  
+
       console.log("Meeting saved successfully:", response.data);
       await fetchMeetings(); // Refresh meetings
       resetForm();
@@ -524,18 +546,36 @@ const Meetings = () => {
                   onChange={handlePhotoChange}
                   className="hidden"
                 />
-                
+
+                {/* Display captured or selected photo */}
+                {photo && !showCamera && (
+                  <div className="mt-2 border rounded-md overflow-hidden">
+                    <img src={photo} alt="Selected" className="w-full" />
+                    <div className="p-2 bg-gray-100 flex justify-between items-center">
+                      <input
+                        type="text"
+                        value={photoName.split(".")[0]}
+                        onChange={(e) =>
+                          setPhotoName(`${e.target.value}.${fileExtension}`)
+                        }
+                        className="flex-1 px-2 py-1 border rounded text-sm"
+                        placeholder="Enter filename"
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Enhanced Camera UI */}
                 {showCamera && (
                   <div className="mt-4 border rounded-md overflow-hidden">
                     <div className="relative w-full bg-black aspect-video">
-                      <video 
-                        ref={videoRef} 
-                        autoPlay 
-                        playsInline 
-                        className="w-full h-full object-cover" 
+                      <video
+                        ref={videoRef}
+                        autoPlay
+                        playsInline
+                        className="w-full h-full object-cover"
                       />
-                      
+
                       <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex justify-between items-center">
                         <select
                           value={fileExtension}
@@ -546,14 +586,14 @@ const Meetings = () => {
                           <option value="png">PNG</option>
                           <option value="webp">WebP</option>
                         </select>
-                        
+
                         <button
                           onClick={capturePhoto}
                           className="bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center"
                         >
                           <div className="w-10 h-10 rounded-full border-2 border-white"></div>
                         </button>
-                        
+
                         <button
                           onClick={toggleCamera}
                           className="px-2 py-1 bg-gray-700 text-white rounded"
@@ -561,23 +601,6 @@ const Meetings = () => {
                           Cancel
                         </button>
                       </div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Display captured or selected photo */}
-                {photo && !showCamera && (
-                  <div className="mt-2 border rounded-md overflow-hidden">
-                    <img src={photo} alt="Selected" className="w-full" />
-                    <div className="p-2 bg-gray-100 flex justify-between items-center">
-                      <input 
-                        type="text"
-                        value={photoName.split('.')[0]}
-                        onChange={(e) => setPhotoName(`${e.target.value}.${fileExtension}`)}
-                        className="flex-1 px-2 py-1 border rounded text-sm"
-                        placeholder="Enter filename"
-                      />
-                      <span className="text-gray-500 ml-1">.{fileExtension}</span>
                     </div>
                   </div>
                 )}

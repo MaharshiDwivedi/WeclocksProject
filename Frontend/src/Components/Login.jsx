@@ -21,16 +21,22 @@ const LoginForm = () => {
   
       const data = res.data;
       if (data.token) {
-
         // ✅ Store values properly
         localStorage.setItem("token", data.token);
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("school_id", data.school_id);
-        localStorage.setItem("category_id", data.category_id)
+        localStorage.setItem("category_id", data.category_id);
         localStorage.setItem("username", data.user.username);
-        console.log(data.user.username)
-        navigate("/home");
-
+  
+        console.log("Logged in as:", data.user.username);
+        console.log("Category ID:", data.category_id);
+  
+        // ✅ Redirect based on category_id
+        if (data.category_id === 37) {
+          navigate("/aohome"); // Redirect to AOHOME
+        } else {
+          navigate("/home"); // Redirect to Home
+        }
       } else {
         setMessage(data.message || "Login failed");
       }
@@ -39,6 +45,7 @@ const LoginForm = () => {
       setMessage(err.response?.data?.error || "Login failed");
     }
   };
+  
 
   return (
     <div className="bg-white p-8 w-96 rounded-lg">

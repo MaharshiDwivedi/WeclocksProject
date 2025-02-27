@@ -4,6 +4,8 @@ const loginRoute = require('./Routes/loginRoute');
 const expenceRoute = require('./Routes/expenceRoute')
 const committeeRoutes = require("./Routes/committeeRoute");
 const meetingRoute = require("./Routes/meetingRoute")
+const documentRoute = require("./Routes/documentRoute");
+const path = require("path");
 
 const app = express();
 
@@ -21,6 +23,9 @@ app.use('/api', loginRoute);
 app.use('/api', expenceRoute);
 app.use('/api/member', committeeRoutes);
 app.use('/api/meeting', meetingRoute);
+app.use('/api/documents', documentRoute);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 
 app.get('/', (req, res) => {

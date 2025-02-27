@@ -1,7 +1,6 @@
 const connection = require("../Config/Connection");
 const path = require("path");
 
-
 // Fetch all meetings
 async function getAllMeetings() {
   try {
@@ -39,6 +38,41 @@ async function getAllMeetings() {
   }
 }
 
+// Get the next meeting number for a specific school
+async function getNextMeetingNumberForSchool(schoolId) {
+  try {
+    // Find the highest meeting number for this school
+    const [rows] = await connection.execute(
+      `SELECT meeting_record FROM tbl_new_smc 
+       WHERE status='Active' AND meeting_record LIKE ?`,
+      [`%${schoolId}|%`] // Look for records with this school_id
+    );
+
+    // Default to 1 if no meetings found
+    if (rows.length === 0) return 1;
+
+    // Extract meeting numbers for this school and find the maximum
+    let maxMeetingNumber = 0;
+    
+    for (const row of rows) {
+      const parts = row.meeting_record.split("|");
+      // Check if parts[1] (school_id) matches the requested schoolId
+      if (parts[1] == schoolId) {
+        const meetingNumber = parseInt(parts[0], 10);
+        if (!isNaN(meetingNumber) && meetingNumber > maxMeetingNumber) {
+          maxMeetingNumber = meetingNumber;
+        }
+      }
+    }
+    
+    // Return the next meeting number
+    return maxMeetingNumber + 1;
+  } catch (error) {
+    console.error("Error getting next meeting number:", error.message);
+    return 1; // Default to 1 if there's an error
+  }
+}
+
 // Add a new meeting 
 async function addMeeting(meeting) {
   try {
@@ -54,6 +88,9 @@ async function addMeeting(meeting) {
       created_at = new Date().toISOString().replace("T", " ").split(".")[0],
       member_id = "",
     } = meeting;
+
+    // Get next meeting number for this school
+    const meetingNumber = await getNextMeetingNumberForSchool(school_id);
 
     // ✅ Extract only filename + extension
     const getFileNameWithExtension = (filePath) => {
@@ -75,9 +112,9 @@ async function addMeeting(meeting) {
     // ✅ Ensure `updated_at` is initially "0000-00-00 00:00:00"
     const updated_at = "0000-00-00 00:00:00";
 
-    // Create meeting record with `meeting_id` first
+    // Create meeting record with school-specific meeting number first
     const newMeetingRecord = [
-      meetingId, // ✅ Ensure meeting_id is first
+      meetingNumber, // ✅ Use school-specific meeting number
       school_id ?? null,
       user_id ?? null,
       meeting_date ?? null,
@@ -97,20 +134,21 @@ async function addMeeting(meeting) {
       [newMeetingRecord, meetingId]
     );
 
-    return { meeting_id: meetingId, message: "Meeting added successfully" };
+    return { 
+      meeting_id: meetingId, 
+      meeting_number: meetingNumber,
+      message: "Meeting added successfully" 
+    };
   } catch (error) {
     console.error("Error in addMeeting:", error.message);
     return { error: "Failed to add meeting. Please check your input and try again." };
   }
 }
 
-
 // Update a meeting
 async function updateMeeting(meeting_id, updatedData) {
   try {
-    console.log("Updating meeting with ID:", meeting_id); // Debugging log
-    console.log("Updated data:", updatedData); // Debugging log
-
+    
     const [rows] = await connection.execute(
       "SELECT meeting_record FROM tbl_new_smc WHERE meeting_id = ? AND status='Active'",
       [meeting_id]
@@ -120,7 +158,8 @@ async function updateMeeting(meeting_id, updatedData) {
 
     let parts = rows[0].meeting_record.split("|");
 
-    // Update the relevant fields
+    // Update the relevant fields, but don't change the meeting number (parts[0])
+    // and don't change the school_id (parts[1]) to maintain ownership
     parts[3] = updatedData.meeting_date || parts[3]; // Update meeting date
     parts[4] = updatedData.selected_member_length || parts[4]; // Update member length
     parts[5] = updatedData.image_url || parts[5]; // Update image URL
@@ -177,11 +216,9 @@ const deleteMeeting = async (meeting_id) => {
   }
 };
 
-
-const getMeetingById =  async (meeting_id) => { 
+const getMeetingById = async (meeting_id) => { 
   const [rows] = await connection.query("SELECT * FROM tbl_new_smc WHERE meeting_id = ?", [meeting_id]);
   return rows.length > 0 ? rows[0] : null;
 };
 
-
-module.exports = { getAllMeetings, addMeeting, updateMeeting, deleteMeeting, getMeetingById};
+module.exports = { getAllMeetings, addMeeting, updateMeeting, deleteMeeting, getMeetingById };
