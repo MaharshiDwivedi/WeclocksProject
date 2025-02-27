@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, X, Camera, Upload } from "lucide-react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
@@ -20,10 +20,24 @@ const Meetings = () => {
   const [committeeMembers, setCommitteeMembers] = useState([]);
   const [meetingNumber, setMeetingNumber] = useState(1);
   const [editingMeetingId, setEditingMeetingId] = useState(null);
+  
+  // Camera functionality
+  const [showCamera, setShowCamera] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+  const [fileExtension, setFileExtension] = useState("jpeg");
 
   useEffect(() => {
     fetchCommitteeMembers();
     fetchMeetings();
+  }, []);
+
+  // Clean up camera stream when component unmounts
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
   }, []);
 
   // Convert string date to Date object for the DatePicker when editing
@@ -162,11 +176,88 @@ const Meetings = () => {
     }
   };
 
+  // Camera functions
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: true 
+      });
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        streamRef.current = stream;
+        setCameraActive(true);
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      alert("Could not access camera. Please check permissions.");
+    }
+  };
+  
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+      setCameraActive(false);
+    }
+  };
+  
+  const capturePhoto = () => {
+    if (videoRef.current && cameraActive) {
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      
+      // Convert to data URL with selected format
+      const imageDataURL = canvas.toDataURL(`image/${fileExtension}`);
+      setPhoto(imageDataURL);
+      
+      // Create a unique filename based on date and meeting
+      const timestamp = new Date().toISOString().replace(/:/g, '-').split('.')[0];
+      setPhotoName(`meeting_${meetingNumber || 'new'}_${timestamp}.${fileExtension}`);
+      
+      // Stop camera after capturing
+      stopCamera();
+      setShowCamera(false);
+    }
+  };
+
+  // Convert base64 to file for form submission
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new File([u8arr], filename, { type: mime });
+  };
+
   const handlePhotoChange = (event) => {
     const file = event.target.files[0];
     if (file) {
-      setPhoto(URL.createObjectURL(file));
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setPhoto(e.target.result);
+      };
+      reader.readAsDataURL(file);
       setPhotoName(file.name);
+    }
+  };
+
+  const toggleCamera = () => {
+    setShowCamera(!showCamera);
+    if (!showCamera) {
+      startCamera();
+    } else {
+      stopCamera();
     }
   };
 
@@ -188,6 +279,10 @@ const Meetings = () => {
     // Add file if available
     if (document.getElementById("fileInput")?.files[0]) {
       formData.append("image", document.getElementById("fileInput").files[0]);
+    } else if (photo && photo.startsWith('data:image')) {
+      // Convert base64 data URL to file and append
+      const imageFile = dataURLtoFile(photo, photoName);
+      formData.append("image", imageFile);
     } else if (photoName) {
       formData.append("image_url", photoName);
     }
@@ -244,6 +339,8 @@ const Meetings = () => {
     setAddress("");
     setPhoto(null);
     setPhotoName("default.jpg");
+    setShowCamera(false);
+    stopCamera();
   };
 
   const handleDeleteMeeting = async (meetingId, event) => {
@@ -413,9 +510,7 @@ const Meetings = () => {
                     Upload Photo
                   </button>
                   <button
-                    onClick={() =>
-                      document.getElementById("cameraInput").click()
-                    }
+                    onClick={toggleCamera}
                     className="flex-1 flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
                   >
                     <Camera className="w-5 h-5" />
@@ -429,20 +524,61 @@ const Meetings = () => {
                   onChange={handlePhotoChange}
                   className="hidden"
                 />
-                <input
-                  type="file"
-                  id="cameraInput"
-                  accept="image/*"
-                  capture="environment"
-                  onChange={handlePhotoChange}
-                  className="hidden"
-                />
-                {photo && (
+                
+                {/* Enhanced Camera UI */}
+                {showCamera && (
+                  <div className="mt-4 border rounded-md overflow-hidden">
+                    <div className="relative w-full bg-black aspect-video">
+                      <video 
+                        ref={videoRef} 
+                        autoPlay 
+                        playsInline 
+                        className="w-full h-full object-cover" 
+                      />
+                      
+                      <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex justify-between items-center">
+                        <select
+                          value={fileExtension}
+                          onChange={(e) => setFileExtension(e.target.value)}
+                          className="px-2 py-1 text-sm rounded bg-gray-800 text-white border border-gray-700"
+                        >
+                          <option value="jpeg">JPEG</option>
+                          <option value="png">PNG</option>
+                          <option value="webp">WebP</option>
+                        </select>
+                        
+                        <button
+                          onClick={capturePhoto}
+                          className="bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center"
+                        >
+                          <div className="w-10 h-10 rounded-full border-2 border-white"></div>
+                        </button>
+                        
+                        <button
+                          onClick={toggleCamera}
+                          className="px-2 py-1 bg-gray-700 text-white rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Display captured or selected photo */}
+                {photo && !showCamera && (
                   <div className="mt-2 border rounded-md overflow-hidden">
                     <img src={photo} alt="Selected" className="w-full" />
-                    <p className="text-center text-sm text-gray-600">
-                      {photoName}
-                    </p>
+                    <div className="p-2 bg-gray-100 flex justify-between items-center">
+                      <input 
+                        type="text"
+                        value={photoName.split('.')[0]}
+                        onChange={(e) => setPhotoName(`${e.target.value}.${fileExtension}`)}
+                        className="flex-1 px-2 py-1 border rounded text-sm"
+                        placeholder="Enter filename"
+                      />
+                      <span className="text-gray-500 ml-1">.{fileExtension}</span>
+                    </div>
                   </div>
                 )}
               </div>

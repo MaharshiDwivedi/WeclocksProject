@@ -26,8 +26,11 @@ const LoginForm = () => {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("school_id", data.school_id);
-        localStorage.setItem("username", data.user.username); 
+        localStorage.setItem("category_id", data.category_id)
+        localStorage.setItem("username", data.user.username);
+        console.log(data.user.username)
         navigate("/home");
+
       } else {
         setMessage(data.message || "Login failed");
       }

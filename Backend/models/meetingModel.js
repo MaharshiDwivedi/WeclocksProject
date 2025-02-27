@@ -178,4 +178,10 @@ const deleteMeeting = async (meeting_id) => {
 };
 
 
-module.exports = { getAllMeetings, addMeeting, updateMeeting, deleteMeeting };
+const getMeetingById =  async (meeting_id) => { 
+  const [rows] = await connection.query("SELECT * FROM tbl_new_smc WHERE meeting_id = ?", [meeting_id]);
+  return rows.length > 0 ? rows[0] : null;
+};
+
+
+module.exports = { getAllMeetings, addMeeting, updateMeeting, deleteMeeting, getMeetingById};

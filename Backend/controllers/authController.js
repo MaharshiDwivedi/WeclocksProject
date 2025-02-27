@@ -59,6 +59,7 @@ exports.login = async (req, res) => {
                 token,
                 user_id: user.user_id, 
                 school_id: user.school_id,
+                category_id : user.category_id,
                 user: {
                     username: user.username,
                    

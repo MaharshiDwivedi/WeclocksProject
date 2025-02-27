@@ -8,11 +8,12 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = path.join(__dirname, "../uploads");
     if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true }); // Create folder if not exists
+      fs.mkdirSync(uploadPath, { recursive: true }); // Create folder if it does not exist
     }
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
+    // Create a unique filename to avoid overwriting
     const uniqueName = `${Date.now()}-${file.originalname}`;
     cb(null, uniqueName);
   }
@@ -21,11 +22,24 @@ const storage = multer.diskStorage({
 // Middleware for handling image uploads
 const upload = multer({ storage }).single("image");
 
+// Function to delete an image file
+const deleteImage = (imageName) => {
+  if (imageName && imageName !== "default.jpg") {
+    const imagePath = path.join(__dirname, "../uploads", imageName);
+    if (fs.existsSync(imagePath)) {
+      console.log(`Deleting image: ${imagePath}`);
+      fs.unlinkSync(imagePath); // Delete file
+    }
+  }
+};
+
+// Get all meetings
 async function getMeetings(req, res) {
   try {
     const meetings = await Meeting.getAllMeetings();
     res.json(meetings);
   } catch (error) {
+    console.error("Error fetching meetings:", error);
     res.status(500).json({ error: "Failed to fetch meetings" });
   }
 }
@@ -33,49 +47,98 @@ async function getMeetings(req, res) {
 // Create a new meeting with image upload
 async function createMeeting(req, res) {
   upload(req, res, async (err) => {
-    if (err) return res.status(500).json({ error: "Image upload failed" });
+    if (err) {
+      console.error("Image upload error:", err);
+      return res.status(500).json({ error: "Image upload failed" });
+    }
+
     try {
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : "default.jpg"; // Store only the image path
+      console.log("Uploaded File:", req.file);
+      const imageUrl = req.file ? req.file.filename : "default.jpg"; // Store only the image filename
       const meetingData = {
         ...req.body,
         image_url: imageUrl,
       };
+
       const result = await Meeting.addMeeting(meetingData);
       res.status(201).json({ message: "Meeting added successfully", result });
     } catch (error) {
+      console.error("Error adding meeting:", error);
       res.status(500).json({ error: "Failed to add meeting" });
     }
   });
 }
 
-// Update meeting with image
+// Update meeting with image handling
 async function updateMeeting(req, res) {
   upload(req, res, async (err) => {
-    if (err) return res.status(500).json({ error: "Image upload failed" });
+    if (err) {
+      console.error("Image upload error:", err);
+      return res.status(500).json({ error: "Image upload failed" });
+    }
+
     try {
-      const imageUrl = req.file ? `/uploads/${req.file.filename}` : req.body.image_url;
-      const updatedData = {
-        ...req.body,
-        image_url: imageUrl,
-      };
-      const result = await Meeting.updateMeeting(req.params.id, updatedData);
-      if (result.error) return res.status(404).json(result);
+      // 1. Get the meeting record
+      const meetingRecord = await Meeting.getMeetingById(req.params.id);
+      if (!meetingRecord) {
+        console.error("Meeting not found");
+        return res.status(404).json({ error: "Meeting not found" });
+      }
+
+      // 2. Extract the current image from the meeting record string
+      const parts = meetingRecord.meeting_record.split("|");
+      const currentImageName = parts[5]; // Image is at index 5 in the pipe-separated string
       
+      // 3. Set the image URL (either keep existing or use new uploaded image)
+      let imageUrl = currentImageName; // Keep the existing image by default
+      
+      // 4. If a new image is uploaded, delete the old one and use the new one
+      if (req.file) {
+        console.log("New image uploaded:", req.file.filename);
+        // Only delete the old image if it's not the default image
+        deleteImage(currentImageName);
+        imageUrl = req.file.filename;
+      }
+
+      // 5. Update the meeting with the new data
+      const updatedData = { 
+        ...req.body, 
+        image_url: imageUrl 
+      };
+      
+      const result = await Meeting.updateMeeting(req.params.id, updatedData);
+
       res.json({ message: "Meeting updated successfully", result });
     } catch (error) {
+      console.error("Error updating meeting:", error);
       res.status(500).json({ error: "Failed to update meeting" });
     }
   });
 }
 
+// Delete a meeting along with its image
 async function deleteMeeting(req, res) {
   try {
-    const result = await Meeting.deleteMeeting(req.params.id);
-    if (result.affectedRows === 0) {
+    const meetingRecord = await Meeting.getMeetingById(req.params.id);
+    if (!meetingRecord) {
+      console.error("Meeting not found");
       return res.status(404).json({ error: "Meeting not found" });
     }
+
+    // Extract the image filename from the meeting record
+    const parts = meetingRecord.meeting_record.split("|");
+    const imageFilename = parts[5]; // Image is at index 5
+    
+    console.log("Deleting Meeting Data:", meetingRecord);
+    // Delete the image file
+    deleteImage(imageFilename);
+    
+    // Delete the meeting record
+    const result = await Meeting.deleteMeeting(req.params.id);
+
     res.json({ message: "Meeting deleted successfully", result });
   } catch (error) {
+    console.error("Error deleting meeting:", error);
     res.status(500).json({ error: "Failed to delete meeting" });
   }
 }
