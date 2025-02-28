@@ -5,15 +5,18 @@ async function addDocument(documentData) {
   try {
     console.log("Adding document:", documentData); // Debugging log
 
-    const { document_title, year, image_url, status = "Active" } = documentData;
+    const { document_title, year, image_url, pdf_url, status = "Active" } = documentData;
 
     // Create the document_record string
-    const document_record = [document_title, year, image_url].join("|");
+    const document_record = [document_title, year, image_url, pdf_url].join("|");
 
     const [result] = await connection.execute(
       "INSERT INTO tbl_documents (document_record, status, ins_date_time, update_date_time) VALUES (?, ?, NOW(), NOW())",
       [document_record, status]
+      
     );
+
+    console.log("Document Data:", documentData);
 
     return result;
   } catch (error) {
@@ -23,6 +26,24 @@ async function addDocument(documentData) {
 }
 
 
+// Delete a document
+async function deleteDocument(documentId) {
+  try {
+    const [result] = await connection.execute(
+      "DELETE FROM tbl_documents WHERE document_id = ?",
+      [documentId]
+    );
+
+    if (result.affectedRows === 0) {
+      return { error: "Document not found or already deleted" };
+    }
+
+    return { success: true, message: "Document deleted successfully" };
+  } catch (error) {
+    console.error("Error in deleteDocument:", error.message);
+    return { error: "Failed to delete document. Please try again later." };
+  }
+}
 
 
 
@@ -43,6 +64,7 @@ async function getAllDocuments() {
         document_title: parts[0] || null,
         year: parts[1] || null,
         image_url: parts[2] || null,
+        pdf_url: parts[3] || null, // Include pdf_url in the response
         status: row.status,
       };
     });
@@ -52,4 +74,4 @@ async function getAllDocuments() {
   }
 }
 
-module.exports = { addDocument, getAllDocuments };
+module.exports = { addDocument, getAllDocuments, deleteDocument };

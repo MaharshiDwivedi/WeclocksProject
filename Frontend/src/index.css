@@ -9,6 +9,25 @@
 }
 
 
+
+.realfont2{
+
+font-family: "Poppins", serif;
+font-weight: 700;
+font-style:normal;
+
+}
+
+
+
+
+
+
+
+
+
+
+
 /* Add this in a separate CSS file that you import in your app or in your global styles */
 
 /* Calendar container */

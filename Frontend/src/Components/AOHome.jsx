@@ -31,7 +31,7 @@ const AOHome = () => {
         <div className="flex flex-col space-y-4 flex-1 px-3 pt-4 realfont">
           <NavLink 
             to="/aohome/aodashboard" 
-            label="AODashboard" 
+            label="Dashboard" 
             path={location.pathname} 
             icon={<ChartColumnIncreasing size={20} />} 
           />

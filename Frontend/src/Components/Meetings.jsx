@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, X, Camera, Upload } from "lucide-react";
+import { Plus, X, Camera, Upload, CalendarPlus } from "lucide-react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -387,17 +387,17 @@ if (meeting.image_url) {
 
   return (
     <div className="min-h-screen p-6 space-y-6">
-      <h2 className="text-4xl font-bold text-center text-blue-950">
+      <h2 className="text-4xl font-bold text-center text-blue-950 realfont2">
         SMC Meetings
       </h2>
 
       <div className="flex justify-start">
         <button
           onClick={toggleModal}
-          className="flex items-center gap-2 bg-blue-950 text-white px-4 py-2 rounded-md hover:bg-blue-900 transition-colors"
+          className="flex items-center gap-2 bg-blue-950 text-white px-2 py-2 rounded-md hover:bg-blue-900 transition-colors"
         >
-          <Plus className="w-5 h-5" />
-          New Meeting
+          <CalendarPlus className="w-9 h-9" />
+        
         </button>
       </div>
 
