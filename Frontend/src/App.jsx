@@ -6,6 +6,9 @@ import Logo from './Assets/logo.jpeg';
 import LoginForm from './Components/Login';
 import Home from './Components/Home';
 import AOHome from './Components/AOHome'; // ✅ Import AOHOME Component
+import Tharav from './Components/Tharav';
+
+
 
 function App() {
   return (
@@ -14,7 +17,8 @@ function App() {
         <Route path="/" element={<LoginPage />} /> {/* Login Page */}
         <Route path="/home/*" element={<Home />} /> {/* Home Page */}
         <Route path="/aohome/*" element={<AOHome />} />{/* ✅ AOHOME Page */}
-        <Route path="*" element={<Navigate to="/" />} /> {/* Redirect unknown paths */}
+        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/home/meeting/Tharav" element={<Tharav />} />
       </Routes>
     </Router>
   );

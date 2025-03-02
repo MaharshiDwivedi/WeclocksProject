@@ -4,7 +4,13 @@ import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+import Tharav from "./Tharav";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+
+
 const Meetings = () => {
+
+  const navigate = useNavigate(); // Use the navigate function
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -620,11 +626,10 @@ if (meeting.image_url) {
       <div className="space-y-6 mt-[30px]">
         {meetings.map((meeting, index) => (
           <div
-            key={meeting.id || index}
+            key={meeting.no || index}
             className="relative flex items-center justify-between bg-white rounded-[20px] border-2 border-blue-950 p-2 cursor-pointer hover:shadow-md transition-shadow mb-9 w-2xl"
             onClick={() => {
-              window.location.href = `/home/meetings/tharav/${index}`;
-            }}
+              navigate(`/home/meetings/tharav/${index}`);            }}
           >
             <div className="flex items-center space-x-[90px]">
               <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">

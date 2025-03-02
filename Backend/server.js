@@ -1,10 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const loginRoute = require('./Routes/loginRoute');
-const expenceRoute = require('./Routes/expenceRoute')
+const expenceRoute = require('./Routes/expenceRoute');
 const committeeRoutes = require("./Routes/committeeRoute");
-const meetingRoute = require("./Routes/meetingRoute")
+const meetingRoute = require("./Routes/meetingRoute");
 const documentRoute = require("./Routes/documentRoute");
+const tharavRoutes = require("./Routes/tharavRoute");
+const purposeRoute = require("./Routes/purposeRoute");
+
 const path = require("path");
 
 const app = express();
@@ -24,9 +27,9 @@ app.use('/api', expenceRoute);
 app.use('/api/member', committeeRoutes);
 app.use('/api/meeting', meetingRoute);
 app.use('/api/documents', documentRoute);
+app.use('/api/tharav', tharavRoutes); 
+app.use('/api/purpose', purposeRoute);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-
 
 app.get('/', (req, res) => {
     res.send("Server is running");

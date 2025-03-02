@@ -22,7 +22,7 @@ const Home = () => {
         
         {/* Sidebar Header - Full Width */}
         <div className="w-full  bg-blue-200 text-blue-950 text-4xl font-bold text-center py-4 realfont shadow-md">
-          ITDP-Nandurbar
+          ITDP Nandurbar
         </div>
 
         {/* Sidebar Links */}
@@ -47,17 +47,17 @@ const Home = () => {
           {/* Add Member Button */}
           <Link
             to="/home/newmember"
-            className={`flex items-center text-blue-950 bg-white px-3 py-2 rounded-md shadow-md transition 
+            className={`flex items-center text-blue-950 realfont2 bg-white px-3 py-2 rounded-md shadow-md transition 
               ${location.pathname === "/home/newmember" ? "border-2 border-blue-500" : "hover:bg-gray-100"}`}
           >
             <Plus className="mr-2" size={18} />
-            Comittee Members
+            Committee Members
           </Link>
 
           {/* Logout Button */}
           <button 
             onClick={handleLogout}
-            className="flex items-center justify-center mt-4 text-white bg-red-500 px-4 py-2 rounded-md transition hover:bg-red-600 w-full"
+            className="flex items-center  realfont2 mt-4 text-white bg-red-500 px-4 py-2 rounded-md transition hover:bg-red-600 w-full"
           >
             <LogOut className="mr-2" size={18} />
             Logout
