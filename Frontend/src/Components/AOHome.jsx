@@ -1,10 +1,12 @@
 import { Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Plus, LogOut, CalendarCheck, ChartColumnIncreasing, FileText } from "lucide-react";
+import { Plus, LogOut, CalendarCheck, ChartColumnIncreasing, FileText, IndianRupee, Check } from "lucide-react";
 
 
 
 import AODash from "./AODash";
 import Documents from "./Documents";
+import FundDist from "./FundDist";
+import SMCSchools from "./SMCSchools";
 
 
 const AOHome = () => {
@@ -43,6 +45,24 @@ const AOHome = () => {
             icon={<FileText size={20}/>} 
           />
 
+<NavLink 
+            to="/aohome/funddist" 
+            label="Fund Distribution" 
+            path={location.pathname} 
+            icon={<IndianRupee size={20} />}  
+          />
+
+<NavLink 
+            to="/aohome/smcschools" 
+            label="SMC Done Schools" 
+            path={location.pathname} 
+            icon={<Check size={20} />}  
+          />
+
+
+
+
+
        
         </div>
 
@@ -71,6 +91,11 @@ const AOHome = () => {
           <Route path="aodashboard" element={<AODash/>} />
 
           <Route path="documents" element={<Documents/>}/>
+
+          <Route path ="funddist" element ={<FundDist/>}/>
+
+          <Route path ="smcschools" element ={<SMCSchools/>}/>
+
         </Routes>
       </div>
     </div>

@@ -49,7 +49,7 @@ const LoginForm = () => {
 
   return (
     <div className="bg-white p-8 w-96 rounded-lg">
-      <h2 className="text-center text-2xl font-semibold mb-4">Login</h2>
+      <h2 className="text-center text-2xl font-semibold mb-4 realfont">Login</h2>
 
       <form onSubmit={handleLogin}>
         <div className="mb-4 relative">
@@ -61,7 +61,7 @@ const LoginForm = () => {
             placeholder="Username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-red-400 rounded-lg outline-none focus:border-red-600"
+            className="w-full pl-10 pr-4 py-2 border border-red-400 rounded-[4px] outline-none focus:border-red-600 realfont"
           />
         </div>
 
@@ -75,12 +75,12 @@ const LoginForm = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-12 py-2 border border-red-400 rounded-lg outline-none focus:border-red-600"
+            className="w-full pl-10 pr-12 py-2 border border-red-400 rounded-[4px] outline-none focus:border-red-600 realfont"
           />
 
           <button
             type="button"
-            className="absolute right-0 top-0 h-full bg-[#e3535c] px-3 rounded-r-lg flex items-center justify-center hover:bg-[#8fbd56e6] hover:cursor-pointer"
+            className="absolute right-0 top-0 h-full bg-[#e3535c] px-3 rounded-r-[4px] flex items-center justify-center hover:bg-[#8fbd56e6] hover:cursor-pointer"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? (
@@ -93,7 +93,7 @@ const LoginForm = () => {
 
         <button
           type="submit"
-          className="w-full bg-[#e3535c] text-white py-2 rounded-lg font-semibold hover:bg-[#8fbd56e6] hover:cursor-pointer"
+          className="w-full bg-[#e3535c] text-white py-2 rounded-[4px] font-semibold hover:bg-[#8fbd56e6] hover:cursor-pointer realfont "
         >
           Login
         </button>

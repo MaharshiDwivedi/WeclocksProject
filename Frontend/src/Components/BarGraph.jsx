@@ -11,34 +11,47 @@ import {
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
-const BarGraph = ({ width, height, actualExpense, expectedExpense }) => {
-  const [chartData, setChartData] = useState({
-    labels: ["Total Expense"],
-    datasets: [
-      { label: "Actual Expense", data: [actualExpense], backgroundColor: "green" },
-      { label: "Expected Expense", data: [expectedExpense], backgroundColor: "gray" },
-    ],
-  });
+const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
+  const [maxScale, setMaxScale] = useState(1000000); // Default 0L - 10L
+  const [stepSize, setStepSize] = useState(200000); // Default 2L step
+  const [unit, setUnit] = useState("L");
+
+  // ✅ Ensure values are valid
+  const actual = actualExpense || 0;
+  const expected = expectedExpense || 0;
 
   useEffect(() => {
-    setChartData({
-      labels: ["Total Expense"],
-      datasets: [
-        { label: "Actual Expense", data: [actualExpense], backgroundColor: "green" },
-        { label: "Expected Expense", data: [expectedExpense], backgroundColor: "gray" },
-      ],
-    });
-  }, [actualExpense, expectedExpense]);
+    console.log("📊 API Data:", { actual, expected });
 
-  // 🔹 Determine max value and unit (Lakhs or Thousands)
-  const highestValue = Math.max(actualExpense, expectedExpense) || 1; // Prevent 0
-  const isLakh = highestValue >= 1;  // If any value >= 1L, use Lakhs
-  const unit = isLakh ? "L" : "K";
-  const scaleFactor = isLakh ? 1 : 100;  // If using 'K', multiply by 100
+    const maxValue = Math.max(actual, expected);
 
-  // 🔹 Convert values based on scale
-  const convertedActual = actualExpense * scaleFactor;
-  const convertedExpected = expectedExpense * scaleFactor;
+    if (maxValue === 0) {
+      // Default scale when values are 0
+      setMaxScale(1000000);
+      setStepSize(200000);
+      setUnit("L");
+    } else if (maxValue < 10000) {
+      setMaxScale(10000);
+      setStepSize(2000);
+      setUnit("K");
+    } else if (maxValue <= 50000) {
+      setMaxScale(100000);
+      setStepSize(20000);
+      setUnit("K");
+    } else if (maxValue <= 1000000) {
+      setMaxScale(1000000);
+      setStepSize(200000);
+      setUnit("L");
+    } else if (maxValue <= 10000000) {
+      setMaxScale(10000000);
+      setStepSize(2000000);
+      setUnit("L");
+    } else {
+      setMaxScale(100000000);
+      setStepSize(20000000);
+      setUnit("L");
+    }
+  }, [actual, expected]);
 
   const options = {
     responsive: true,
@@ -46,27 +59,35 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense }) => {
     scales: {
       y: {
         beginAtZero: true,
-        max: 10, // Ensure at least 2
+        max: maxScale,
         ticks: {
-          stepSize: 2, // Always step in 2 units
-          callback: (value) => `${value} ${unit}`, // Display correct unit
+          stepSize: stepSize,
+          callback: (value) =>
+            unit === "K" ? `${value / 1000}K` : `${value / 100000}L`,
         },
       },
     },
   };
 
+  const data = {
+    labels: ["Total Expense"],
+    datasets: [
+      {
+        label: "Actual Expense",
+        data: [actual],
+        backgroundColor: "darkgreen",
+      },
+      {
+        label: "Expected Expense",
+        data: [expected],
+        backgroundColor: "gray",
+      },
+    ],
+  };
+
   return (
     <div style={{ width, height }}>
-      <Bar
-        data={{
-          labels: ["Total Expense"],
-          datasets: [
-            { label: "Actual Expense", data: [convertedActual], backgroundColor: "green" },
-            { label: "Expected Expense", data: [convertedExpected], backgroundColor: "gray" },
-          ],
-        }}
-        options={options}
-      />
+      <Bar data={data} options={options} />
     </div>
   );
 };
