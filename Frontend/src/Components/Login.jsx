@@ -1,41 +1,45 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { useNavigate } from "react-router-dom";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
+import Loader from './Loader'; // ✅ Correct import
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
+
+      // Artificial delay of 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 2000));
       const res = await axios.post("http://localhost:5000/api/login", {
         username,
         password,
       });
-  
+
       const data = res.data;
       if (data.token) {
-        // ✅ Store values properly
         localStorage.setItem("token", data.token);
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("school_id", data.school_id);
         localStorage.setItem("category_id", data.category_id);
         localStorage.setItem("username", data.user.username);
-  
+
         console.log("Logged in as:", data.user.username);
         console.log("Category ID:", data.category_id);
-  
-        // ✅ Redirect based on category_id
+
         if (data.category_id === 37) {
-          navigate("/aohome"); // Redirect to AOHOME
+          navigate("/aohome");
         } else {
-          navigate("/home"); // Redirect to Home
+          navigate("/home");
         }
       } else {
         setMessage(data.message || "Login failed");
@@ -43,9 +47,10 @@ const LoginForm = () => {
     } catch (err) {
       console.error("Login request failed:", err);
       setMessage(err.response?.data?.error || "Login failed");
+    } finally {
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="bg-white p-8 w-96 rounded-lg">
@@ -100,6 +105,7 @@ const LoginForm = () => {
       </form>
 
       {message && <p className="text-center mt-4 text-red-500">{message}</p>}
+      {loading && <Loader />} {/* Show Loader when loading is true */}
     </div>
   );
 };
