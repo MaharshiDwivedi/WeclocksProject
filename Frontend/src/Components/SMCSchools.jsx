@@ -32,7 +32,7 @@ const SMCSchools = () => {
 
   return (
     <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Schools with SMC Meetings</h2>
+      <h2 className="text-2xl font-bold mb-4 realfont2">Schools with SMC Meetings</h2>
       <div className="bg-white rounded-lg shadow-md p-4">
         <table className="min-w-full">
           <thead>

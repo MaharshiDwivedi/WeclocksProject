@@ -14,6 +14,45 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
+
+
+
+async function updateDocument(req, res) {
+  try {
+    const { documentId } = req.params;
+    const { document_title, year } = req.body;
+    const image_url = req.files.image ? req.files.image[0].filename : null;
+    const pdf_url = req.files.pdf ? req.files.pdf[0].filename : null;
+
+    const result = await Document.updateDocument(documentId, {
+      document_title,
+      year,
+      image_url,
+      pdf_url
+    });
+
+    if (result.error) {
+      return res.status(400).json(result);
+    }
+
+    res.json({ message: "Document updated successfully", result });
+  } catch (error) {
+    console.error("Error in updateDocument:", error.message);
+    res.status(500).json({ error: "Failed to update document" });
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 // Add a new document with image and PDF upload
 async function addDocument(req, res) {
   try {
@@ -74,4 +113,4 @@ async function getDocuments(req, res) {
   }
 }
 
-module.exports = { addDocument, getDocuments,deleteDocument, upload };
+module.exports = { addDocument, getDocuments,deleteDocument, upload ,updateDocument};

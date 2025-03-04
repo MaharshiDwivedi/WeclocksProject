@@ -17,6 +17,10 @@ export default function Tharavopration() {
   const [purpose, setpurpose] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
 
+
+  const category_id = localStorage.getItem("category_id") || ""; // Fallback to empty string
+  const user_id = localStorage.getItem("user_id") || "";
+
   const [tharav, setTharav] = useState({
     tharavNo: "",
     purpose: "",
@@ -118,15 +122,17 @@ export default function Tharavopration() {
     const photoValue =
       tharav.photo instanceof File ? tharav.photo.name : tharav.photo;
 
-    const memberData = `1|${tharav.tharavNo}|${tharav.decisionTaken}|${
-      tharav.expectedExpenditure
-    }|${photoValue}|14|34|Pending|${
-      !isEditing ? formattedDate : insertdate
-    }|${formattedDate}|0000-00-00 00:00:00|${tharav.purpose}|${
-      tharav.problemFounded
-    }|${tharav.where}|${tharav.what}|${tharav.howMany}|${
-      tharav.deadStockNumber
-    }|${tharav.fixedDate}`;
+      const memberData = `${meetingId}|${tharav.tharavNo}|${
+        tharav.decisionTaken
+      }|${
+        tharav.expectedExpenditure
+      }|${photoValue}|${category_id}|${user_id}|Pending|${
+        !isEditing ? formattedDate : insertdate
+      }|${formattedDate}|0000-00-00 00:00:00|${tharav.purpose}|${
+        tharav.problemFounded
+      }|${tharav.where}|${tharav.what}|${tharav.howMany}|${
+        tharav.deadStockNumber
+      }|${tharav.fixedDate}`;
 
     const formData = new FormData();
     formData.append("nirnay_reord", memberData);

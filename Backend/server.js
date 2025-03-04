@@ -8,6 +8,7 @@ const documentRoute = require("./Routes/documentRoute");
 const tharavRoutes = require("./Routes/tharavRoute");
 const purposeRoute = require("./Routes/purposeRoute");
 const schoolRoutes = require('./Routes/SchoolRoute');
+const fundRoutes = require('./Routes/FundRoute');
 
 
 const path = require("path");
@@ -16,7 +17,7 @@ const app = express();
 
 // CORS configuration
 app.use(cors({
-    origin: 'http://localhost:5174',
+    origin: 'http://localhost:5173',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -34,6 +35,8 @@ app.use('/api/purpose', purposeRoute);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 app.use('/api', schoolRoutes)
+app.use('/api', fundRoutes);
+
 
 app.get('/', (req, res) => {
     res.send("Server is running");

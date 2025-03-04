@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Menu } from "@headlessui/react";
 import { FaEllipsisV, FaTrash, FaEdit } from "react-icons/fa";
+import { Plus } from "lucide-react";
 
 export default function Ui() {
   const API_URL = "http://localhost:5000/api/member";
@@ -193,15 +194,18 @@ export default function Ui() {
 
   return (
     <div className="p-4 bg-purple-100 w-full">
-      <div className="bg-purple-600 text-white text-xl font-bold p-4 text-center rounded-t-md">
+      <div className="bg-purple-600 text-white text-xl font-bold p-4 text-center rounded-t-md realfont2">
         <span>Committee Members</span>
       </div>
       <div className="flex justify-end p-4">
         <button
           onClick={handleOpenModal}
-          className="bg-blue-500  hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="bg-blue-500  hover:bg-blue-700 text-white font-bold py-2 px-4 rounded realfont2 flex"
         >
-          + ADD MEMBER
+
+<Plus />
+
+           ADD MEMBER
         </button>
       </div>
       <div className="overflow--auto">

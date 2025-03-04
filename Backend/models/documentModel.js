@@ -1,5 +1,52 @@
 const connection = require("../Config/Connection");
 
+async function updateDocument(documentId, documentData) {
+  try {
+    const { document_title, year, image_url, pdf_url } = documentData;
+
+    // Get existing document to preserve unchanged fields
+    const [existingRows] = await connection.execute(
+      "SELECT document_record FROM tbl_documents WHERE document_id = ?",
+      [documentId]
+    );
+    
+    if (existingRows.length === 0) {
+      return { error: "Document not found" };
+    }
+
+    const existingParts = existingRows[0].document_record.split("|");
+    const updatedTitle = document_title || existingParts[0];
+    const updatedYear = year || existingParts[1];
+    const updatedImage = image_url || existingParts[2];
+    const updatedPdf = pdf_url || existingParts[3];
+
+    const document_record = [updatedTitle, updatedYear, updatedImage, updatedPdf].join("|");
+
+    const [result] = await connection.execute(
+      "UPDATE tbl_documents SET document_record = ?, update_date_time = NOW() WHERE document_id = ?",
+      [document_record, documentId]
+    );
+
+    if (result.affectedRows === 0) {
+      return { error: "Document not found or no changes made" };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error in updateDocument:", error.message);
+    return { error: "Failed to update document" };
+  }
+}
+
+
+
+
+
+
+
+
+
+
 // Add a new document
 async function addDocument(documentData) {
   try {
@@ -74,4 +121,4 @@ async function getAllDocuments() {
   }
 }
 
-module.exports = { addDocument, getAllDocuments, deleteDocument };
+module.exports = { addDocument, getAllDocuments, deleteDocument,updateDocument };

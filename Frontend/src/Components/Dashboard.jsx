@@ -71,7 +71,7 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col px-10 mb-[180px] gap-[50px]">
       <div className="w-full flex justify-start">
-        <label className="text-lg font-semibold text-blue-950 mt-[26px]">Choose Month:</label>
+        <label className="text-lg font-semibold text-blue-950 mt-[26px] realfont2">Choose Month:</label>
         <input
           type="month"
           value={`${selectedDate.year}-${selectedDate.month.toString().padStart(2, "0")}`}
@@ -79,7 +79,7 @@ const Dashboard = () => {
           className="ml-4 px-4 py-2 border-2 border-blue-950 rounded-lg shadow-md 
                     text-lg text-blue-950 cursor-pointer transition-all duration-300 
                     focus:ring-2 focus:ring-blue-500 focus:outline-none 
-                    hover:border-blue-700 hover:shadow-lg mt-[20px]"
+                    hover:border-blue-700 hover:shadow-lg mt-[20px] realfont"
         />
       </div>
 
@@ -94,22 +94,22 @@ const Dashboard = () => {
         </div>
 
         <div className="flex flex-col items-center">
-          <h2 className="text-2xl font-bold mb-5 text-blue-950">Total Expense</h2>
+          <h2 className="text-2xl font-bold mb-5 text-blue-950 realfont2">Total Expense</h2>
           <div className="flex gap-8">
             <div className="relative border-2 border-blue-950 rounded-lg p-6 w-44 text-center">
-              <p className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-blue-950 text-sm">
+              <p className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-blue-950 text-sm realfont">
                 Actual Exp
-              </p>
-              <p className="text-3xl font-bold text-blue-950">
+              </p><br/>
+              <p className="text-3xl font-bold text-blue-950 realfont2">
                 {formatNumber(values.actualExpense)}
               </p>
             </div>
 
             <div className="relative border-2 border-blue-950 rounded-lg p-6 w-44 text-center">
-              <p className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-blue-950 text-sm">
+              <p className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-blue-950 text-sm realfont">
                 Expected Exp
-              </p>
-              <p className="text-3xl font-bold text-blue-950">
+              </p><br/>
+              <p className="text-3xl font-bold text-blue-950 realfont2">
                 {formatNumber(values.expectedExpense)}
               </p>
             </div>
@@ -117,7 +117,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <div className="text-2xl font-bold mb-5 text-blue-950 mt-1.5 ml-[41%]">
+      <div className="text-2xl font-bold mb-5 text-blue-950 mt-1.5 ml-[41%] realfont2">
         Head Wise Expense :
       </div>
 

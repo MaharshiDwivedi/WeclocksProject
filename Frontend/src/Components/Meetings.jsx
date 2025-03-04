@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, X, Camera, Upload, CalendarPlus } from "lucide-react";
+import { Plus, X, Camera, Upload, CalendarPlus, Pencil, Trash2 } from "lucide-react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -408,7 +408,7 @@ if (meeting.image_url) {
       </div>
 
       {isOpen && (
-        <div className="fixed z-10 inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] h-full">
+        <div className="fixed z-10 inset-0 flex items-center justify-center bg-transparent backdrop-blur-[2px] h-full realfont">
           <div className="bg-white rounded-lg shadow-md shadow-blue-950 w-[500px] max-w-md h-[500px] flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="text-xl font-bold text-blue-950">
@@ -431,7 +431,7 @@ if (meeting.image_url) {
                   selected={selectedDate}
                   onChange={handleDateChange}
                   dateFormat="MMMM d, yyyy"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 shadow-lg rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholderText="Select a date"
                   wrapperClassName="w-full"
                 />
@@ -463,7 +463,7 @@ if (meeting.image_url) {
                 <label className="block text-sm font-medium text-blue-950">
                   Committee Members
                 </label>
-                <div className="border rounded-md h-32 overflow-y-auto">
+                <div className=" shadow-lg rounded-md h-32 overflow-y-auto">
                   {committeeMembers.map((member, index) => (
                     <div
                       key={index}
@@ -492,7 +492,7 @@ if (meeting.image_url) {
                   <label className="block text-sm font-medium text-blue-950">
                     Latitude
                   </label>
-                  <div className="p-2 border rounded-md bg-gray-50 text-center">
+                  <div className="p-2 shadow-lg rounded-md bg-gray-50 text-center">
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-blue-950 border-t-transparent rounded-full animate-spin mx-auto" />
                     ) : (
@@ -504,7 +504,7 @@ if (meeting.image_url) {
                   <label className="block text-sm font-medium text-blue-950">
                     Longitude
                   </label>
-                  <div className="p-2 border rounded-md bg-gray-50 text-center">
+                  <div className="p-2 shadow-lg rounded-md bg-gray-50 text-center">
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-blue-950 border-t-transparent rounded-full animate-spin mx-auto" />
                     ) : (
@@ -521,7 +521,7 @@ if (meeting.image_url) {
                 <input
                   value={address}
                   readOnly
-                  className="w-full px-3 py-2 border rounded-md bg-gray-50"
+                  className="w-full px-3 py-2 shadow-lg rounded-md bg-gray-50"
                 />
               </div>
 
@@ -555,7 +555,7 @@ if (meeting.image_url) {
 
                 {/* Display captured or selected photo */}
                 {photo && !showCamera && (
-                  <div className="mt-2 border rounded-md overflow-hidden">
+                  <div className="mt-2 shadow-lg rounded-md overflow-hidden">
                     <img src={photo} alt="Selected" className="w-full" />
                     <div className="p-2 bg-gray-100 flex justify-between items-center">
                       <input
@@ -624,15 +624,15 @@ if (meeting.image_url) {
       )}
 
       <div className="space-y-6 mt-[30px]">
-        {meetings.map((meeting, index) => (
+        {meetings.map((meeting) => (
           <div
-            key={meeting.no || index}
-            className="relative flex items-center justify-between bg-white rounded-[20px] border-2 border-blue-950 p-2 cursor-pointer hover:shadow-md transition-shadow mb-9 w-2xl"
+            key={meeting.id}
+            className="relative flex items-center justify-between bg-white rounded-[10px] border-[1px] shadow-lg border-blue-950 p-2 cursor-pointer hover:shadow-md transition-shadow mb-9 w-2xl"
             onClick={() => {
-              navigate(`/home/meetings/tharav/${index}`);            }}
+              navigate(`/home/meetings/tharav/${meeting.id}`);            }}
           >
             <div className="flex items-center space-x-[90px]">
-              <div className="text-lg font-semibold text-white bg-blue-950 rounded-[10px] pl-3 pr-3 absolute mb-[80px]">
+              <div className="text-lg font-semibold text-white bg-blue-950 rounded-[5px] pl-3 pr-3 absolute mb-[80px]">
                 {meeting.date}
               </div>
               <div className="text-center">
@@ -655,16 +655,16 @@ if (meeting.image_url) {
 
             <button
               onClick={(e) => handleEditMeeting(meeting, e)}
-              className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors"
+              className="bg-blue-950 text-white px-3 py-1 rounded-md hover:bg-blue-500 transition-colors"
             >
-              Edit
+              <Pencil/>
             </button>
 
             <button
               onClick={(event) => handleDeleteMeeting(meeting.id, event)}
               className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors"
             >
-              Delete
+              <Trash2/>
             </button>
           </div>
         ))}
