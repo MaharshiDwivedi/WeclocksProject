@@ -18,8 +18,7 @@ const LoginForm = () => {
     setLoading(true);
     try {
 
-      // Artificial delay of 2 seconds
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+     
       const res = await axios.post("http://localhost:5000/api/login", {
         username,
         password,
