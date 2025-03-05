@@ -12,23 +12,53 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error("Only JPG, PNG, and PDF files are allowed"));
+    }
+  },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
 
+// Add a new document with single file upload
+async function addDocument(req, res) {
+  try {
+    const { document_title, year } = req.body;
+    const file_url = req.file ? req.file.filename : null;
 
+    if (!file_url) {
+      return res.status(400).json({ error: "File is required" });
+    }
 
+    const result = await Document.addDocument({ document_title, year, file_url });
 
+    if (result.error) {
+      return res.status(400).json(result);
+    }
+
+    res.status(201).json({ message: "Document added successfully", result });
+  } catch (error) {
+    console.error("Error in addDocument:", error.message);
+    res.status(500).json({ error: "Failed to add document" });
+  }
+}
+
+// Update a document
 async function updateDocument(req, res) {
   try {
     const { documentId } = req.params;
     const { document_title, year } = req.body;
-    const image_url = req.files.image ? req.files.image[0].filename : null;
-    const pdf_url = req.files.pdf ? req.files.pdf[0].filename : null;
+    const file_url = req.file ? req.file.filename : null;
 
     const result = await Document.updateDocument(documentId, {
       document_title,
       year,
-      image_url,
-      pdf_url
+      file_url,
     });
 
     if (result.error) {
@@ -42,43 +72,7 @@ async function updateDocument(req, res) {
   }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-// Add a new document with image and PDF upload
-async function addDocument(req, res) {
-  try {
-    console.log("Request body:", req.body); // Debugging log
-    console.log("Uploaded image:", req.files.image); // Debugging log
-    console.log("Uploaded PDF:", req.files.pdf); // Debugging log
-
-    const { document_title, year } = req.body;
-    const image_url = req.files.image ? req.files.image[0].filename : null;
-    const pdf_url = req.files.pdf ? req.files.pdf[0].filename : null;
-
-    const result = await Document.addDocument({ document_title, year, image_url, pdf_url });
-
-    if (result.error) {
-      return res.status(400).json(result);
-    }
-
-    res.status(201).json({ message: "Document added successfully", result });
-  } catch (error) {
-    console.error("Error in addDocument:", error.message); // Debugging log
-    res.status(500).json({ error: "Failed to add document" });
-  }
-}
-
-// Rest of the code remains the same...
-
+// Delete a document
 async function deleteDocument(req, res) {
   try {
     const { documentId } = req.params;
@@ -96,21 +90,15 @@ async function deleteDocument(req, res) {
   }
 }
 
-
-
-
-
-
 // Fetch all documents
 async function getDocuments(req, res) {
   try {
     const documents = await Document.getAllDocuments();
-    console.log("Fetched documents:", documents); // Debugging log
     res.json(documents);
   } catch (error) {
-    console.error("Error in getDocuments:", error.message); // Debugging log
+    console.error("Error in getDocuments:", error.message);
     res.status(500).json({ error: "Failed to fetch documents" });
   }
 }
 
-module.exports = { addDocument, getDocuments,deleteDocument, upload ,updateDocument};
+module.exports = { addDocument, getDocuments, deleteDocument, upload, updateDocument };
