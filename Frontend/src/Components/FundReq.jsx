@@ -2,7 +2,7 @@ import React from 'react'
 
 function FundReq() {
   return (
-    <div>   COMING SOON</div>
+    <div>   COMING SOON (hopefully😥)</div>
   )
 }
 

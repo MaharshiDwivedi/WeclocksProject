@@ -1,117 +1,108 @@
-import { useState } from "react";
 import { Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import {
+  Plus,
+  LogOut,
+  CalendarCheck,
+  ChartColumnIncreasing,
+  CirclePower,
+  UsersRound,
+} from "lucide-react";
 import Meetings from "./Meetings";
 import Dashboard from "./Dashboard";
 import NewMember from "./NewMember";
-import Tharav from "./Tharav"; // Import Tharav Component
-import { Plus, LogOut, CalendarCheck, ChartColumnIncreasing, Menu } from "lucide-react";
+import Tharav from "./Tharav";
+import React from "react";
 
 const Home = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State to manage sidebar visibility
+  const [fontSize, setFontSize] = React.useState(16);
+  const [language, setLanguage] = React.useState("en");
 
-  // Logout Function
   const handleLogout = () => {
-    localStorage.removeItem("token"); // Remove JWT token
-    navigate("/login"); // Redirect to login page
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
-  // Toggle Sidebar
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
+  const increaseTextSize = () => {
+    setFontSize((prev) => Math.min(prev + 2, 24));
+  };
+
+  const decreaseTextSize = () => {
+    setFontSize((prev) => Math.max(prev - 2, 12));
   };
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Hamburger Menu for Mobile */}
-      <button
-        onClick={toggleSidebar}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-blue-950 text-white rounded-md shadow-lg"
-      >
-        <Menu size={24} />
-      </button>
-
-      {/* Sidebar - Full Height */}
-      <aside
-        className={`w-64 bg-blue-950 text-white flex flex-col min-h-screen h-screen shadow-lg fixed transform transition-transform duration-300 ease-in-out 
-          ${isSidebarOpen ? "translate-x-0" : "-translate-x-64"} lg:translate-x-0`}
-      >
-        {/* Sidebar Header - Full Width */}
-        <div className="w-full bg-blue-200 text-blue-950 text-4xl font-bold text-center py-4 realfont shadow-md">
+    <div className="flex h-screen bg-white" style={{ fontSize: `${fontSize}px` }}>
+      {/* Sidebar */}
+      <aside className="w-64 bg-blue-950 text-white flex flex-col min-h-screen h-screen shadow-lg fixed">
+        <div className="w-full h-[55px] bg-blue-200 text-blue-950 text-[30px] text-center realfont shadow-md flex items-center justify-center overflow-hidden">
           ITDP Nandurbar
         </div>
 
-        {/* Sidebar Links */}
         <div className="flex flex-col space-y-4 flex-1 px-3 pt-4 realfont">
-          <NavLink
-            to="/home/dashboard"
-            label="Dashboard"
-            path={location.pathname}
-            icon={<ChartColumnIncreasing size={20} />}
-            onClick={() => setIsSidebarOpen(false)} // Close sidebar on link click
-          />
+          <NavLink to="/home/dashboard" label="Dashboard" path={location.pathname} icon={<ChartColumnIncreasing size={20} />} />
+          <NavLink to="/home/meetings" label="Meetings" path={location.pathname} icon={<CalendarCheck size={20} />} />
+          <NavLink to="/home/newmember" label="Commitee Members" path={location.pathname} icon={<UsersRound size={20} />} />
 
-          <NavLink
-            to="/home/meetings"
-            label="Meetings"
-            path={location.pathname}
-            icon={<CalendarCheck size={20} />}
-            onClick={() => setIsSidebarOpen(false)} // Close sidebar on link click
-          />
-        </div>
-
-        {/* Bottom Buttons - Add Member & Logout */}
-        <div className="mt-auto px-3 pb-4">
-          {/* Add Member Button */}
-          <Link
-            to="/home/newmember"
-            className={`flex items-center text-blue-950 realfont2 bg-white px-3 py-2 rounded-md shadow-md transition 
-              ${location.pathname === "/home/newmember" ? "border-2 border-blue-500" : "hover:bg-gray-100"}`}
-            onClick={() => setIsSidebarOpen(false)} // Close sidebar on link click
-          >
-            <Plus className="mr-2" size={18} />
-            Committee Members
-          </Link>
-
-          {/* Logout Button */}
-          <button
-            onClick={handleLogout}
-            className="flex items-center realfont2 mt-4 text-white bg-red-500 px-4 py-2 rounded-md transition hover:bg-red-600 w-full"
-          >
-            <LogOut className="mr-2" size={18} />
-            Logout
-          </button>
         </div>
       </aside>
 
-      {/* Page Content */}
-      <div className="flex-1 p-6 lg:ml-64">
-        <Routes>
-          <Route path="/" element={<Navigate to="meetings" />} />
-          <Route path="meetings" element={<Meetings />} />
-          <Route path="meetings/tharav/:index" element={<Tharav />} />
-          <Route path="dashboard" element={<Dashboard />} />
-          <Route path="newmember" element={<NewMember />} />
-        </Routes>
+      {/* Main Content */}
+      <div className="flex-1 ml-64 flex flex-col">
+        {/* Navbar */}
+        <div className="bg-white p-4 flex justify-between items-center h-[55px] shadow-md">
+          <div className="realfont2 text-2xl text-blue-950">WELCOME, HEADMASTER</div>
+          <div className="flex items-center space-x-2">
+            <button onClick={increaseTextSize} className="flex items-center gap-1 px-3 py-2 text-neutral-900 rounded hover:bg-neutral-300" title="Increase text size">
+              <span>+</span>
+              <span>A</span>
+            </button>
+            <button onClick={decreaseTextSize} className="flex items-center gap-1 px-3 py-2 text-neutral-900 rounded hover:bg-neutral-300" title="Decrease text size">
+              <span>-</span>
+              <span>A</span>
+            </button>
+            <button onClick={handleLogout} className="flex items-center justify-center text-white px-2 py-2 rounded-md hover:bg-neutral-300">
+              <CirclePower className="mr-2 text-red-500" size={24} />
+            </button>
+          </div>
+        </div>
+
+        {/* Routed Content */}
+        <div className="flex-1">
+          <Routes>
+            <Route path="/" element={<Navigate to="dashboard" />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="meetings" element={<Meetings />} />
+            <Route path="meetings/tharav/:index" element={<Tharav />} />
+            <Route path="newmember" element={<NewMember />} />
+          </Routes>
+        </div>
+        <footer className="bg-blue-100 text-neutral-500 p-3 mt-auto realfont">
+        Developed by WeClocks Technology Pvt. Ltd. @ 2025
+  </footer>
+
+
+        
       </div>
     </div>
   );
 };
 
 // Custom NavLink Component
-const NavLink = ({ to, label, path, icon, onClick }) => (
+const NavLink = ({ to, label, path, icon }) => (
   <Link
     to={to}
-    onClick={onClick}
-    className={`flex items-center px-4 py-2 rounded-md transition font-medium 
-      ${path === to
-        ? "bg-white text-blue-950 font-semibold shadow-md" // ✅ Dark text when active
-        : "text-white hover:bg-gray-700 hover:text-gray-300" // ✅ Normal & hover states
-      }`}
+    className={`flex items-center px-4 py-2 transition-all duration-300 ease-in-out font-medium relative overflow-hidden
+      ${path === to ? "text-blue-950 font-semibold shadow-md rounded-r-[5px]" : "text-white hover:bg-gray-700 hover:text-gray-300"}
+    `}
   >
-    {icon}
-    <span className="ml-2">{label}</span>
+    <span className={`absolute inset-0 bg-white transition-transform duration-300 ease-in-out ${path === to ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`} />
+    <span className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${path === to ? "opacity-100" : "opacity-0"}`} />
+    <span className="relative flex items-center">
+      {icon}
+      <span className="ml-2">{label}</span>
+    </span>
   </Link>
 );
 
