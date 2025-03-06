@@ -20,9 +20,12 @@ const Home = () => {
   const [language, setLanguage] = React.useState("en");
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+    if (window.confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
   };
+  
 
   const increaseTextSize = () => {
     setFontSize((prev) => Math.min(prev + 2, 24));

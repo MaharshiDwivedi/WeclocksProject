@@ -45,12 +45,22 @@ class FundController {
       res.status(500).json({ message: "Failed to delete fund" });
     }
   }
-
   static async updateFund(req, res) {
     try {
       const { id } = req.params;
-      const { school_id, year, amount } = req.body;
-      await FundModel.updateFund(id, school_id, year, amount);
+      const { additional_amount } = req.body; // Change to receive additional_amount instead
+      
+      // Get current fund data
+      const currentFund = await FundModel.getFundById(id);
+      if (!currentFund) {
+        return res.status(404).json({ message: "Fund not found" });
+      }
+      
+      // Extract existing values
+      const [school_id, year, currentAmount] = currentFund.demand_master_record.split('|');
+      const newAmount = parseFloat(currentAmount) + parseFloat(additional_amount);
+      
+      await FundModel.updateFund(id, school_id, year, newAmount);
       res.status(200).json({ message: "Fund updated successfully" });
     } catch (error) {
       console.error("Error updating fund:", error);

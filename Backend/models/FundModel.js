@@ -14,11 +14,11 @@ class FundModel {
         s.school_name
       FROM tbl_demand_master dm
       INNER JOIN tbl_schools s ON SUBSTRING_INDEX(dm.demand_master_record, '|', 1) = s.school_id
+      WHERE dm.status = 'Active'  -- Add this condition
     `;
     const [rows] = await connection.query(query);
     return rows;
   }
-
   static async getAllSchools() {
     const query = `SELECT school_id, school_name FROM tbl_schools`;
     const [rows] = await connection.query(query);
@@ -30,6 +30,21 @@ class FundModel {
     await connection.query(query, [id]);
   }
   
+  static async getFundById(id) {
+    const query = `
+      SELECT demand_master_record 
+      FROM tbl_demand_master 
+      WHERE demand_master_id = ? AND status = 'Active'
+    `;
+    const [rows] = await connection.query(query, [id]);
+    return rows[0];
+  }
+
+
+
+
+
+
   
   static async updateFund(id, school_id, year, amount) {
     const record = `${school_id}|${year}|${amount}|Credit|403`;

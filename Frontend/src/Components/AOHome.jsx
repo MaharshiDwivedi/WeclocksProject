@@ -36,9 +36,12 @@ const AOHome = () => {
   const [language, setLanguage] = React.useState("en");
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
+    if (window.confirm("Are you sure you want to logout?")) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
   };
+  
 
   const increaseTextSize = () => {
     setFontSize((prev) => Math.min(prev + 2, 24));
@@ -72,7 +75,7 @@ const AOHome = () => {
 
   return (
     <div
-      className="flex h-screen bg-white"
+      className="flex h-screen bg-neutral-200"
       style={{ fontSize: `${fontSize}px` }}
     >
       {/* Sidebar - Full Height */}
