@@ -1,35 +1,42 @@
 @import "tailwindcss";
 
 
-.realfont{
-
-    font-family: "Poppins", serif;
+.realfont {
+  font-family: "Poppins", serif;
   font-weight: 300;
   font-style: normal;
 }
 
-
-
-.realfont2{
-
-font-family: "Poppins", serif;
-font-weight: 700;
-font-style:normal;
-
+.realfont2 {
+  font-family: "Poppins", serif;
+  font-weight: 700;
+  font-style: normal;
 }
 
-.itdpfont{
-
-    font-family: "Amita", serif;
-    font-weight: 400;
-    font-style: normal;
-  
+.itdpfont {
+  font-family: "Amita", serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
-.bgcolor{
+.bgcolor {
   background-color: #f4f7fa;
 }
 
+.font1 {
+  font-family: "Roboto Condensed", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 900;
+  font-style: normal;
+}
+
+.font2 {
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing:auto;
+  font-weight: 600;
+  font-style: normal;
+
+}
 
 
 
@@ -38,14 +45,27 @@ font-style:normal;
 
 
 
-/* Add this in a separate CSS file that you import in your app or in your global styles */
 
-/* Calendar container */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .react-datepicker {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 

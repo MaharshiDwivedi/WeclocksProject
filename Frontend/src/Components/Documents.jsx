@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Plus,
   X,
@@ -8,6 +8,7 @@ import {
   Trash2,
   AlertCircle,
   Search,
+  Upload,
 } from "lucide-react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
@@ -22,9 +23,11 @@ const Documents = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [documentTitle, setDocumentTitle] = useState("");
-  const [year, setYear] = useState("2023-24");
+  const [year, setYear] = useState("2024-25");
   const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
   const [errors, setErrors] = useState({});
+  const fileInputRef = useRef(null);
 
   // Fetch documents
   const fetchDocuments = async () => {
@@ -51,6 +54,10 @@ const Documents = () => {
           ? `http://localhost:5000/uploads/${selectedDocument.file_url}`
           : null
       );
+      // Set the filename when editing
+      if (selectedDocument.file_url) {
+        setFileName(selectedDocument.file_url);
+      }
     } else {
       resetForm();
     }
@@ -91,13 +98,20 @@ const Documents = () => {
   // Handle file change
   const handleFileChange = (event) => {
     const file = event.target.files[0];
-    if (validateFile(file)) {
+    if (file && validateFile(file)) {
       setFile(file);
+      setFileName(file.name);
       setErrors((prev) => ({ ...prev, file: undefined }));
 
       const reader = new FileReader();
       reader.onloadend = () => setFilePreview(reader.result);
       reader.readAsDataURL(file);
+    } else if (!file) {
+      // If no file is selected (cancel was clicked)
+      if (!selectedDocument) {
+        setFileName("");
+        setFilePreview(null);
+      }
     }
   };
 
@@ -106,7 +120,7 @@ const Documents = () => {
     const newErrors = {};
     if (!documentTitle.trim())
       newErrors.documentTitle = "Document title is required";
-    if (!file) newErrors.file = "File is required";
+    if (!file && !selectedDocument) newErrors.file = "File is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -117,7 +131,9 @@ const Documents = () => {
       const formData = new FormData();
       formData.append("document_title", documentTitle);
       formData.append("year", year);
-      formData.append("file", file);
+      if (file) {
+        formData.append("file", file);
+      }
 
       try {
         if (selectedDocument) {
@@ -131,6 +147,7 @@ const Documents = () => {
         } else {
           await axios.post("http://localhost:5000/api/documents", formData, {
             headers: { "Content-Type": "multipart/form-data" },
+            // Added possible loading state handling
           });
         }
         fetchDocuments();
@@ -160,8 +177,13 @@ const Documents = () => {
     setYear("2023-24");
     setFile(null);
     setFilePreview(null);
+    setFileName("");
     setErrors({});
     setSelectedDocument(null);
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   // Filter documents
@@ -213,7 +235,6 @@ const Documents = () => {
           {row.file_url.endsWith(".pdf") ? <FileDown /> : <Eye />}
         </button>
       ),
-      center: true,
     },
     {
       name: "Actions",
@@ -236,7 +257,6 @@ const Documents = () => {
           </button>
         </div>
       ),
-      center: true,
     },
   ];
 
@@ -285,7 +305,19 @@ const Documents = () => {
           highlightOnHover
           customStyles={{
             headCells: {
-              style: { backgroundColor: "#f3f4f6", fontSize:"16px" },
+              style: {
+                backgroundColor: "#f3f4f6",
+                fontSize: "18px",
+                fontFamily: "Poppins",
+                fontWeight: 400,
+              },
+            },
+            cells: {
+              style: {
+                fontSize: "16px",
+                fontFamily: "Poppins",
+                color: "#333",
+              },
             },
           }}
         />
@@ -300,7 +332,7 @@ const Documents = () => {
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm  bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-[500px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-2xl font-bold text-blue-950">
@@ -354,19 +386,40 @@ const Documents = () => {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium ">
+                <label className="block mb-2 text-sm font-medium">
                   Upload File (Image or PDF)
                 </label>
-                <input
-                  type="file"
-                  accept=".jpg,.jpeg,.png,.pdf"
-                  onChange={handleFileChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.file
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500"
-                  }`}
-                />
+                <div className="relative">
+                  {/* Hidden File Input */}
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept=".jpg,.jpeg,.png,.pdf"
+                    onChange={handleFileChange}
+                    className="hidden"
+                    id="fileInput"
+                  />
+                  {/* Custom Button */}
+                  <label
+                    htmlFor="fileInput"
+                    className={`inline-flex items-center px-4 py-2 ${
+                      errors.file
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-blue-950 hover:bg-blue-900"
+                    } text-white text-sm font-medium rounded-md cursor-pointer transition duration-200`}
+                  >
+                    <Upload className="mr-2" size={16} />
+                    Choose File
+                  </label>
+                  {/* Selected File Name Display */}
+                  <div className="mt-2 text-sm">
+                    {fileName ? (
+                      <span className="font-medium text-blue-950">Selected: {fileName}</span>
+                    ) : (
+                      <span className="text-gray-400">No file chosen</span>
+                    )}
+                  </div>
+                </div>
                 {errors.file && (
                   <p className="text-red-500 text-sm mt-1 flex items-center">
                     <AlertCircle className="mr-2" size={16} /> {errors.file}
@@ -375,16 +428,17 @@ const Documents = () => {
 
                 {filePreview && (
                   <div className="mt-4 flex justify-center">
-                    {filePreview.startsWith("data:image") ? (
+                    {filePreview.endsWith(".pdf") || 
+                     (filePreview.startsWith("http") && filePreview.endsWith(".pdf")) ? (
+                      <div className="flex items-center text-blue-600 bg-blue-50 p-3 rounded-md">
+                        <FileDown className="mr-2" /> PDF File Selected
+                      </div>
+                    ) : (
                       <img
                         src={filePreview}
                         alt="File Preview"
-                        className="max-w-full h-40 object-cover rounded-md"
+                        className="max-w-full h-40 object-cover rounded-md border border-gray-200"
                       />
-                    ) : (
-                      <div className="flex items-center text-blue-600 ">
-                        <FileDown className="mr-2" /> PDF File Selected
-                      </div>
                     )}
                   </div>
                 )}
@@ -405,7 +459,7 @@ const Documents = () => {
 
       {/* File Preview Modal */}
       {selectedFile && (
-        <div className="fixed inset-0  bg-opacity-75 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-opacity-75 flex items-center justify-center z-50">
           <div className="relative max-w-4xl max-h-[90vh]">
             <button
               onClick={() => setSelectedFile(null)}

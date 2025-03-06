@@ -52,7 +52,7 @@ const Home = () => {
       <div className="flex-1 ml-64 flex flex-col">
         {/* Navbar */}
         <div className="bg-white p-4 flex justify-between items-center h-[55px] shadow-md">
-          <div className="realfont2 text-2xl text-blue-950">WELCOME, HEADMASTER</div>
+          <div className=" text-[18px] text-blue-950 font2">Welcome, HeadMaster.</div>
           <div className="flex items-center space-x-2">
             <button onClick={increaseTextSize} className="flex items-center gap-1 px-3 py-2 text-neutral-900 rounded hover:bg-neutral-300" title="Increase text size">
               <span>+</span>

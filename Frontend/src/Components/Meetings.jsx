@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Plus, X, Camera, Upload, CalendarPlus, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Camera, Upload, CalendarPlus, Pencil, Trash2, ChevronRight } from "lucide-react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -623,52 +623,67 @@ if (meeting.image_url) {
         </div>
       )}
 
-      <div className="space-y-6 mt-[30px]">
-        {meetings.map((meeting) => (
-          <div
-            key={meeting.id}
-            className="relative flex items-center justify-between bg-white rounded-[10px] border-[1px] shadow-lg border-blue-950 p-2 cursor-pointer hover:shadow-md transition-shadow mb-9 w-2xl"
-            onClick={() => {
-              navigate(`/home/meetings/tharav/${meeting.id}`);            }}
-          >
-            <div className="flex items-center space-x-[90px]">
-              <div className="text-lg font-semibold text-white bg-blue-950 rounded-[5px] pl-3 pr-3 absolute mb-[80px]">
-                {meeting.date}
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Meeting No</div>
-                <div className="text-xl font-bold text-gray-800">
-                  {meeting.number}
+<div className="space-y-6 mt-8">
+      {meetings.map((meeting) => (
+        <div
+          key={meeting.id}
+          onClick={() => navigate(`/home/meetings/tharav/${meeting.id}`)}
+          className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointe w-[700px]"
+        >
+          {/* Date badge */}
+          <div className="absolute top-0 left-6 px-4 py-1 bg-blue-950 text-white text-sm font-medium rounded-b-lg shadow-sm transform transition-transform group-hover:translate-y-0.5">
+            {meeting.date}
+          </div>
+
+          {/* Card content */}
+          <div className="pt-8 pb-4 px-6">
+            <div className="flex items-center justify-between">
+              {/* Meeting stats */}
+              <div className="flex items-center gap-12 py-2">
+                <div className="text-center">
+                  <div className="text-sm font-medium text-gray-500 mb-1">Meeting No</div>
+                  <div className="text-2xl font-bold text-blue-950">{meeting.number}</div>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-sm font-medium text-gray-500 mb-1">Members</div>
+                  <div className="text-2xl font-bold text-blue-950">{meeting.members?.length || 0}</div>
+                </div>
+
+                <div className="text-center">
+                  <div className="text-sm font-medium text-gray-500 mb-1">Total Tharav</div>
+                  <div className="text-2xl font-bold text-blue-950">-</div>
                 </div>
               </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Member's</div>
-                <div className="text-xl font-bold text-gray-800">
-                  {meeting.members?.length || 0}
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-sm text-gray-600">Total Tharav</div>
-                <div className="text-xl font-bold text-gray-800">-</div>
+
+              {/* Actions */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={(e) => handleEditMeeting(meeting, e)}
+                  className="flex items-center justify-center h-9 w-9 rounded-full bg-blue-100 text-blue-950 hover:bg-blue-200 transition-colors"
+                  aria-label="Edit meeting"
+                >
+                  <Pencil size={16} />
+                </button>
+
+                <button
+                  onClick={(e) => handleDeleteMeeting(meeting.id, e)}
+                  className="flex items-center justify-center h-9 w-9 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                  aria-label="Delete meeting"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
 
-            <button
-              onClick={(e) => handleEditMeeting(meeting, e)}
-              className="bg-blue-950 text-white px-3 py-1 rounded-md hover:bg-blue-500 transition-colors"
-            >
-              <Pencil/>
-            </button>
-
-            <button
-              onClick={(event) => handleDeleteMeeting(meeting.id, event)}
-              className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors"
-            >
-              <Trash2/>
-            </button>
+            {/* View indicator */}
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <ChevronRight className="text-gray-400" />
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      ))}
+    </div>
     </div>
   );
 };

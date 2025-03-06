@@ -90,12 +90,12 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col px-4 md:px-10 py-6 min-h-screen gap-8 bgcolor shadow-sm">
       {/* Date Picker */}
-      <div className="w-full flex items-center justify-start">
+      <div className="w-full flex items-center">
         <label className="text-lg font-semibold text-blue-950 mr-4 realfont2">
           Choose Month:
         </label>
         <input
-          type="month"
+          type="month" 
           value={`${selectedDate.year}-${selectedDate.month
             .toString()
             .padStart(2, "0")}`}

@@ -139,8 +139,8 @@ const AOHome = () => {
         {/* Navbar */}
 <div className="bg-white p-4 flex justify-between items-center  h-[55px] shadow-md  ">
   {/* Left-aligned text */}
-  <div className="realfont2 text-2xl text-blue-950">
-    WELCOME, ACCOUNT OFFICER
+  <div className=" text-[18px] text-blue-950 font2">
+    Welcome , Account Officer.
   </div>
 
   {/* Right-aligned controls */}
