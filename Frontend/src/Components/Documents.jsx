@@ -1,15 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  Plus,
-  X,
-  Eye,
-  FileDown,
-  Pencil,
-  Trash2,
-  AlertCircle,
-  Search,
-  Upload,
-} from "lucide-react";
+import { Plus, X, Image, FileDown, AlertCircle, Search, Upload } from "lucide-react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 
@@ -54,7 +44,6 @@ const Documents = () => {
           ? `http://localhost:5000/uploads/${selectedDocument.file_url}`
           : null
       );
-      // Set the filename when editing
       if (selectedDocument.file_url) {
         setFileName(selectedDocument.file_url);
       }
@@ -107,7 +96,6 @@ const Documents = () => {
       reader.onloadend = () => setFilePreview(reader.result);
       reader.readAsDataURL(file);
     } else if (!file) {
-      // If no file is selected (cancel was clicked)
       if (!selectedDocument) {
         setFileName("");
         setFilePreview(null);
@@ -147,7 +135,6 @@ const Documents = () => {
         } else {
           await axios.post("http://localhost:5000/api/documents", formData, {
             headers: { "Content-Type": "multipart/form-data" },
-            // Added possible loading state handling
           });
         }
         fetchDocuments();
@@ -180,7 +167,6 @@ const Documents = () => {
     setFileName("");
     setErrors({});
     setSelectedDocument(null);
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -215,6 +201,12 @@ const Documents = () => {
   // Table columns
   const columns = [
     {
+      name: "Sr. No.",
+      selector: (row, index) => index + 1,
+      sortable: false,
+      width: "100px",
+    },
+    {
       name: "Document Title",
       selector: (row) => row.document_title,
       sortable: true,
@@ -232,14 +224,14 @@ const Documents = () => {
           }}
           className="text-blue-600 hover:text-blue-800"
         >
-          {row.file_url.endsWith(".pdf") ? <FileDown /> : <Eye />}
+          {row.file_url.endsWith(".pdf") ? <FileDown size={27} className="text-red-600"/> :  <Image  size={27} />}
         </button>
       ),
     },
     {
       name: "Actions",
       cell: (row) => (
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 gap-5">
           <button
             onClick={() => {
               setSelectedDocument(row);
@@ -247,13 +239,13 @@ const Documents = () => {
             }}
             className="text-yellow-500 hover:text-yellow-600"
           >
-            <Pencil />
+            <span className="realfont2 text-teal-500 text-lg">EDIT</span>
           </button>
           <button
             onClick={() => handleDelete(row.document_id)}
             className="text-red-500 hover:text-red-600"
           >
-            <Trash2 />
+            <span className="realfont2 text-lg">DELETE</span>
           </button>
         </div>
       ),
@@ -261,10 +253,10 @@ const Documents = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
+    <div className="container mx-auto px-10 py-8">
+      <div className="bg-white shadow-md rounded-[4px] overflow-hidden">
         {/* Header */}
-        <div className="bg-blue-950 text-white p-6 flex justify-between items-center">
+        <div className="bg-blue-950 text-white px-6 py-2 flex justify-between items-center realfont2">
           <h2 className="text-2xl font-bold">Document Management</h2>
           <button
             onClick={() => setIsModalOpen(true)}
@@ -275,7 +267,7 @@ const Documents = () => {
         </div>
 
         {/* Filters */}
-        <div className="p-4 bg-gray-50 flex space-x-4">
+        <div className="p-4 bg-gray-50 flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow">
             <input
               type="text"
@@ -310,6 +302,7 @@ const Documents = () => {
                 fontSize: "18px",
                 fontFamily: "Poppins",
                 fontWeight: 400,
+                justifyContent: "center",
               },
             },
             cells: {
@@ -317,6 +310,7 @@ const Documents = () => {
                 fontSize: "16px",
                 fontFamily: "Poppins",
                 color: "#333",
+                justifyContent: "center",
               },
             },
           }}
@@ -332,7 +326,7 @@ const Documents = () => {
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm  bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-[500px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-2xl font-bold text-blue-950">
@@ -367,7 +361,7 @@ const Documents = () => {
                 />
                 {errors.documentTitle && (
                   <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2" size={16} />{" "}
+                    <AlertCircle className="mr-2" size={16} />  
                     {errors.documentTitle}
                   </p>
                 )}
@@ -390,7 +384,6 @@ const Documents = () => {
                   Upload File (Image or PDF)
                 </label>
                 <div className="relative">
-                  {/* Hidden File Input */}
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -399,7 +392,6 @@ const Documents = () => {
                     className="hidden"
                     id="fileInput"
                   />
-                  {/* Custom Button */}
                   <label
                     htmlFor="fileInput"
                     className={`inline-flex items-center px-4 py-2 ${
@@ -411,7 +403,6 @@ const Documents = () => {
                     <Upload className="mr-2" size={16} />
                     Choose File
                   </label>
-                  {/* Selected File Name Display */}
                   <div className="mt-2 text-sm">
                     {fileName ? (
                       <span className="font-medium text-blue-950">Selected: {fileName}</span>
@@ -428,8 +419,8 @@ const Documents = () => {
 
                 {filePreview && (
                   <div className="mt-4 flex justify-center">
-                    {filePreview.endsWith(".pdf") || 
-                     (filePreview.startsWith("http") && filePreview.endsWith(".pdf")) ? (
+                    {filePreview.endsWith(".pdf") ||
+                    (filePreview.startsWith("http") && filePreview.endsWith(".pdf")) ? (
                       <div className="flex items-center text-blue-600 bg-blue-50 p-3 rounded-md">
                         <FileDown className="mr-2" /> PDF File Selected
                       </div>

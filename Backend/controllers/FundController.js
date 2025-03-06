@@ -1,20 +1,18 @@
 // controllers/FundController.js
 const FundModel = require("../models/FundModel");
 
-class FundController {
-  static async getFundDistribution(req, res) {
+const FundController = {
+  getFundDistribution: async (req, res) => {
     try {
       const fundData = await FundModel.getFundDistribution();
       res.status(200).json(fundData);
     } catch (error) {
       console.error("Error fetching fund distribution:", error);
-      res
-        .status(500)
-        .json({ message: "Failed to fetch fund distribution data" });
+      res.status(500).json({ message: "Failed to fetch fund distribution data" });
     }
-  }
+  },
 
-  static async getAllSchools(req, res) {
+  getAllSchools: async (req, res) => {
     try {
       const schools = await FundModel.getAllSchools();
       res.status(200).json(schools);
@@ -22,20 +20,32 @@ class FundController {
       console.error("Error fetching schools:", error);
       res.status(500).json({ message: "Failed to fetch schools" });
     }
-  }
+  },
 
-  static async addFundDistribution(req, res) {
+  addFundDistribution: async (req, res) => {
     try {
       const { school_id, year, amount } = req.body;
+
+      // Check if fund already exists for this school and year
+      const existingFund = await FundModel.checkExistingFund(school_id, year);
+      
+      if (existingFund) {
+        // If fund exists, return a message indicating that the user should edit the existing record
+        return res.status(409).json({ 
+          message: "This school already has funds distributed for this year." 
+        });
+      }
+
+      // If no existing fund, create new record
       await FundModel.addFundDistribution(school_id, year, amount);
       res.status(201).json({ message: "Fund added successfully" });
     } catch (error) {
       console.error("Error adding fund:", error);
       res.status(500).json({ message: "Failed to add fund" });
     }
-  }
+  },
 
-  static async deleteFund(req, res) {
+  deleteFund: async (req, res) => {
     try {
       const { id } = req.params;
       await FundModel.deleteFund(id);
@@ -44,19 +54,18 @@ class FundController {
       console.error("Error deleting fund:", error);
       res.status(500).json({ message: "Failed to delete fund" });
     }
-  }
-  static async updateFund(req, res) {
+  },
+
+  updateFund: async (req, res) => {
     try {
       const { id } = req.params;
-      const { additional_amount } = req.body; // Change to receive additional_amount instead
+      const { additional_amount } = req.body;
       
-      // Get current fund data
       const currentFund = await FundModel.getFundById(id);
       if (!currentFund) {
         return res.status(404).json({ message: "Fund not found" });
       }
       
-      // Extract existing values
       const [school_id, year, currentAmount] = currentFund.demand_master_record.split('|');
       const newAmount = parseFloat(currentAmount) + parseFloat(additional_amount);
       
@@ -67,6 +76,6 @@ class FundController {
       res.status(500).json({ message: "Failed to update fund" });
     }
   }
-}
+};
 
 module.exports = FundController;
