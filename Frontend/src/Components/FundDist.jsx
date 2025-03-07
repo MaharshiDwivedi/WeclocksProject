@@ -1,4 +1,3 @@
-// FundDist.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { X, Trash2, Pencil, Plus, AlertCircle, Search } from "lucide-react";
@@ -20,6 +19,8 @@ const FundDist = () => {
   const [errors, setErrors] = useState({});
   const [additionalAmount, setAdditionalAmount] = useState("");
   const [formError, setFormError] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteFundId, setDeleteFundId] = useState(null);
 
   useEffect(() => {
     const fetchFundData = async () => {
@@ -97,17 +98,9 @@ const FundDist = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this fund?")) {
-      try {
-        await axios.delete(`http://localhost:5000/api/fund-distribution/${id}`);
-        setFundData((prevFundData) => prevFundData.filter((fund) => fund.demand_master_id !== id));
-        setFilteredFundData((prevFilteredFundData) => prevFilteredFundData.filter((fund) => fund.demand_master_id !== id));
-      } catch (err) {
-        console.error("Error deleting fund:", err);
-        setError("Failed to delete fund");
-      }
-    }
+  const handleDelete = (id) => {
+    setDeleteFundId(id);
+    setIsDeleteModalOpen(true);
   };
 
   const handleEdit = (fund) => {
@@ -210,7 +203,7 @@ const FundDist = () => {
               setIsEditMode(false);
               setIsModalOpen(true);
             }}
-            className="bg-blue-950 text-white hover:bg-blue-900 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg"
+            className="bg-blue-950 text-white hover:bg-blue-900 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont"
           >
             <Plus className="mr-2" /> Add Fund
           </button>
@@ -356,12 +349,54 @@ const FundDist = () => {
               )}
             </div>
 
-            <div className="p-6 border-t">
+            <div className="p-3 border-t flex item-center justify-center">
               <button
                 onClick={handleSubmit}
-                className="w-full bg-blue-950 text-white py-3 rounded-md hover:bg-blue-900 transition-colors text-[18px] shadow-md hover:shadow-lg"
+                className="w-[40%] bg-blue-950 text-white py-3 rounded-md hover:bg-blue-900 transition-colors font-semibold text-xl"
+                >
+                {isEditMode ? "SUBMIT" : "SUBMIT"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 realfont">
+          <div className="bg-white rounded-lg shadow-2xl w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+            <div className="p-6 border-b flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-blue-950">Confirm Delete</h2>
+              <button onClick={() => setIsDeleteModalOpen(false)} className="text-gray-500 hover:text-gray-700 transition-colors">
+                <X />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <p className="text-gray-700 font-bold">Are you sure you want to delete this fund?</p>
+            </div>
+
+            <div className="p-6 border-t flex justify-end space-x-4">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
               >
-                {isEditMode ? "UPDATE FUND" : "ADD FUND"}
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await axios.delete(`http://localhost:5000/api/fund-distribution/${deleteFundId}`);
+                    setFundData((prevFundData) => prevFundData.filter((fund) => fund.demand_master_id !== deleteFundId));
+                    setFilteredFundData((prevFilteredFundData) => prevFilteredFundData.filter((fund) => fund.demand_master_id !== deleteFundId));
+                    setIsDeleteModalOpen(false);
+                  } catch (err) {
+                    console.error("Error deleting fund:", err);
+                    setError("Failed to delete fund");
+                  }
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+              >
+                Delete
               </button>
             </div>
           </div>

@@ -73,9 +73,34 @@ const AOHome = () => {
     },
   };
 
+
+  const getBreadcrumbs = () => {
+    const pathnames = location.pathname.split("/").filter((x) => x);
+    const breadcrumbs = [{ name: "Account Officer", path: "/aohome" }];
+  
+    if (pathnames.includes("aodashboard")) {
+      breadcrumbs.push({ name: "Dashboard", path: "/aohome/aodashboard" });
+    } else if (pathnames.includes("funddist")) {
+      breadcrumbs.push({ name: "Fund Distribution", path: "/aohome/funddist" });
+    } else if (pathnames.includes("fundreq")) {
+      breadcrumbs.push({ name: "Fund Request", path: "/aohome/fundreq" });
+    } else if (pathnames.includes("documents")) {
+      breadcrumbs.push({ name: "Documents", path: "/aohome/documents" });
+    } else if (pathnames.includes("genreport")) {
+      breadcrumbs.push({ name: "Generate Report", path: "/aohome/genreport" });
+    } else if (pathnames.includes("smcschools")) {
+      breadcrumbs.push({ name: "SMC Schools", path: "/aohome/smcschools" });
+    }
+  
+    return breadcrumbs;
+  };
+  
+
+
+
   return (
     <div
-      className="flex h-screen bg-neutral-200"
+      className="flex min-h-screen bg-neutral-200"
       style={{ fontSize: `${fontSize}px` }}
     >
       {/* Sidebar - Full Height */}
@@ -184,6 +209,42 @@ const AOHome = () => {
     </button>
   </div>
 </div>
+
+
+       {/*Breadcrumbs */}
+       <div className="bg-gradient-to-r from-blue-100 to-blue-800  px-6 py-3 shadow-sm  font2 ">
+          <nav className="flex" aria-label="Breadcrumb">
+            <ol className="inline-flex items-center space-x-2">
+              {getBreadcrumbs().map((crumb, index) => (
+                <li key={index} className="inline-flex items-center">
+                  {index > 0 && (
+                    <span className="mx-2 text-blue-400 font-bold">/</span>
+                  )}
+                  <Link
+                    to={crumb.path}
+                    className={`inline-flex items-center px-2 py-1 rounded-md transition-all duration-200 ${
+                      index === getBreadcrumbs().length - 1
+                        ? "bg-blue-500 text-white font-semibold shadow-md"
+                        : "text-blue-700 hover:bg-blue-200 hover:text-blue-900"
+                    }`}
+                  >
+                    {crumb.name}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </div>
+
+
+
+
+
+
+
+
+
+
 
 
         {/* Routed Content */}

@@ -18,6 +18,8 @@ const Documents = () => {
   const [fileName, setFileName] = useState("");
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+const [deleteDocumentId, setDeleteDocumentId] = useState(null);
 
   // Fetch documents
   const fetchDocuments = async () => {
@@ -147,15 +149,9 @@ const Documents = () => {
   };
 
   // Delete document
-  const handleDelete = async (documentId) => {
-    if (window.confirm("Are you sure you want to delete this document?")) {
-      try {
-        await axios.delete(`http://localhost:5000/api/documents/${documentId}`);
-        fetchDocuments();
-      } catch (error) {
-        console.error("Error deleting document:", error);
-      }
-    }
+  const handleDelete = (documentId) => {
+    setDeleteDocumentId(documentId);
+    setIsDeleteModalOpen(true);
   };
 
   // Reset form
@@ -281,7 +277,7 @@ const Documents = () => {
           <select
             value={selectedYear}
             onChange={handleYearFilter}
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-6 py-2 border bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mr-10 realfont2"
           >
             <option value="">All Years</option>
             <option value="2023-24">2023-24</option>
@@ -447,6 +443,63 @@ const Documents = () => {
           </div>
         </div>
       )}
+
+{isDeleteModalOpen && (
+  <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-xl w-[400px] max-h-[90vh] overflow-y-auto">
+      <div className="p-6 border-b flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-blue-950">Confirm Delete</h2>
+        <button
+          onClick={() => setIsDeleteModalOpen(false)}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <X />
+        </button>
+      </div>
+
+      <div className="p-6 space-y-4">
+        <p className="text-gray-700">Are you sure you want to delete this document?</p>
+      </div>
+
+      <div className="p-6 border-t flex justify-end space-x-4">
+        <button
+          onClick={() => setIsDeleteModalOpen(false)}
+          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={async () => {
+            try {
+              await axios.delete(`http://localhost:5000/api/documents/${deleteDocumentId}`);
+              fetchDocuments(); // Refresh the documents list
+              setIsDeleteModalOpen(false);
+            } catch (error) {
+              console.error("Error deleting document:", error);
+            }
+          }}
+          className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* File Preview Modal */}
       {selectedFile && (

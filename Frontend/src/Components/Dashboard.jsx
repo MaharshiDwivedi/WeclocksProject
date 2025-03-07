@@ -88,26 +88,24 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col px-4 md:px-10 py-6 min-h-screen gap-8 bgcolor shadow-sm">
+    <div className="flex flex-col px-4 md:px-10 py-6 min-h-screen gap-8 shadow-sm">
       {/* Date Picker */}
       <div className="w-full flex items-center">
-        <label className="text-lg font-semibold text-blue-950 mr-4 realfont2">
-          Choose Month:
-        </label>
+        
         <input
           type="month" 
           value={`${selectedDate.year}-${selectedDate.month
             .toString()
             .padStart(2, "0")}`}
           onChange={handleDateChange}
-          className="px-4 py-2 border-2 border-blue-950 rounded-lg shadow-sm text-lg text-blue-950 cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:outline-none hover:border-blue-700 hover:shadow-md realfont"
+          className="px-4 py-2 border-2 ml-[73px] bg-white border-blue-950 rounded-lg shadow-sm text-lg text-blue-950 cursor-pointer transition-all duration-300 focus:ring-2 focus:ring-blue-500 focus:outline-none hover:border-blue-700 hover:shadow-md realfont"
         />
       </div>
 
       {/* Main Content */}
       <div className="flex flex-col md:flex-row justify-center items-start gap-6">
         {/* Bar Graph */}
-        <div className="w-full md:w-[45vw] h-[400px] bg-white shadow-lg rounded-lg overflow-hidden">
+        <div className="w-full md:w-[45vw] h-[400px] bg-white shadow-lg rounded-lg  overflow-hidden ">
           <BarGraph
             width="100%"
             height="400px"

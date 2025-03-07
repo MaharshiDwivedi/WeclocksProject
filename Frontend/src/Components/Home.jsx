@@ -25,7 +25,6 @@ const Home = () => {
       navigate("/login");
     }
   };
-  
 
   const increaseTextSize = () => {
     setFontSize((prev) => Math.min(prev + 2, 24));
@@ -35,8 +34,27 @@ const Home = () => {
     setFontSize((prev) => Math.max(prev - 2, 12));
   };
 
+  // Breadcrumbs logic
+  const getBreadcrumbs = () => {
+    const pathnames = location.pathname.split("/").filter((x) => x);
+    const breadcrumbs = [{ name: "Headmaster", path: "/home" }];
+
+    if (pathnames.includes("dashboard")) {
+      breadcrumbs.push({ name: "Dashboard", path: "/home/dashboard" });
+    } else if (pathnames.includes("meetings")) {
+      breadcrumbs.push({ name: "Meetings", path: "/home/meetings" });
+      if (pathnames.includes("tharav")) {
+        breadcrumbs.push({ name: "Tharav", path: location.pathname });
+      }
+    } else if (pathnames.includes("newmember")) {
+      breadcrumbs.push({ name: "Committee Members", path: "/home/newmember" });
+    }
+
+    return breadcrumbs;
+  };
+
   return (
-    <div className="flex h-screen bg-white" style={{ fontSize: `${fontSize}px` }}>
+<div className="flex min-h-screen bg-neutral-200">
       {/* Sidebar */}
       <aside className="w-64 bg-blue-950 text-white flex flex-col min-h-screen h-screen shadow-lg fixed">
         <div className="w-full h-[55px] bg-blue-200 text-blue-950 text-[30px] text-center realfont shadow-md flex items-center justify-center overflow-hidden">
@@ -47,7 +65,6 @@ const Home = () => {
           <NavLink to="/home/dashboard" label="Dashboard" path={location.pathname} icon={<ChartColumnIncreasing size={20} />} />
           <NavLink to="/home/meetings" label="Meetings" path={location.pathname} icon={<CalendarCheck size={20} />} />
           <NavLink to="/home/newmember" label="Commitee Members" path={location.pathname} icon={<UsersRound size={20} />} />
-
         </div>
       </aside>
 
@@ -55,7 +72,7 @@ const Home = () => {
       <div className="flex-1 ml-64 flex flex-col">
         {/* Navbar */}
         <div className="bg-white p-4 flex justify-between items-center h-[55px] shadow-md">
-          <div className=" text-[18px] text-blue-950 font2">Welcome, HeadMaster.</div>
+          <div className="text-[18px] text-blue-950 font2">Welcome, HeadMaster.</div>
           <div className="flex items-center space-x-2">
             <button onClick={increaseTextSize} className="flex items-center gap-1 px-3 py-2 text-neutral-900 rounded hover:bg-neutral-300" title="Increase text size">
               <span>+</span>
@@ -71,6 +88,31 @@ const Home = () => {
           </div>
         </div>
 
+        {/*Breadcrumbs */}
+        <div className="bg-gradient-to-r from-blue-100 to-blue-800  px-6 py-3 shadow-sm  font2 ">
+          <nav className="flex" aria-label="Breadcrumb">
+            <ol className="inline-flex items-center space-x-2">
+              {getBreadcrumbs().map((crumb, index) => (
+                <li key={index} className="inline-flex items-center">
+                  {index > 0 && (
+                    <span className="mx-2 text-blue-400 font-bold">/</span>
+                  )}
+                  <Link
+                    to={crumb.path}
+                    className={`inline-flex items-center px-2 py-1 rounded-md transition-all duration-200 ${
+                      index === getBreadcrumbs().length - 1
+                        ? "bg-blue-500 text-white font-semibold shadow-md"
+                        : "text-blue-700 hover:bg-blue-200 hover:text-blue-900"
+                    }`}
+                  >
+                    {crumb.name}
+                  </Link>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        </div>
+
         {/* Routed Content */}
         <div className="flex-1">
           <Routes>
@@ -82,11 +124,8 @@ const Home = () => {
           </Routes>
         </div>
         <footer className="bg-blue-100 text-neutral-500 p-3 mt-auto realfont">
-        Developed by WeClocks Technology Pvt. Ltd. @ 2025
-  </footer>
-
-
-        
+          Developed by WeClocks Technology Pvt. Ltd. @ 2025
+        </footer>
       </div>
     </div>
   );

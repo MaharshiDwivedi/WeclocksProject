@@ -86,8 +86,8 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
   };
 
   return (
-    <div style={{ width, height }}>
-      <Bar data={data} options={options} />
+    <div style={{ width, height } } >
+      <Bar data={data} options={options}  />
     </div>
   );
 };
