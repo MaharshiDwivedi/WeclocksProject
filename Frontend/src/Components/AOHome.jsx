@@ -204,6 +204,7 @@ const AOHome = () => {
     <button
       onClick={handleLogout}
       className="flex items-center justify-center text-white px-2 py-2 rounded-md hover:bg-neutral-300"
+      title="Logout"
     >
       <CirclePower className="mr-2 text-red-500" size={24} />
     </button>
@@ -277,13 +278,13 @@ const AOHome = () => {
 const NavLink = ({ to, label, path, icon }) => (
   <Link
   to={to}
-  className={`flex items-center px-4 py-2 transition-all duration-300 ease-in-out font-medium relative overflow-hidden
-    ${path === to ? "text-blue-950 font-semibold shadow-md rounded-r-[5px]" : "text-white hover:bg-gray-700 hover:text-gray-300"}
+  className={`flex items-center px-4 py-2 transition-all duration-200 ease-in-out font-medium relative overflow-hidden
+    ${path === to ? "text-blue-950 font-semibold shadow-md  rounded-r-[7px] " : "text-white  hover:text-cyan-400"}
   `}
 >
   {/* Smooth background transition */}
   <span
-    className={`absolute inset-0 bg-white transition-transform duration-300 ease-in-out ${
+    className={`absolute inset-0  bg-white transition-transform duration-500 ease-in-out ${
       path === to ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
     }`}
   />
