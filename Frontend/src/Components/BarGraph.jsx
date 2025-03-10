@@ -21,7 +21,7 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
   const expected = expectedExpense || 0;
 
   useEffect(() => {
-    console.log("📊 API Data:", { actual, expected });
+    console.log(" API Data:", { actual, expected });
 
     const maxValue = Math.max(actual, expected);
 

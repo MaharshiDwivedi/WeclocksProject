@@ -1,246 +1,309 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { X, Trash2, Pencil, Plus, AlertCircle, Search } from "lucide-react";
-import DataTable from "react-data-table-component";
+"use client"
+
+import { useEffect, useState } from "react"
+import axios from "axios"
+import { X, Plus, AlertCircle, Search } from "lucide-react"
+import DataTable from "react-data-table-component"
 
 const FundDist = () => {
-  const [fundData, setFundData] = useState([]);
-  const [filteredFundData, setFilteredFundData] = useState([]);
-  const [schools, setSchools] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editFundId, setEditFundId] = useState(null);
-  const [selectedSchool, setSelectedSchool] = useState("");
-  const [selectedYear, setSelectedYear] = useState("2023-24");
-  const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [errors, setErrors] = useState({});
-  const [additionalAmount, setAdditionalAmount] = useState("");
-  const [formError, setFormError] = useState("");
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleteFundId, setDeleteFundId] = useState(null);
+  const [fundData, setFundData] = useState([])
+  const [filteredFundData, setFilteredFundData] = useState([])
+  const [schools, setSchools] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditMode, setIsEditMode] = useState(false)
+  const [editFundId, setEditFundId] = useState(null)
+  const [selectedSchool, setSelectedSchool] = useState("")
+  const [selectedYear, setSelectedYear] = useState("2023-24")
+  const [amount, setAmount] = useState("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [errors, setErrors] = useState({})
+  const [additionalAmount, setAdditionalAmount] = useState("")
+  const [formError, setFormError] = useState("")
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [deleteFundId, setDeleteFundId] = useState(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  // Add responsive detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
 
   useEffect(() => {
     const fetchFundData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/fund-distribution");
-        setFundData(response.data);
-        setFilteredFundData(response.data);
-        setLoading(false);
+        const response = await axios.get("http://localhost:5000/api/fund-distribution")
+        setFundData(response.data)
+        setFilteredFundData(response.data)
+        setLoading(false)
       } catch (err) {
-        console.error("Error fetching fund data:", err);
-        setError("Failed to fetch fund data");
-        setLoading(false);
+        console.error("Error fetching fund data:", err)
+        setError("Failed to fetch fund data")
+        setLoading(false)
       }
-    };
+    }
 
     const fetchSchools = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/schools");
-        setSchools(response.data);
+        const response = await axios.get("http://localhost:5000/api/schools")
+        setSchools(response.data)
       } catch (err) {
-        console.error("Error fetching schools:", err);
+        console.error("Error fetching schools:", err)
       }
-    };
+    }
 
-    fetchFundData();
-    fetchSchools();
-  }, []);
+    fetchFundData()
+    fetchSchools()
+  }, [])
 
   const validateForm = () => {
-    const newErrors = {};
+    const newErrors = {}
     if (isEditMode) {
-      if (!additionalAmount || parseFloat(additionalAmount) <= 0) {
-        newErrors.additionalAmount = "Valid additional amount is required";
+      if (!additionalAmount || Number.parseFloat(additionalAmount) <= 0) {
+        newErrors.additionalAmount = "Valid additional amount is required"
       }
     } else {
-      if (!selectedSchool) newErrors.school = "School is required";
-      if (!amount || amount <= 0) newErrors.amount = "Valid amount is required";
+      if (!selectedSchool) newErrors.school = "School is required"
+      if (!amount || amount <= 0) newErrors.amount = "Valid amount is required"
     }
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm()) return
 
-    setFormError("");
+    setFormError("")
 
     try {
       if (isEditMode) {
-        const payload = { additional_amount: additionalAmount };
-        await axios.put(`http://localhost:5000/api/fund-distribution/${editFundId}`, payload);
-        const response = await axios.get("http://localhost:5000/api/fund-distribution");
-        setFundData(response.data);
-        setFilteredFundData(response.data);
-        resetForm();
+        const payload = { additional_amount: additionalAmount }
+        await axios.put(`http://localhost:5000/api/fund-distribution/${editFundId}`, payload)
+        const response = await axios.get("http://localhost:5000/api/fund-distribution")
+        setFundData(response.data)
+        setFilteredFundData(response.data)
+        resetForm()
       } else {
         const payload = {
           school_id: selectedSchool,
           year: selectedYear,
           amount,
-        };
-        const response = await axios.post("http://localhost:5000/api/fund-distribution", payload);
-        const updatedResponse = await axios.get("http://localhost:5000/api/fund-distribution");
-        setFundData(updatedResponse.data);
-        setFilteredFundData(updatedResponse.data);
-        resetForm();
+        }
+        const response = await axios.post("http://localhost:5000/api/fund-distribution", payload)
+        const updatedResponse = await axios.get("http://localhost:5000/api/fund-distribution")
+        setFundData(updatedResponse.data)
+        setFilteredFundData(updatedResponse.data)
+        resetForm()
       }
     } catch (err) {
       if (err.response && err.response.status === 409) {
-        setFormError(err.response.data.message);
+        setFormError(err.response.data.message)
       } else {
-        console.error("Error saving fund:", err);
-        setError("Failed to save fund");
+        console.error("Error saving fund:", err)
+        setError("Failed to save fund")
       }
     }
-  };
+  }
 
   const handleDelete = (id) => {
-    setDeleteFundId(id);
-    setIsDeleteModalOpen(true);
-  };
+    setDeleteFundId(id)
+    setIsDeleteModalOpen(true)
+  }
 
   const handleEdit = (fund) => {
-    setSelectedSchool(fund.school_id);
-    setSelectedYear(fund.year);
-    setAmount(fund.amount);
-    setAdditionalAmount("");
-    setEditFundId(fund.demand_master_id);
-    setIsEditMode(true);
-    setIsModalOpen(true);
-    setErrors({});
-    setFormError("");
-  };
+    setSelectedSchool(fund.school_id)
+    setSelectedYear(fund.year)
+    setAmount(fund.amount)
+    setAdditionalAmount("")
+    setEditFundId(fund.demand_master_id)
+    setIsEditMode(true)
+    setIsModalOpen(true)
+    setErrors({})
+    setFormError("")
+  }
 
   const resetForm = () => {
-    setIsModalOpen(false);
-    setIsEditMode(false);
-    setEditFundId(null);
-    setSelectedSchool("");
-    setSelectedYear("2023-24");
-    setAmount("");
-    setAdditionalAmount("");
-    setErrors({});
-    setFormError("");
-  };
+    setIsModalOpen(false)
+    setIsEditMode(false)
+    setEditFundId(null)
+    setSelectedSchool("")
+    setSelectedYear("2023-24")
+    setAmount("")
+    setAdditionalAmount("")
+    setErrors({})
+    setFormError("")
+  }
 
   const handleSearch = (e) => {
-    const term = e.target.value.toLowerCase();
-    setSearchTerm(term);
+    const term = e.target.value.toLowerCase()
+    setSearchTerm(term)
     const filtered = fundData.filter(
-      (fund) =>
-        fund.school_name.toLowerCase().includes(term) ||
-        fund.amount.toString().includes(term)
-    );
-    setFilteredFundData(filtered);
-  };
+      (fund) => fund.school_name.toLowerCase().includes(term) || fund.amount.toString().includes(term),
+    )
+    setFilteredFundData(filtered)
+  }
 
+  // Updated columns with responsive design - FIXED: Using text-only buttons on small screens
   const columns = [
     {
       name: "Sr. No.",
       selector: (row, index) => index + 1,
       sortable: false,
-      width: "100px",
+      width: "80px",
+      hide: "sm",
     },
     {
       name: "School Name",
       selector: (row) => row.school_name,
       sortable: true,
+      wrap: true,
+      minWidth: "200px",
     },
     {
       name: "Amount",
       selector: (row) => `₹${row.amount}`,
       sortable: true,
+      minWidth: "120px",
     },
     {
       name: "Date",
-      selector: (row) =>
-        new Date(row.ins_date_time).toLocaleDateString("en-GB").replace(/\//g, "-"),
+      selector: (row) => new Date(row.ins_date_time).toLocaleDateString("en-GB").replace(/\//g, "-"),
       sortable: true,
+      hide: "md",
+      minWidth: "120px",
     },
     {
       name: "Actions",
       cell: (row) => (
-        <div className="flex space-x-2 gap-5">
-          <button onClick={() => handleEdit(row)} className="flex">
-            <span className="realfont2 text-teal-500 text-lg hover:text-teal-600 transition-colors">EDIT</span>
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
+          <button
+            onClick={() => handleEdit(row)}
+            className=" text-teal-600 x-3 py-1 rounded-md hover:bg-teal-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
+          >
+            EDIT
           </button>
-          <button onClick={() => handleDelete(row.demand_master_id)} className="text-red-500 hover:text-red-600 transition-colors">
-            <span className="realfont2 text-lg">DELETE</span>
+          <button
+            onClick={() => handleDelete(row.demand_master_id)}
+            className=" text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
+          >
+            DELETE
           </button>
         </div>
       ),
+      minWidth: "150px",
     },
-  ];
+  ]
 
-  if (loading) return <div className="text-center p-6">Loading...</div>;
-  if (error) return <div className="text-center p-6 text-red-500">{error}</div>;
+  if (loading) return <div className="text-center p-6">Loading...</div>
+  if (error) return <div className="text-center p-6 text-red-500">{error}</div>
 
   return (
-    <div className="container mx-auto px-8 py-10">
+    <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 realfont">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="bg-blue-950 text-white p-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold">Fund Distribution</h2>
+        <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+          <h2 className="text-xl md:text-2xl font-bold">Fund Distribution</h2>
         </div>
 
-        <div className="p-4 flex items-center justify-between">
-          <div className="relative w-[300px]">
+        {/* Make search and add button responsive */}
+        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="relative w-full sm:w-[300px]">
             <input
               type="text"
               placeholder="Search"
               value={searchTerm}
               onChange={handleSearch}
-              className="w-full pl-4 pr-10 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
             />
-            <Search className="absolute right-3 top-3 text-gray-400 -mt-1" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           </div>
 
           <button
             onClick={() => {
-              setIsEditMode(false);
-              setIsModalOpen(true);
+              setIsEditMode(false)
+              setIsModalOpen(true)
             }}
-            className="bg-blue-950 text-white hover:bg-blue-900 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont"
+            className="bg-blue-950 text-white hover:bg-blue-900 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont w-[200px] sm:w-auto justify-center sm:justify-start"
           >
-            <Plus className="mr-2" /> Add Fund
+            <Plus className="mr-2" size={18} /> Add Fund
           </button>
         </div>
 
-        <DataTable
-          columns={columns}
-          data={filteredFundData}
-          pagination
-          highlightOnHover
-          customStyles={{
-            headCells: { style: { backgroundColor: "#f3f4f6", fontSize: "18px", justifyContent: "center" } },
-            cells: { style: { fontSize: "16px", fontFamily: "Poppins", color: "#333", justifyContent: "center" } },
-          }}
-        />
+        {/* Make DataTable responsive */}
+        <div className="overflow-x-auto">
+          <DataTable
+            columns={columns}
+            data={filteredFundData}
+            pagination
+            paginationPerPage={10}
+            paginationRowsPerPageOptions={[10, 20, 30, 50]}
+            highlightOnHover
+            responsive
+            defaultSortFieldId={1}
+            customStyles={{
+              headCells: {
+                style: {
+                  backgroundColor: "#f3f4f6",
+                  fontSize: "15px",
+                  fontWeight: "600",
+                  justifyContent: "center",
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                },
+              },
+              cells: {
+                style: {
+                  fontSize: "14px",
+                  fontFamily: "Poppins",
+                  color: "#333",
+                  justifyContent: "center",
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                },
+              },
+              pagination: {
+                style: {
+                  fontSize: "13px",
+                  minHeight: "56px",
+                  borderTopStyle: "solid",
+                  borderTopWidth: "1px",
+                  borderTopColor: "#f3f4f6",
+                },
+              },
+            }}
+          />
+        </div>
 
-        {filteredFundData.length === 0 && (
-          <div className="text-center p-8 text-gray-500">No funds found</div>
-        )}
+        {filteredFundData.length === 0 && <div className="text-center p-4 md:p-8 text-gray-500">No funds found</div>}
       </div>
 
+      {/* Make modals responsive */}
       {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 realfont">
-          <div className="bg-white rounded-lg shadow-2xl w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
-            <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-blue-950">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
                 {isEditMode ? "Edit Fund" : "Fund Distribution"}
               </h2>
-              <button onClick={resetForm} className="text-gray-500 hover:text-gray-700 transition-colors">
-                <X />
+              <button
+                onClick={resetForm}
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            {/* Form content remains the same, just ensure padding is responsive */}
+            <div className="p-4 md:p-6 space-y-4">
               {formError && (
-                <div className="text-red-500 text-sm mb-4 flex items-center">
-                  <AlertCircle className="mr-2" size={20} /> {formError}
+                <div className="text-red-500 text-sm mb-4 flex items-center p-3 bg-red-50 rounded-md">
+                  <AlertCircle className="mr-2 flex-shrink-0" size={20} />
+                  <span>{formError}</span>
                 </div>
               )}
 
@@ -250,9 +313,7 @@ const FundDist = () => {
                     <label className="block mb-2 text-sm font-medium">School</label>
                     <input
                       type="text"
-                      value={
-                        schools.find((s) => String(s.school_id) === String(selectedSchool))?.school_name || ""
-                      }
+                      value={schools.find((s) => String(s.school_id) === String(selectedSchool))?.school_name || ""}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
                       readOnly
                     />
@@ -282,13 +343,15 @@ const FundDist = () => {
                       value={additionalAmount}
                       onChange={(e) => setAdditionalAmount(e.target.value)}
                       className={`w-full px-3 py-2 border rounded-md ${
-                        errors.additionalAmount ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
+                        errors.additionalAmount
+                          ? "border-red-500 focus:ring-red-500"
+                          : "border-gray-300 focus:border-blue-500"
                       }`}
                       placeholder="Enter additional amount"
                     />
                     {errors.additionalAmount && (
                       <p className="text-red-500 text-sm mt-1 flex items-center">
-                        <AlertCircle className="mr-2" size={16} /> {errors.additionalAmount}
+                        <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.additionalAmount}
                       </p>
                     )}
                   </div>
@@ -313,7 +376,7 @@ const FundDist = () => {
                     </select>
                     {errors.school && (
                       <p className="text-red-500 text-sm mt-1 flex items-center">
-                        <AlertCircle className="mr-2" size={16} /> {errors.school}
+                        <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.school}
                       </p>
                     )}
                   </div>
@@ -341,7 +404,7 @@ const FundDist = () => {
                     />
                     {errors.amount && (
                       <p className="text-red-500 text-sm mt-1 flex items-center">
-                        <AlertCircle className="mr-2" size={16} /> {errors.amount}
+                        <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.amount}
                       </p>
                     )}
                   </div>
@@ -352,8 +415,8 @@ const FundDist = () => {
             <div className="p-3 border-t flex item-center justify-center">
               <button
                 onClick={handleSubmit}
-                className="w-[40%] bg-blue-950 text-white py-3 rounded-md hover:bg-blue-900 transition-colors font-semibold text-xl"
-                >
+                className="w-full sm:w-[60%] md:w-[40%] bg-blue-950 text-white py-2 md:py-3 rounded-md hover:bg-blue-900 transition-colors font-semibold text-lg md:text-xl"
+              >
                 {isEditMode ? "SUBMIT" : "SUBMIT"}
               </button>
             </div>
@@ -361,40 +424,46 @@ const FundDist = () => {
         </div>
       )}
 
+      {/* Make delete modal responsive */}
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 realfont">
-          <div className="bg-white rounded-lg shadow-2xl w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
-            <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-blue-950">Confirm Delete</h2>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="text-gray-500 hover:text-gray-700 transition-colors">
-                <X />
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 realfont p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950">Confirm Delete</h2>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-4 md:p-6 space-y-4">
               <p className="text-gray-700 font-bold">Are you sure you want to delete this fund?</p>
             </div>
 
-            <div className="p-6 border-t flex justify-end space-x-4">
+            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
               >
                 Cancel
               </button>
               <button
                 onClick={async () => {
                   try {
-                    await axios.delete(`http://localhost:5000/api/fund-distribution/${deleteFundId}`);
-                    setFundData((prevFundData) => prevFundData.filter((fund) => fund.demand_master_id !== deleteFundId));
-                    setFilteredFundData((prevFilteredFundData) => prevFilteredFundData.filter((fund) => fund.demand_master_id !== deleteFundId));
-                    setIsDeleteModalOpen(false);
+                    await axios.delete(`http://localhost:5000/api/fund-distribution/${deleteFundId}`)
+                    setFundData((prevFundData) => prevFundData.filter((fund) => fund.demand_master_id !== deleteFundId))
+                    setFilteredFundData((prevFilteredFundData) =>
+                      prevFilteredFundData.filter((fund) => fund.demand_master_id !== deleteFundId),
+                    )
+                    setIsDeleteModalOpen(false)
                   } catch (err) {
-                    console.error("Error deleting fund:", err);
-                    setError("Failed to delete fund");
+                    console.error("Error deleting fund:", err)
+                    setError("Failed to delete fund")
                   }
                 }}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
               >
                 Delete
               </button>
@@ -403,7 +472,8 @@ const FundDist = () => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default FundDist;
+export default FundDist
+
