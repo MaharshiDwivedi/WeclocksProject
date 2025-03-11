@@ -1,12 +1,12 @@
-
 import { useEffect, useState, useRef } from "react";
 import { Plus, X, Image, FileDown, AlertCircle, Search, Upload } from "lucide-react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import WebcamCapture from "./WebcamCapture";
-import Swal from "sweetalert2"; // Import SweetAlert2
+import { useNavigate } from "react-router-dom";
 
 export default function Tharavopration() {
+  const navigate = useNavigate();
   const API_URL = "http://localhost:5000/api/tharav";
   const API_URL_Purpose = "http://localhost:5000/api/purpose";
   const SERVER_URL = "http://localhost:5000";
@@ -24,12 +24,10 @@ export default function Tharavopration() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
   const [errors, setErrors] = useState({});
+  const [formError, setFormError] = useState("");
   const fileInputRef = useRef(null);
-  
-
-
-  
-  
+const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+const [deleteNirnayId, setDeleteNirnayId] = useState(null);
 
   const [tharav, setTharav] = useState({
     tharavNo: "",
@@ -71,25 +69,6 @@ export default function Tharavopration() {
     }
   }, [searchTerm, nirnay]);
 
-  //   try {
-  //     const res = await fetch(API_URL);
-  //     if (!res.ok) throw new Error("Failed to fetch data");
-  //     const data = await res.json();
-  //     const sortedData = Array.isArray(data)
-  //       ? data.sort((a, b) => {
-  //           const recordA = a.nirnay_reord?.split("|");
-  //           const recordB = b.nirnay_reord?.split("|");
-  //           return recordB[8]?.localeCompare(recordA[8]);
-  //         })
-  //       : [];
-  //     setNirnay(sortedData);
-  //     setFilteredNirnay(sortedData);
-  //   } catch (error) {
-  //     console.error("Error fetching Tharavs:", error);
-  //     setNirnay([]);
-  //     setFilteredNirnay([]);
-  //   }
-  // };
   const fetchTharavs = async () => {
     try {
       const res = await fetch(API_URL);
@@ -99,7 +78,6 @@ export default function Tharavopration() {
         ? data.sort((a, b) => {
             const recordA = a.nirnay_reord?.split("|");
             const recordB = b.nirnay_reord?.split("|");
-            // Sort by tharavNo in ascending order
             return recordA[1]?.localeCompare(recordB[1]);
           })
         : [];
@@ -111,10 +89,7 @@ export default function Tharavopration() {
       setFilteredNirnay([]);
     }
   };
-  
 
-
-  
   const fetchMembers = async () => {
     try {
       const res = await fetch(API_URL_Purpose);
@@ -126,7 +101,6 @@ export default function Tharavopration() {
       setPurpose([]);
     }
   };
-
 
   const handleEdit = (nirnay) => {
     const recordData = nirnay.nirnay_reord.split("|");
@@ -154,199 +128,128 @@ export default function Tharavopration() {
     setCurrentNirnayId(nirnay.nirnay_id);
     setIsEditing(true);
     setIsModalOpen(true);
+  
   };
 
- 
 
 
-const handleDelete = async (id) => {
-  // Show confirmation popup
-  const result = await Swal.fire({
-    title: "Are you sure?",
-    text: "You won't be able to revert this!",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Yes, delete it!",
-  });
-
-  if (!result.isConfirmed) return; // Stop if user cancels
-
-  try {
-    const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-
-    if (!res.ok) {
-      throw new Error("Failed to delete nirnay");
-    }
-
-    Swal.fire({
-      title: "Deleted!",
-      text: "Nirnay has been deleted successfully.",
-      icon: "success",
-      timer: 2000, // Auto-close after 2 seconds
-    });
-
-    fetchTharavs(); // Refresh the list after deletion
-  } catch (error) {
-    Swal.fire({
-      title: "Error!",
-      text: "Failed to delete nirnay. Please try again.",
-      icon: "error",
-    });
-
-    console.error("Error deleting nirnay:", error);
-  }
+  const handleDelete = (id) => {
+    setDeleteNirnayId(id);
+    setIsDeleteModalOpen(true);
 };
 
-const handleSubmit = async (e) => {
+  const handleRemarks = (row) => {
+    const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
+    navigate(`/home/meetings/tharav/${row.nirnay_id}/remarks`, {
+      state: {
+        tharavNo: recordData[1] || "N/A",
+        date: recordData[8] || "N/A",
+        purpose: purpose.find((data) => data.head_id == recordData[11])?.head_name || "N/A",
+        expectedAmount: recordData[3] || "N/A",
+        decisionTaken: recordData[2] || "N/A",
+        photo: recordData[4] ? `${SERVER_URL}${recordData[4]}` : null,
+      },
+    });
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!tharav.tharavNo || !/^[1-9]\d*$/.test(tharav.tharavNo)) {
+      newErrors.tharavNo = "Tharav No must be a positive number starting from 1.";
+    }
+
+    if (!tharav.purpose) {
+      newErrors.purpose = "Purpose is required.";
+    }
+
+    if (!tharav.problemFounded) {
+      newErrors.problemFounded = "Problem Founded is required.";
+    }
+
+    if (!tharav.where) {
+      newErrors.where = "This field is required.";
+    }
+
+    if (!tharav.what) {
+      newErrors.what = "This field is required.";
+    }
+
+    if (!tharav.howMany || !/^\d+$/.test(tharav.howMany)) {
+      newErrors.howMany = "How Many must be a number.";
+    }
+
+    if (!tharav.deadStockNumber || !/^\d+$/.test(tharav.deadStockNumber)) {
+      newErrors.deadStockNumber = "Dead Stock Number must be a number.";
+    }
+
+    if (!tharav.decisionTaken) {
+      newErrors.decisionTaken = "Decision Taken is required.";
+    }
+
+    if (!tharav.expectedExpenditure || !/^\d+$/.test(tharav.expectedExpenditure)) {
+      newErrors.expectedExpenditure = "Expected Expenditure must be a number.";
+    }
+
+    if (!tharav.fixedDate) {
+      newErrors.fixedDate = "Fixed Date is required.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Tharav Data Before Submit:", tharav);
+    if (!validateForm()) return;
 
-    // ✅ 1. Check if all required fields are filled
-    for (let key in tharav) {
-        if (typeof tharav[key] === "string" && !tharav[key].trim()) {
-            Swal.fire({
-                icon: "error",
-                title: "Missing Field!",
-                text: `${key.replace(/([A-Z])/g, " $1")} is required.`,
-            });
-            return;
-        }
+    setFormError("");
 
-        if (tharav[key] === null || tharav[key] === undefined) {
-            Swal.fire({
-                icon: "error",
-                title: "Missing Field!",
-                text: `${key.replace(/([A-Z])/g, " $1")} is required.`,
-            });
-            return;
-        }
-    }
-
-    // ✅ 2. Validate that 'tharavNo' is unique (ONLY WHEN ADDING A NEW ONE)
-    if (!isEditing) {
-        if (nirnay.some(item => item.nirnay_reord?.split("|")[1] === tharav.tharavNo)) {
-            Swal.fire({
-                icon: "error",
-                title: "Duplicate Tharav No!",
-                text: "Tharav No must be unique. Please enter a different number.",
-            });
-            return;
-        }
-    }
-
-    // ✅ 3. Validate numeric fields (allow infinite digits)
-    const numericFields = ["expectedExpenditure", "howMany", "deadStockNumber"];
-    for (let field of numericFields) {
-        if (!/^\d+$/.test(tharav[field])) {
-            Swal.fire({
-                icon: "warning",
-                title: "Invalid Input!",
-                text: `${field.replace(/([A-Z])/g, " $1")} must be a number.`,
-            });
-            return;
-        }
-    }
-
-    // ✅ 4. Validate tharavNo (must be a positive number starting from 1, no max limit)
-if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
-  Swal.fire({
-      icon: "warning",
-      title: "Invalid Tharav No!",
-      text: "Tharav No must be a positive number starting from 1, with no upper limit.",
-  });
-  return;
-}
-
-
-    // ✅ 5. Validate character string fields
-    const stringFields = ["problemFounded", "where", "what", "decisionTaken"];
-    for (let field of stringFields) {
-        if (!/^[a-zA-Z\s]+$/.test(tharav[field])) {
-            Swal.fire({
-                icon: "warning",
-                title: "Invalid Input!",
-                text: `${field.replace(/([A-Z])/g, " $1")} must contain only letters and spaces.`,
-            });
-            return;
-        }
-    }
-
-    // ✅ 6. Ask for confirmation before proceeding
-    const confirmation = await Swal.fire({
-        title: isEditing ? "Are you sure?" : "Confirm Adding",
-        text: isEditing ? "Do you want to update this Tharav?" : "Do you want to add this Tharav?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: isEditing ? "Yes, Update Tharav" : "Yes, Add Tharav",
-        cancelButtonText: "Cancel",
-    });
-
-    if (!confirmation.isConfirmed) {
-        return; // Stop submission if the user cancels
-    }
-
-    // ✅ 7. Prepare Data for Submission
     const currentDate = new Date();
     const formattedDate = `${currentDate.getFullYear()}-${String(
-        currentDate.getMonth() + 1
+      currentDate.getMonth() + 1
     ).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")} ${String(
-        currentDate.getHours()
+      currentDate.getHours()
     ).padStart(2, "0")}:${String(currentDate.getMinutes()).padStart(2, "0")}:${String(
-        currentDate.getSeconds()
+      currentDate.getSeconds()
     ).padStart(2, "0")}`;
 
     const photoValue = tharav.photo instanceof File ? tharav.photo.name : tharav.photo;
 
     const memberData = `1|${tharav.tharavNo}|${tharav.decisionTaken}|${
-        tharav.expectedExpenditure
+      tharav.expectedExpenditure
     }|${photoValue}|14|34|Pending|${
-        !isEditing ? formattedDate : insertdate
+      !isEditing ? formattedDate : insertdate
     }|${formattedDate}|0000-00-00 00:00:00|${tharav.purpose}|${
-        tharav.problemFounded
+      tharav.problemFounded
     }|${tharav.where}|${tharav.what}|${tharav.howMany}|${tharav.deadStockNumber}|${tharav.fixedDate}`;
-   
 
     const formData = new FormData();
     formData.append("nirnay_reord", memberData);
 
     if (tharav.photo instanceof File) {
-        formData.append("photo", tharav.photo);
+      formData.append("photo", tharav.photo);
     }
 
-    // ✅ 8. Send Data to API
     const method = isEditing ? "PUT" : "POST";
     const url = isEditing ? `${API_URL}/${currentNirnayId}` : API_URL;
 
     try {
-        const res = await fetch(url, {
-            method,
-            body: formData,
-        });
+      const res = await fetch(url, {
+        method,
+        body: formData,
+      });
 
-        if (!res.ok) throw new Error("Failed to save nirnay");
+      if (!res.ok) throw new Error("Failed to save nirnay");
 
-        // ✅ 9. Show Success Alert
-        await Swal.fire({
-            icon: "success",
-            title: "Success!",
-            text: `Tharav has been ${isEditing ? "updated" : "created"} successfully.`,
-            confirmButtonColor: "#4CAF50",
-        });
-
-        closeModal();
-        fetchTharavs();
+      closeModal();
+      fetchTharavs();
     } catch (error) {
-        console.error("Fetch error:", error);
-        Swal.fire({
-            icon: "error",
-            title: "Error!",
-            text: `Something went wrong: ${error.message}`,
-        });
+      console.error("Fetch error:", error);
+      setFormError("Failed to save Tharav. Please try again.");
     }
-};
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -366,6 +269,8 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
     });
     setPreviewImage(null);
     setCurrentNirnayId(null);
+    setErrors({});
+    setFormError("");
   };
 
   const handleOpenModal = () => {
@@ -432,7 +337,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
     setSearchTerm(e.target.value);
   };
 
-   const columns = [
+  const columns = [
     {
       name: "Tharav No.",
       selector: (row) => {
@@ -440,7 +345,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return recordData[1] || "N/A";
       },
       sortable: true,
-      width: "120px", // Fixed width for Tharav No.
+      width: "120px",
     },
     {
       name: "Problem Founded",
@@ -449,7 +354,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return recordData[12] || "N/A";
       },
       sortable: true,
-      width: "200px", // Fixed width for Problem Founded
+      width: "200px",
     },
     {
       name: "Purpose",
@@ -458,7 +363,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return purpose.find((data) => data.head_id == recordData[11])?.head_name || "N/A";
       },
       sortable: true,
-      width: "150px", // Fixed width for Purpose
+      width: "150px",
     },
     {
       name: "How Many",
@@ -467,7 +372,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return recordData[15] || "N/A";
       },
       sortable: true,
-      width: "100px", // Fixed width for How Many
+      width: "100px",
     },
     {
       name: "What",
@@ -476,7 +381,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return recordData[14] || "N/A";
       },
       sortable: true,
-      width: "150px", // Fixed width for What
+      width: "150px",
     },
     {
       name: "Where",
@@ -485,7 +390,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return recordData[13] || "N/A";
       },
       sortable: true,
-      width: "150px", // Fixed width for Where
+      width: "150px",
     },
     {
       name: "Expense",
@@ -494,7 +399,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return `₹${recordData[3] || "0"}`;
       },
       sortable: true,
-      width: "120px", // Fixed width for Expense
+      width: "120px",
     },
     {
       name: "Decision",
@@ -503,23 +408,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         return recordData[2] || "N/A";
       },
       sortable: true,
-      width: "200px", // Fixed width for Decision
-    },
-    {
-      name: "Photo",
-      cell: (row) => {
-        const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
-        return recordData[4] ? (
-          <img
-            src={`${SERVER_URL}${recordData[4]}`}
-            alt="Tharav Photo"
-            className="w-12 h-12 object-cover rounded-md border shadow hover:scale-150 transition-transform cursor-zoom-in"
-          />
-        ) : (
-          <div className="text-sm text-gray-500">No image</div>
-        );
-      },
-      width: "120px", // Fixed width for Photo
+      width: "200px",
     },
     {
       name: "Actions",
@@ -537,20 +426,22 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
           >
             <span className="realfont2 text-lg">DELETE</span>
           </button>
+          <button
+            onClick={() => handleRemarks(row)}
+            className="text-blue-500 hover:text-blue-600"
+          >
+            <span className="realfont2 text-lg">REMARKS</span>
+          </button>
         </div>
       ),
-      width: "150px", // Fixed width for Actions
+      width: "200px",
     },
   ];
 
-
-
-
   return (
-    <div className="container mx-auto px-0 py-8  ">
-      <div className="bg-white shadow-md  w-[1200px] mx-auto ">
-        {/* Header */}
-        <div className="bg-blue-950 text-white px-6 py-2 flex justify-between items-center realfont2 ">
+    <div className="container mx-auto px-0 py-8">
+      <div className="bg-white shadow-md w-[1200px] mx-auto">
+        <div className="bg-blue-950 text-white px-6 py-2 flex justify-between items-center realfont2">
           <h2 className="text-2xl font-bold">Tharav Management</h2>
           <button
             onClick={handleOpenModal}
@@ -560,7 +451,6 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
           </button>
         </div>
 
-        {/* Filters */}
         <div className="p-4 bg-gray-50 flex flex-col md:flex-row gap-4">
           <div className="relative flex-grow px-4 text-[20px]">
             <input
@@ -574,9 +464,8 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
           </div>
         </div>
 
-        {/* Table Container with Scroll */}
-        <div className=" overflow-x-auto w-[1200px]">
-          <div className="min-w-[160px]"> {/* Added minimum width to force scrolling */}
+        <div className="overflow-x-auto w-[1200px]">
+          <div className="min-w-[160px]">
             <DataTable
               columns={columns}
               data={filteredNirnay}
@@ -585,9 +474,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
               customStyles={{
                 table: {
                   style: {
-                    width: '100%',
-                    minWidth: '800px', // Match the wrapper's min-width
-                    
+                    width: 'auto'
                   },
                 },
                 headCells: {
@@ -598,7 +485,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     fontWeight: 400,
                     justifyContent: "center",
                     whiteSpace: 'nowrap',
-                    padding: '0 8px', // Add padding for better spacing
+                    padding: '0 8px',
                   },
                 },
                 cells: {
@@ -608,7 +495,7 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     color: "#333",
                     justifyContent: "center",
                     whiteSpace: 'nowrap',
-                    padding: '0 8px', // Add padding for better spacing
+                    padding: '0 8px',
                   },
                 },
               }}
@@ -619,7 +506,6 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
           </div>
         </div>
 
-        {/* Empty State */}
         {filteredNirnay.length === 0 && (
           <div className="text-center p-8 text-gray-500">
             No tharavs found
@@ -627,9 +513,75 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
         )}
       </div>
 
-      {/* Add/Edit Modal */}
+
+
+
+
+
+
+
+
+
+      {isDeleteModalOpen && (
+    <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 realfont p-4">
+        <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center">
+                <h2 className="text-xl md:text-2xl font-bold text-blue-950">Confirm Delete</h2>
+                <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+                >
+                    <X size={20} />
+                </button>
+            </div>
+
+            <div className="p-4 md:p-6 space-y-4">
+                <p className="text-gray-700 font-bold">Are you sure you want to delete this Tharav?</p>
+            </div>
+
+            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
+                <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
+                >
+                    Cancel
+                </button>
+                <button
+                    onClick={async () => {
+                        try {
+                            await axios.delete(`http://localhost:5000/api/tharav/${deleteNirnayId}`);
+                            setNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId));
+                            setFilteredNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId));
+                            setIsDeleteModalOpen(false);
+                        } catch (error) {
+                            console.error("Error deleting Tharav:", error);
+                            setFormError("Failed to delete Tharav");
+                        }
+                    }}
+                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
+                >
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 realfont">
           <div className="bg-white rounded-lg shadow-xl w-[900px] max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b flex justify-between items-center">
               <h2 className="text-2xl font-bold text-blue-900">
@@ -644,62 +596,88 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium">
-                  Tharav No.
-                </label>
-                <input
-                  type="text"
-                  name="tharavNo"
-                  value={tharav.tharavNo}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.tharavNo
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500"
-                  }`}
-                  placeholder="Enter tharav no"
-                />
-                {errors.tharavNo && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2" size={16} />
-                    {errors.tharavNo}
-                  </p>
-                )}
+              {formError && (
+                <div className="text-red-500 text-sm mb-4 flex items-center p-3 bg-red-50 rounded-md">
+                  <AlertCircle className="mr-2 flex-shrink-0" size={20} />
+                  <span>{formError}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block mb-2 text-sm font-medium">
+                    Tharav No.
+                  </label>
+                  <input
+                    type="text"
+                    name="tharavNo"
+                    value={tharav.tharavNo}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.tharavNo
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
+                    placeholder="Enter tharav no"
+                  />
+                  {errors.tharavNo && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.tharavNo}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block mb-2 text-sm font-medium">Purpose</label>
+                  <select
+                    name="purpose"
+                    value={tharav.purpose}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.purpose
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
+                  >
+                    <option value="">Select Purpose</option>
+                    {purpose.map((item) => (
+                      <option key={item.head_id} value={item.head_id}>
+                        {item.head_name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.purpose && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.purpose}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium">Purpose</label>
-                <select
-                  name="purpose"
-                  value={tharav.purpose}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select Purpose</option>
-                  {purpose.map((item) => (
-                    <option key={item.head_id} value={item.head_id}>
-                      {item.head_name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              </div>
-
-              <div>
                 <label className="block mb-2 text-sm font-medium">
-                  Problem Found     
+                  Problem Found
                 </label>
                 <textarea
                   name="problemFounded"
                   value={tharav.problemFounded}
                   onChange={handleInputChange}
-                  className="w-[500px] px-3 py-2 border border-gray-300 rounded-md"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    errors.problemFounded
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-blue-500"
+                  }`}
                   rows="3"
                   placeholder="Describe the problem"
                 ></textarea>
+                {errors.problemFounded && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <AlertCircle className="mr-2" size={16} />
+                    {errors.problemFounded}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -710,9 +688,19 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     name="where"
                     value={tharav.where}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.where
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
                     placeholder="Location"
                   />
+                  {errors.where && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.where}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium">What</label>
@@ -721,9 +709,19 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     name="what"
                     value={tharav.what}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.what
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
                     placeholder="Item/Issue"
                   />
+                  {errors.what && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.what}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -735,9 +733,19 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     name="howMany"
                     value={tharav.howMany}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.howMany
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
                     placeholder="Quantity"
                   />
+                  {errors.howMany && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.howMany}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium">
@@ -748,9 +756,19 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     name="deadStockNumber"
                     value={tharav.deadStockNumber}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.deadStockNumber
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
                     placeholder="Stock number if applicable"
                   />
+                  {errors.deadStockNumber && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.deadStockNumber}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -762,10 +780,20 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                   name="decisionTaken"
                   value={tharav.decisionTaken}
                   onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className={`w-full px-3 py-2 border rounded-md ${
+                    errors.decisionTaken
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:border-blue-500"
+                  }`}
                   rows="3"
                   placeholder="Decision details"
                 ></textarea>
+                {errors.decisionTaken && (
+                  <p className="text-red-500 text-sm mt-1 flex items-center">
+                    <AlertCircle className="mr-2" size={16} />
+                    {errors.decisionTaken}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -778,9 +806,19 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     name="expectedExpenditure"
                     value={tharav.expectedExpenditure}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.expectedExpenditure
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
                     placeholder="Amount in ₹"
                   />
+                  {errors.expectedExpenditure && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.expectedExpenditure}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block mb-2 text-sm font-medium">
@@ -791,13 +829,21 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                     name="fixedDate"
                     value={tharav.fixedDate}
                     onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className={`w-full px-3 py-2 border rounded-md ${
+                      errors.fixedDate
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:border-blue-500"
+                    }`}
                   />
+                  {errors.fixedDate && (
+                    <p className="text-red-500 text-sm mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} />
+                      {errors.fixedDate}
+                    </p>
+                  )}
                 </div>
               </div>
 
-              {/* Photo Upload Section */}
-              
               <div>
                 <label className="block mb-2 text-sm font-large">Photo</label>
                 <div className="flex items-center space-x-2">
@@ -846,18 +892,13 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                 )}
               </div>
 
-              {/* Webcam Component (Hidden by default) */}
-              {/* Include WebcamCapture component here */}
-
-
               <div className="flex justify-end space-x-4 mt-6">
-              <button
+                <button
                   type="submit"
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                 >
                   {isEditing ? "Update Tharav" : "Save Tharav"}
                 </button>
-
                 <button
                   type="button"
                   onClick={closeModal}
@@ -865,36 +906,11 @@ if (!/^[1-9]\d*$/.test(tharav.tharavNo)) {
                 >
                   Cancel
                 </button>
-              
               </div>
             </form>
           </div>
         </div>
       )}
-
-
-
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

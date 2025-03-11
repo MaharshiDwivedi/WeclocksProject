@@ -87,38 +87,23 @@ const updateTharav = async (req, res) => {
     }
 };
 
-// Delete a Tharav record
+// Delete a Tharav record (soft delete)
 const deleteTharav = async (req, res) => {
     const { id } = req.params;
 
     try {
-        // Get record details to find the image path
-        const tharav = await tharavModel.getTharavById(id);
-        if (tharav && tharav.length > 0) {
-            const recordData = tharav[0].nirnay_reord.split("|");
-            const photoPath = recordData[4];
-
-            // Delete the image file if it exists
-            if (photoPath && photoPath.startsWith("/uploads/")) {
-                const filePath = path.join(__dirname, "..", photoPath);
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                }
-            }
-        }
-
-        // Delete the record from the database
         const result = await tharavModel.deleteTharav(id);
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Tharav not found" });
         }
 
-        res.json({ message: "Tharav deleted successfully" });
+        res.json({ message: "Tharav deleted successfully (soft delete)" });
     } catch (err) {
         console.error("Error deleting Tharav:", err);
         res.status(500).json({ error: "Database error" });
     }
 };
+
 
 // Export controller functions
 module.exports = {

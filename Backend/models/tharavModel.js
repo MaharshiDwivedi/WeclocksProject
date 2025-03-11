@@ -2,7 +2,7 @@ const connection = require('../Config/Connection');
 
 // Fetch all tharavs
 const getAllTharav = async () => {
-    const sql = "SELECT * FROM tbl_new_smc_nirnay";
+    const sql = "SELECT * FROM tbl_new_smc_nirnay WHERE status = 'Active'";
     const [rows] = await connection.query(sql);
     return rows;
 };
@@ -30,7 +30,7 @@ const updateTharav = async (id, nirnayreord) => {
 
 // Delete a tharav
 const deleteTharav = async (id) => {
-    const sql = "DELETE FROM tbl_new_smc_nirnay WHERE nirnay_id = ?";
+    const sql = "UPDATE tbl_new_smc_nirnay SET status = 'Inactive' WHERE nirnay_id = ?";
     const [result] = await connection.query(sql, [id]);
     return result;
 };

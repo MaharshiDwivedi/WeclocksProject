@@ -46,6 +46,11 @@ const Home = () => {
       if (pathnames.includes("tharav")) {
         breadcrumbs.push({ name: "Tharav", path: location.pathname });
       }
+
+      if (pathnames.includes("remarks")) {
+        breadcrumbs.push({ name: "Remarks", path: location.pathname });
+      }
+
     } else if (pathnames.includes("newmember")) {
       breadcrumbs.push({ name: "Committee Members", path: "/home/newmember" });
     }
@@ -119,8 +124,9 @@ const Home = () => {
             <Route path="/" element={<Navigate to="dashboard" />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="meetings" element={<Meetings />} />
-            <Route path="meetings/tharav/:index" element={<Tharav />} />
+            <Route path="meetings/tharav/:index/*" element={<Tharav />} /> {/* Allow nested routes */}
             <Route path="newmember" element={<NewMember />} />
+
           </Routes>
         </div>
         <footer className="bg-blue-100 text-neutral-500 p-3 mt-auto realfont">

@@ -262,6 +262,7 @@ const AOHome = () => {
             <Route path="smcschools" element={<SMCSchools />} />
             <Route path="fundreq" element={<FundReq />} />
             <Route path="genreport" element={<GenReport />} />
+
           </Routes>
         </div>
 
