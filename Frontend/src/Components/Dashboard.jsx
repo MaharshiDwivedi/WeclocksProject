@@ -5,6 +5,10 @@ import { Card, CardContent } from "@mui/material";
 import { MonthPicker, MonthInput } from "react-lite-month-picker";
 
 const Dashboard = () => {
+
+  const schoolId = localStorage.getItem("school_id");
+  const category_id = localStorage.getItem("category_id");
+
   const [values, setValues] = useState({
     actualExpense: 0,
     expectedExpense: 0,
@@ -28,7 +32,7 @@ const Dashboard = () => {
       unit = "Lakh";
     } else if (value >= 1000) {
       numericValue = (value / 1000).toFixed(2);
-      unit = "K";
+      unit = "thousand";
     } else {
       numericValue = value.toString();
       unit = "";
@@ -47,8 +51,8 @@ const Dashboard = () => {
       const response = await axios.post("http://localhost:5000/api/expenceData", {
         month: selectedDate.month.toString(),
         year: selectedDate.year.toString(),
-        category_id: "4",
-        school_id: "14",
+        category_id: `${category_id}`,
+        school_id: `${schoolId}`,
       });
 
       if (!response.data || !Array.isArray(response.data.data)) {

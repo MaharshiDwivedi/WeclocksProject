@@ -9,6 +9,7 @@ const tharavRoutes = require("./Routes/tharavRoute");
 const purposeRoute = require("./Routes/purposeRoute");
 const schoolRoutes = require('./Routes/SchoolRoute');
 const fundRoutes = require('./Routes/FundRoute');
+const remarksRoute = require("./Routes/remarksRoute");
 
 
 const path = require("path");
@@ -34,7 +35,8 @@ app.use('/api/tharav', tharavRoutes);
 app.use('/api/purpose', purposeRoute);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-app.use('/api', schoolRoutes)
+app.use('/api', schoolRoutes);
+app.use("/api/remarks", remarksRoute);
 app.use('/api', fundRoutes);
 
 

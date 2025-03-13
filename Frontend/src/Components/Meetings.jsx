@@ -3,10 +3,7 @@ import { Plus, X, Camera, Upload, CalendarPlus, Pencil, Trash2, ChevronRight } f
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
-import Tharav from "./Tharav";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-
+import { useNavigate } from "react-router-dom"; 
 
 const Meetings = () => {
 
@@ -83,7 +80,14 @@ const Meetings = () => {
 
   const fetchMeetings = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/meeting");
+      const SchoolId = localStorage.getItem("school_id"); // Get school_id from localStorage
+      if (!SchoolId) {
+        console.error("School ID not found in local storage");
+        return;
+      }
+  
+      const response = await axios.get(`http://localhost:5000/api/meeting?school_id=${SchoolId}`);
+  
       const meetingsData = response.data.map((meeting) => ({
         id: meeting.meeting_id,
         date: meeting.meeting_date,
@@ -95,11 +99,13 @@ const Meetings = () => {
         image_url: meeting.image_url,
         member_id: meeting.member_id,
       }));
+  
       setMeetings(meetingsData);
     } catch (error) {
       console.error("Error fetching meetings:", error);
     }
   };
+  
 
   const handleEditMeeting = (meeting, event) => {
     event.stopPropagation(); // Stop event propagation
@@ -626,10 +632,10 @@ if (meeting.image_url) {
 <div className="space-y-6 mt-8">
       {meetings.map((meeting) => (
         <div
-          key={meeting.id}
-          onClick={() => navigate(`/home/meetings/tharav/${meeting.id}`)}
-          className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointe w-[700px]"
-        >
+  key={meeting.id}
+  onClick={() => navigate(`/home/meetings/tharav/${meeting.number}`, { state: { meetingId: meeting.id, meetingNumber: meeting.number } })}
+  className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer w-[700px]"
+>
           {/* Date badge */}
           <div className="absolute top-0 left-6 px-4 py-1 bg-blue-950 text-white text-sm font-medium rounded-b-lg shadow-sm transform transition-transform group-hover:translate-y-0.5">
             {meeting.date}

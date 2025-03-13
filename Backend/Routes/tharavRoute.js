@@ -35,7 +35,8 @@ const upload = multer({
 });
 
 // Routes
-router.get("/", tharavController.getTharav);
+// router.get("/", tharavController.getTharav);
+router.get("/filter", tharavController.getTharav);
 router.post("/", upload.single("photo"), tharavController.addTharav);
 router.put("/:id", upload.single("photo"), tharavController.updateTharav);
 router.delete("/:id", tharavController.deleteTharav);

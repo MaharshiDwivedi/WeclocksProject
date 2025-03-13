@@ -33,10 +33,26 @@ const deleteImage = (imageName) => {
   }
 };
 
-// Get all meetings
+// // Get all meetings
+// async function getMeetings(req, res) {
+//   try {
+//     const meetings = await Meeting.getAllMeetings();
+//     res.json(meetings);
+//   } catch (error) {
+//     console.error("Error fetching meetings:", error);
+//     res.status(500).json({ error: "Failed to fetch meetings" });
+//   }
+// }
+
+// Get all meetings for a specific school
 async function getMeetings(req, res) {
   try {
-    const meetings = await Meeting.getAllMeetings();
+    const { school_id } = req.query; // Get school_id from query params
+    if (!school_id) {
+      return res.status(400).json({ error: "school_id is required" });
+    }
+
+    const meetings = await Meeting.getMeetingsBySchoolId(school_id);
     res.json(meetings);
   } catch (error) {
     console.error("Error fetching meetings:", error);

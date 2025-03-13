@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, X, Image, FileDown, AlertCircle, Search, Upload } from "lucide-react";
+import { Plus, X, Image, AlertCircle, Search, Upload } from "lucide-react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
-import WebcamCapture from "./WebcamCapture";
 import { useNavigate } from "react-router-dom";
 
-export default function Tharavopration() {
+export default function Tharavopration({ meetingNumber, meetingId }) {
   const navigate = useNavigate();
   const API_URL = "http://localhost:5000/api/tharav";
   const API_URL_Purpose = "http://localhost:5000/api/purpose";
@@ -20,14 +19,14 @@ export default function Tharavopration() {
   const [purpose, setPurpose] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [filePreview, setFilePreview] = useState(null);
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const fileInputRef = useRef(null);
-const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-const [deleteNirnayId, setDeleteNirnayId] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteNirnayId, setDeleteNirnayId] = useState(null);
+
+  const schoolId = localStorage.getItem("school_id");
+  const userId = localStorage.getItem("user_id");
 
   const [tharav, setTharav] = useState({
     tharavNo: "",
@@ -54,15 +53,24 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
     } else {
       const lowercasedSearch = searchTerm.toLowerCase();
       const filtered = nirnay.filter((item) => {
-        const recordData = item.nirnay_reord ? item.nirnay_reord.split("|") : [];
+        const recordData = item.nirnay_reord
+          ? item.nirnay_reord.split("|")
+          : [];
         return (
-          (recordData[1] && recordData[1].toLowerCase().includes(lowercasedSearch)) ||
-          (recordData[2] && recordData[2].toLowerCase().includes(lowercasedSearch)) ||
-          (recordData[12] && recordData[12].toLowerCase().includes(lowercasedSearch)) ||
-          (recordData[14] && recordData[14].toLowerCase().includes(lowercasedSearch)) ||
-          (recordData[13] && recordData[13].toLowerCase().includes(lowercasedSearch)) ||
-          (recordData[15] && recordData[15].toLowerCase().includes(lowercasedSearch)) ||
-          (recordData[16] && recordData[16].toLowerCase().includes(lowercasedSearch))
+          (recordData[1] &&
+            recordData[1].toLowerCase().includes(lowercasedSearch)) ||
+          (recordData[2] &&
+            recordData[2].toLowerCase().includes(lowercasedSearch)) ||
+          (recordData[12] &&
+            recordData[12].toLowerCase().includes(lowercasedSearch)) ||
+          (recordData[14] &&
+            recordData[14].toLowerCase().includes(lowercasedSearch)) ||
+          (recordData[13] &&
+            recordData[13].toLowerCase().includes(lowercasedSearch)) ||
+          (recordData[15] &&
+            recordData[15].toLowerCase().includes(lowercasedSearch)) ||
+          (recordData[16] &&
+            recordData[16].toLowerCase().includes(lowercasedSearch))
         );
       });
       setFilteredNirnay(filtered);
@@ -71,18 +79,15 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
 
   const fetchTharavs = async () => {
     try {
-      const res = await fetch(API_URL);
+      console.log("Meeting Number in API Call:", meetingNumber);
+      console.log("School ID in API Call:", schoolId);
+      const res = await fetch(
+        `${API_URL}/filter?meeting_number=${meetingNumber}&school_id=${schoolId}`
+      );
       if (!res.ok) throw new Error("Failed to fetch data");
       const data = await res.json();
-      const sortedData = Array.isArray(data)
-        ? data.sort((a, b) => {
-            const recordA = a.nirnay_reord?.split("|");
-            const recordB = b.nirnay_reord?.split("|");
-            return recordA[1]?.localeCompare(recordB[1]);
-          })
-        : [];
-      setNirnay(sortedData);
-      setFilteredNirnay(sortedData);
+      setNirnay(data);
+      setFilteredNirnay(data);
     } catch (error) {
       console.error("Error fetching Tharavs:", error);
       setNirnay([]);
@@ -128,15 +133,12 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
     setCurrentNirnayId(nirnay.nirnay_id);
     setIsEditing(true);
     setIsModalOpen(true);
-  
   };
-
-
 
   const handleDelete = (id) => {
     setDeleteNirnayId(id);
     setIsDeleteModalOpen(true);
-};
+  };
 
   const handleRemarks = (row) => {
     const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
@@ -144,7 +146,9 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
       state: {
         tharavNo: recordData[1] || "N/A",
         date: recordData[8] || "N/A",
-        purpose: purpose.find((data) => data.head_id == recordData[11])?.head_name || "N/A",
+        purpose:
+          purpose.find((data) => data.head_id == recordData[11])?.head_name ||
+          "N/A",
         expectedAmount: recordData[3] || "N/A",
         decisionTaken: recordData[2] || "N/A",
         photo: recordData[4] ? `${SERVER_URL}${recordData[4]}` : null,
@@ -156,7 +160,8 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
     const newErrors = {};
 
     if (!tharav.tharavNo || !/^[1-9]\d*$/.test(tharav.tharavNo)) {
-      newErrors.tharavNo = "Tharav No must be a positive number starting from 1.";
+      newErrors.tharavNo =
+        "Tharav No must be a positive number starting from 1.";
     }
 
     if (!tharav.purpose) {
@@ -187,7 +192,10 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
       newErrors.decisionTaken = "Decision Taken is required.";
     }
 
-    if (!tharav.expectedExpenditure || !/^\d+$/.test(tharav.expectedExpenditure)) {
+    if (
+      !tharav.expectedExpenditure ||
+      !/^\d+$/.test(tharav.expectedExpenditure)
+    ) {
       newErrors.expectedExpenditure = "Expected Expenditure must be a number.";
     }
 
@@ -209,21 +217,27 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
     const currentDate = new Date();
     const formattedDate = `${currentDate.getFullYear()}-${String(
       currentDate.getMonth() + 1
-    ).padStart(2, "0")}-${String(currentDate.getDate()).padStart(2, "0")} ${String(
-      currentDate.getHours()
-    ).padStart(2, "0")}:${String(currentDate.getMinutes()).padStart(2, "0")}:${String(
-      currentDate.getSeconds()
-    ).padStart(2, "0")}`;
+    ).padStart(2, "0")}-${String(currentDate.getDate()).padStart(
+      2,
+      "0"
+    )} ${String(currentDate.getHours()).padStart(2, "0")}:${String(
+      currentDate.getMinutes()
+    ).padStart(2, "0")}:${String(currentDate.getSeconds()).padStart(2, "0")}`;
 
-    const photoValue = tharav.photo instanceof File ? tharav.photo.name : tharav.photo;
+    const photoValue =
+      tharav.photo instanceof File ? tharav.photo.name : tharav.photo;
 
-    const memberData = `1|${tharav.tharavNo}|${tharav.decisionTaken}|${
+    const memberData = `${meetingNumber}|${tharav.tharavNo}|${
+      tharav.decisionTaken
+    }|${
       tharav.expectedExpenditure
-    }|${photoValue}|14|34|Pending|${
+    }|${photoValue}|${schoolId}|${userId}|Pending|${
       !isEditing ? formattedDate : insertdate
     }|${formattedDate}|0000-00-00 00:00:00|${tharav.purpose}|${
       tharav.problemFounded
-    }|${tharav.where}|${tharav.what}|${tharav.howMany}|${tharav.deadStockNumber}|${tharav.fixedDate}`;
+    }|${tharav.where}|${tharav.what}|${tharav.howMany}|${
+      tharav.deadStockNumber
+    }|${tharav.fixedDate}`;
 
     const formData = new FormData();
     formData.append("nirnay_reord", memberData);
@@ -339,12 +353,18 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
 
   const columns = [
     {
+      name: "Sr. No.",
+      selector: (row, index) => index + 1,
+      sortable: false,
+      width: "80px",
+      hide: "sm",
+    },
+    {
       name: "Tharav No.",
       selector: (row) => {
         const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
         return recordData[1] || "N/A";
       },
-      sortable: true,
       width: "120px",
     },
     {
@@ -360,7 +380,10 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
       name: "Purpose",
       selector: (row) => {
         const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
-        return purpose.find((data) => data.head_id == recordData[11])?.head_name || "N/A";
+        return (
+          purpose.find((data) => data.head_id == recordData[11])?.head_name ||
+          "N/A"
+        );
       },
       sortable: true,
       width: "150px",
@@ -474,7 +497,7 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
               customStyles={{
                 table: {
                   style: {
-                    width: 'auto'
+                    width: "auto",
                   },
                 },
                 headCells: {
@@ -484,8 +507,8 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
                     fontFamily: "Poppins",
                     fontWeight: 400,
                     justifyContent: "center",
-                    whiteSpace: 'nowrap',
-                    padding: '0 8px',
+                    whiteSpace: "nowrap",
+                    padding: "0 8px",
                   },
                 },
                 cells: {
@@ -494,8 +517,8 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
                     fontFamily: "Poppins",
                     color: "#333",
                     justifyContent: "center",
-                    whiteSpace: 'nowrap',
-                    padding: '0 8px',
+                    whiteSpace: "nowrap",
+                    padding: "0 8px",
                   },
                 },
               }}
@@ -507,78 +530,64 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
         </div>
 
         {filteredNirnay.length === 0 && (
-          <div className="text-center p-8 text-gray-500">
-            No tharavs found
-          </div>
+          <div className="text-center p-8 text-gray-500">No tharavs found</div>
         )}
       </div>
 
-
-
-
-
-
-
-
-
-
       {isDeleteModalOpen && (
-    <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 realfont p-4">
-        <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 realfont p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
-                <h2 className="text-xl md:text-2xl font-bold text-blue-950">Confirm Delete</h2>
-                <button
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-                >
-                    <X size={20} />
-                </button>
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
+                Confirm Delete
+              </h2>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
             </div>
 
             <div className="p-4 md:p-6 space-y-4">
-                <p className="text-gray-700 font-bold">Are you sure you want to delete this Tharav?</p>
+              <p className="text-gray-700 font-bold">
+                Are you sure you want to delete this Tharav?
+              </p>
             </div>
 
             <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
-                <button
-                    onClick={() => setIsDeleteModalOpen(false)}
-                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={async () => {
-                        try {
-                            await axios.delete(`http://localhost:5000/api/tharav/${deleteNirnayId}`);
-                            setNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId));
-                            setFilteredNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId));
-                            setIsDeleteModalOpen(false);
-                        } catch (error) {
-                            console.error("Error deleting Tharav:", error);
-                            setFormError("Failed to delete Tharav");
-                        }
-                    }}
-                    className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
-                >
-                    Delete
-                </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await axios.delete(
+                      `http://localhost:5000/api/tharav/${deleteNirnayId}`
+                    );
+                    setNirnay((prev) =>
+                      prev.filter((item) => item.nirnay_id !== deleteNirnayId)
+                    );
+                    setFilteredNirnay((prev) =>
+                      prev.filter((item) => item.nirnay_id !== deleteNirnayId)
+                    );
+                    setIsDeleteModalOpen(false);
+                  } catch (error) {
+                    console.error("Error deleting Tharav:", error);
+                    setFormError("Failed to delete Tharav");
+                  }
+                }}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
+              >
+                Delete
+              </button>
             </div>
+          </div>
         </div>
-    </div>
-)}
-
-
-
-
-
-
-
-
-
-
-
-
-
+      )}
 
       {isModalOpen && (
         <div className="fixed inset-0 backdrop-blur-sm bg-opacity-50 flex items-center justify-center z-50 realfont">
@@ -629,7 +638,9 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Purpose</label>
+                  <label className="block mb-2 text-sm font-medium">
+                    Purpose
+                  </label>
                   <select
                     name="purpose"
                     value={tharav.purpose}
@@ -682,7 +693,9 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Where</label>
+                  <label className="block mb-2 text-sm font-medium">
+                    Where
+                  </label>
                   <input
                     type="text"
                     name="where"
@@ -727,7 +740,9 @@ const [deleteNirnayId, setDeleteNirnayId] = useState(null);
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block mb-2 text-sm font-medium">How Many</label>
+                  <label className="block mb-2 text-sm font-medium">
+                    How Many
+                  </label>
                   <input
                     type="text"
                     name="howMany"
