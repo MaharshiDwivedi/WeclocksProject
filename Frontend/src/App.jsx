@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useState } from 'react';
 
 import Bg from './Assets/download.jpg';
 import Logo from './Assets/logo.jpeg';
@@ -7,6 +6,7 @@ import LoginForm from './Components/Login';
 import Home from './Components/Home';
 import AOHome from './Components/AOHome';
 import Tharav from './Components/Tharav';
+import "./i18n";  // Import i18n setup
 
 function App() {
   return (

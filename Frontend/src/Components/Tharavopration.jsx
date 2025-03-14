@@ -3,12 +3,14 @@ import { Plus, X, Image, AlertCircle, Search, Upload } from "lucide-react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function Tharavopration({ meetingNumber, meetingId }) {
   const navigate = useNavigate();
   const API_URL = "http://localhost:5000/api/tharav";
   const API_URL_Purpose = "http://localhost:5000/api/purpose";
   const SERVER_URL = "http://localhost:5000";
+  const { t } = useTranslation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -465,12 +467,12 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
     <div className="container mx-auto px-0 py-8">
       <div className="bg-white shadow-md w-[1200px] mx-auto">
         <div className="bg-blue-950 text-white px-6 py-2 flex justify-between items-center realfont2">
-          <h2 className="text-2xl font-bold">Tharav Management</h2>
+          <h2 className="text-2xl font-bold">{t("tharavManagement")}</h2>
           <button
             onClick={handleOpenModal}
             className="bg-white text-blue-950 px-4 py-2 rounded-md hover:bg-blue-100 flex items-center"
           >
-            <Plus className="mr-2" /> Add Tharav
+            <Plus className="mr-2" />{t("addTharav")}
           </button>
         </div>
 

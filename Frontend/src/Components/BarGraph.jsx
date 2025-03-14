@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useTranslation } from "react-i18next";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -20,9 +21,9 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
   const actual = actualExpense || 0;
   const expected = expectedExpense || 0;
 
-  useEffect(() => {
-    console.log(" API Data:", { actual, expected });
+  const { t } = useTranslation();
 
+  useEffect(() => {
     const maxValue = Math.max(actual, expected);
 
     if (maxValue === 0) {
@@ -70,15 +71,15 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
   };
 
   const data = {
-    labels: ["Total Expense"],
+    labels: [t("totalExpense")],
     datasets: [
       {
-        label: "Actual Expense",
+        label: t("actualExpense"),
         data: [actual],
         backgroundColor: "darkgreen",
       },
       {
-        label: "Expected Expense",
+      label: t("expectedExpense"),
         data: [expected],
         backgroundColor: "gray",
       },
