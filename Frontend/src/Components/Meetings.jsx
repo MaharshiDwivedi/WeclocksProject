@@ -1,16 +1,15 @@
+// Meetings.jsx
 import { useState, useEffect, useRef } from "react";
 import { Plus, X, Camera, Upload, CalendarPlus, Pencil, Trash2, ChevronRight } from "lucide-react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-
-import Tharav from "./Tharav";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
-
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next"; 
 
 const Meetings = () => {
-
-  const navigate = useNavigate(); // Use the navigate function
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState([]);
@@ -56,7 +55,6 @@ const Meetings = () => {
   // Handle date change from the DatePicker
   const handleDateChange = (date) => {
     setSelectedDate(date);
-    // Convert the Date object to ISO string format for the backend
     setDate(date.toISOString().split("T")[0]);
   };
 
@@ -69,7 +67,7 @@ const Meetings = () => {
           ? item.member_record.split("|")
           : [];
         return {
-          id: item.member_id, // Use member_id instead of name
+          id: item.member_id,
           name: recordData[0] || "N/A",
           representative: recordData[2] || "N/A",
           designation: recordData[8] || "N/A",
@@ -83,7 +81,14 @@ const Meetings = () => {
 
   const fetchMeetings = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/meeting");
+      const SchoolId = localStorage.getItem("school_id");
+      if (!SchoolId) {
+        console.error("School ID not found in local storage");
+        return;
+      }
+
+      const response = await axios.get(`http://localhost:5000/api/meeting?school_id=${SchoolId}`);
+
       const meetingsData = response.data.map((meeting) => ({
         id: meeting.meeting_id,
         date: meeting.meeting_date,
@@ -95,6 +100,7 @@ const Meetings = () => {
         image_url: meeting.image_url,
         member_id: meeting.member_id,
       }));
+
       setMeetings(meetingsData);
     } catch (error) {
       console.error("Error fetching meetings:", error);
@@ -102,7 +108,7 @@ const Meetings = () => {
   };
 
   const handleEditMeeting = (meeting, event) => {
-    event.stopPropagation(); // Stop event propagation
+    event.stopPropagation();
     setIsEditing(true);
     setEditingMeetingId(meeting.id);
     setDate(meeting.date);
@@ -111,36 +117,33 @@ const Meetings = () => {
     setAddress(meeting.address);
     setPhotoName(meeting.image_url);
 
-// Set the photo URL to the full path of the image in the uploads folder
-if (meeting.image_url) {
-  if (meeting.image_url === "default.jpg") {
-    setPhoto(null); // Reset photo for default image
-  } else if (meeting.image_url.startsWith('http')) {
-    setPhoto(meeting.image_url); // Use as-is if it's already a full URL
-  } else {
-    // Construct URL for images in the uploads folder
-    setPhoto(`http://localhost:5000/uploads/${meeting.image_url}`);
-  }
-} else {
-  setPhoto(null);
-}
+    if (meeting.image_url) {
+      if (meeting.image_url === "default.jpg") {
+        setPhoto(null);
+      } else if (meeting.image_url.startsWith('http')) {
+        setPhoto(meeting.image_url);
+      } else {
+        setPhoto(`http://localhost:5000/uploads/${meeting.image_url}`);
+      }
+    } else {
+      setPhoto(null);
+    }
 
-    // Map member IDs to their corresponding member objects
     const selectedMemberObjects = committeeMembers.filter((member) =>
       meeting.members.includes(member.id.toString())
     );
     setSelectedMembers(selectedMemberObjects);
 
-    console.log("Editing meeting with members:", selectedMemberObjects); // Debug log
+    console.log("Editing meeting with members:", selectedMemberObjects);
     setIsOpen(true);
   };
 
   const toggleModal = () => {
     if (!isOpen) {
-      setIsEditing(false); // Reset editing state when opening the modal
-      setEditingMeetingId(null); // Reset editing meeting ID
-      resetForm(); // Reset the form fields
-      detectLocation(); // Detect location for new meetings
+      setIsEditing(false);
+      setEditingMeetingId(null);
+      resetForm();
+      detectLocation();
     }
     setIsOpen(!isOpen);
   };
@@ -168,12 +171,12 @@ if (meeting.image_url) {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          alert("Please enable location permissions");
+          alert(t("geolocationError")); // Translated error message
           setLoading(false);
         }
       );
     } else {
-      alert("Geolocation is not supported by this browser");
+      alert(t("geolocationNotSupported")); // Translated error message
     }
   };
 
@@ -186,17 +189,16 @@ if (meeting.image_url) {
       if (data.status === "OK" && data.results.length > 0) {
         setAddress(data.results[0].formatted_address);
       } else {
-        setAddress("Address not found");
+        setAddress(t("addressNotFound")); // Translated error message
       }
     } catch (error) {
       console.error("Error fetching address:", error);
-      setAddress("Unable to fetch address");
+      setAddress(t("addressFetchError")); // Translated error message
     } finally {
       setLoading(false);
     }
   };
 
-  // Camera functions
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -210,7 +212,7 @@ if (meeting.image_url) {
       }
     } catch (err) {
       console.error("Error accessing camera:", err);
-      alert("Could not access camera. Please check permissions.");
+      alert(t("cameraAccessError")); // Translated error message
     }
   };
 
@@ -231,11 +233,9 @@ if (meeting.image_url) {
       const ctx = canvas.getContext("2d");
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-      // Convert to data URL with selected format
       const imageDataURL = canvas.toDataURL(`image/${fileExtension}`);
       setPhoto(imageDataURL);
 
-      // Create a unique filename based on date and meeting
       const timestamp = new Date()
         .toISOString()
         .replace(/:/g, "-")
@@ -244,13 +244,11 @@ if (meeting.image_url) {
         `meeting_${meetingNumber || "new"}_${timestamp}.${fileExtension}`
       );
 
-      // Stop camera after capturing
       stopCamera();
       setShowCamera(false);
     }
   };
 
-  // Convert base64 to file for form submission
   const dataURLtoFile = (dataurl, filename) => {
     const arr = dataurl.split(",");
     const mime = arr[0].match(/:(.*?);/)[1];
@@ -288,31 +286,27 @@ if (meeting.image_url) {
 
   const handleSubmit = async () => {
     if (!date || selectedMembers.length === 0) {
-      alert("Please fill in all required fields");
+      alert(t("requiredFieldsError")); // Translated error message
       return;
     }
 
-    // Create FormData for file upload
     const formData = new FormData();
     formData.append("meeting_date", date);
     formData.append("latitude", latitude || "0.0000");
     formData.append("longitude", longitude || "0.0000");
-    formData.append("address", address || "Unknown");
+    formData.append("address", address || t("unknown")); // Translated default value
     formData.append("member_id", selectedMembers.map((m) => m.id).join(","));
     formData.append("selected_member_length", selectedMembers.length);
 
-    // Add file if available
     if (document.getElementById("fileInput")?.files[0]) {
       formData.append("image", document.getElementById("fileInput").files[0]);
     } else if (photo && photo.startsWith("data:image")) {
-      // Convert base64 data URL to file and append
       const imageFile = dataURLtoFile(photo, photoName);
       formData.append("image", imageFile);
     } else if (photoName) {
       formData.append("image_url", photoName);
     }
 
-    // Add additional fields for new meetings
     if (!isEditing) {
       formData.append("meeting_number", meetingNumber);
       formData.append("school_id", localStorage.getItem("school_id") || "");
@@ -328,32 +322,29 @@ if (meeting.image_url) {
       let response;
 
       if (isEditing) {
-        // Update existing meeting
         response = await axios.put(
           `http://localhost:5000/api/meeting/${editingMeetingId}`,
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
       } else {
-        // Create new meeting
         response = await axios.post(
           "http://localhost:5000/api/meeting",
           formData,
           { headers: { "Content-Type": "multipart/form-data" } }
         );
 
-        // Increment meeting number after successful creation
         setMeetingNumber(meetingNumber + 1);
       }
 
       console.log("Meeting saved successfully:", response.data);
-      await fetchMeetings(); // Refresh meetings
+      await fetchMeetings();
       resetForm();
       setIsEditing(false);
       setEditingMeetingId(null);
     } catch (error) {
       console.error("Error submitting meeting:", error.response?.data || error);
-      alert("Failed to submit meeting");
+      alert(t("submitError")); // Translated error message
     }
   };
 
@@ -374,7 +365,7 @@ if (meeting.image_url) {
   const handleDeleteMeeting = async (meetingId, event) => {
     event.stopPropagation();
 
-    if (window.confirm("Are you sure you want to delete this meeting?")) {
+    if (window.confirm(t("confirmDeleteMeeting"))) { // Translated confirmation message
       try {
         const response = await axios.delete(
           `http://localhost:5000/api/meeting/${meetingId}`
@@ -386,7 +377,7 @@ if (meeting.image_url) {
         );
       } catch (error) {
         console.error("Error deleting meeting:", error);
-        alert("Failed to delete meeting");
+        alert(t("deleteError")); // Translated error message
       }
     }
   };
@@ -394,7 +385,7 @@ if (meeting.image_url) {
   return (
     <div className="min-h-screen p-6 space-y-6">
       <h2 className="text-4xl font-bold text-center text-blue-950 realfont2">
-        SMC Meetings
+        {t("smcMeetings")}
       </h2>
 
       <div className="flex justify-start">
@@ -403,7 +394,7 @@ if (meeting.image_url) {
           className="flex items-center gap-2 bg-blue-950 text-white px-2 py-2 rounded-md hover:bg-blue-900 transition-colors"
         >
           <CalendarPlus className="w-9 h-9" />
-        
+          <span>{t("addMeeting")}</span>
         </button>
       </div>
 
@@ -412,7 +403,7 @@ if (meeting.image_url) {
           <div className="bg-white rounded-lg shadow-md shadow-blue-950 w-[500px] max-w-md h-[500px] flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <h3 className="text-xl font-bold text-blue-950">
-                {isEditing ? "Edit Meeting" : "Add Meeting"}
+                {isEditing ? t("editMeeting") : t("addMeeting")}
               </h3>
               <button
                 onClick={toggleModal}
@@ -425,21 +416,21 @@ if (meeting.image_url) {
             <div className="p-4 space-y-4 flex-1 overflow-y-auto">
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-blue-950">
-                  Date
+                  {t("date")}
                 </label>
                 <DatePicker
                   selected={selectedDate}
                   onChange={handleDateChange}
                   dateFormat="MMMM d, yyyy"
                   className="w-full px-3 py-2 shadow-lg rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholderText="Select a date"
+                  placeholderText={t("selectDate")} // Translated placeholder
                   wrapperClassName="w-full"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-blue-950">
-                  Selected Members
+                  {t("selectedMembers")}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {selectedMembers.map((member, index) => (
@@ -461,7 +452,7 @@ if (meeting.image_url) {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-blue-950">
-                  Committee Members
+                  {t("committeeMembersLabel")}
                 </label>
                 <div className=" shadow-lg rounded-md h-32 overflow-y-auto">
                   {committeeMembers.map((member, index) => (
@@ -490,7 +481,7 @@ if (meeting.image_url) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-blue-950">
-                    Latitude
+                    {t("latitude")}
                   </label>
                   <div className="p-2 shadow-lg rounded-md bg-gray-50 text-center">
                     {loading ? (
@@ -502,7 +493,7 @@ if (meeting.image_url) {
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-blue-950">
-                    Longitude
+                    {t("longitude")}
                   </label>
                   <div className="p-2 shadow-lg rounded-md bg-gray-50 text-center">
                     {loading ? (
@@ -516,7 +507,7 @@ if (meeting.image_url) {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-blue-950">
-                  Address
+                  {t("address")}
                 </label>
                 <input
                   value={address}
@@ -527,7 +518,7 @@ if (meeting.image_url) {
 
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-blue-950">
-                  Upload or Take a Photo
+                  {t("uploadOrTakePhoto")}
                 </label>
                 <div className="flex gap-4">
                   <button
@@ -535,14 +526,14 @@ if (meeting.image_url) {
                     className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
                   >
                     <Upload className="w-5 h-5" />
-                    Upload Photo
+                    {t("uploadPhoto")}
                   </button>
                   <button
                     onClick={toggleCamera}
                     className="flex-1 flex items-center justify-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
                   >
                     <Camera className="w-5 h-5" />
-                    Take Photo
+                    {t("takePhoto")}
                   </button>
                 </div>
                 <input
@@ -553,10 +544,9 @@ if (meeting.image_url) {
                   className="hidden"
                 />
 
-                {/* Display captured or selected photo */}
                 {photo && !showCamera && (
                   <div className="mt-2 shadow-lg rounded-md overflow-hidden">
-                    <img src={photo} alt="Selected" className="w-full" />
+                    <img src={photo} alt={t("selectedPhoto")} className="w-full" />
                     <div className="p-2 bg-gray-100 flex justify-between items-center">
                       <input
                         type="text"
@@ -565,13 +555,12 @@ if (meeting.image_url) {
                           setPhotoName(`${e.target.value}.${fileExtension}`)
                         }
                         className="flex-1 px-2 py-1 border rounded text-sm"
-                        placeholder="Enter filename"
+                        placeholder={t("enterFilename")} // Translated placeholder
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Enhanced Camera UI */}
                 {showCamera && (
                   <div className="mt-4 border rounded-md overflow-hidden">
                     <div className="relative w-full bg-black aspect-video">
@@ -604,7 +593,7 @@ if (meeting.image_url) {
                           onClick={toggleCamera}
                           className="px-2 py-1 bg-gray-700 text-white rounded"
                         >
-                          Cancel
+                          {t("cancel")}
                         </button>
                       </div>
                     </div>
@@ -617,73 +606,68 @@ if (meeting.image_url) {
               onClick={handleSubmit}
               className="p-4 border-t w-full bg-blue-900 text-white px-4 py-2 rounded-b-md hover:bg-blue-950 cursor-pointer transition-colors"
             >
-              {isEditing ? "Update Meeting" : "Submit"}
+              {isEditing ? t("updateMeeting") : t("submit")}
             </button>
           </div>
         </div>
       )}
 
-<div className="space-y-6 mt-8">
-      {meetings.map((meeting) => (
-        <div
-          key={meeting.id}
-          onClick={() => navigate(`/home/meetings/tharav/${meeting.id}`)}
-          className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointe w-[700px]"
-        >
-          {/* Date badge */}
-          <div className="absolute top-0 left-6 px-4 py-1 bg-blue-950 text-white text-sm font-medium rounded-b-lg shadow-sm transform transition-transform group-hover:translate-y-0.5">
-            {meeting.date}
-          </div>
+      <div className="space-y-6 mt-8">
+        {meetings.map((meeting) => (
+          <div
+            key={meeting.id}
+            onClick={() => navigate(`/home/meetings/tharav/${meeting.number}`, { state: { meetingId: meeting.id, meetingNumber: meeting.number } })}
+            className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer w-[700px]"
+          >
+            <div className="absolute top-0 left-6 px-4 py-1 bg-blue-950 text-white text-sm font-medium rounded-b-lg shadow-sm transform transition-transform group-hover:translate-y-0.5">
+              {meeting.date}
+            </div>
 
-          {/* Card content */}
-          <div className="pt-8 pb-4 px-6">
-            <div className="flex items-center justify-between">
-              {/* Meeting stats */}
-              <div className="flex items-center gap-12 py-2">
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-500 mb-1">Meeting No</div>
-                  <div className="text-2xl font-bold text-blue-950">{meeting.number}</div>
+            <div className="pt-8 pb-4 px-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-12 py-2">
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-gray-500 mb-1">{t("meetingNo")}</div>
+                    <div className="text-2xl font-bold text-blue-950">{meeting.number}</div>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-gray-500 mb-1">{t("members")}</div>
+                    <div className="text-2xl font-bold text-blue-950">{meeting.members?.length || 0}</div>
+                  </div>
+
+                  <div className="text-center">
+                    <div className="text-sm font-medium text-gray-500 mb-1">{t("totalTharav")}</div>
+                    <div className="text-2xl font-bold text-blue-950">-</div>
+                  </div>
                 </div>
 
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-500 mb-1">Members</div>
-                  <div className="text-2xl font-bold text-blue-950">{meeting.members?.length || 0}</div>
-                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={(e) => handleEditMeeting(meeting, e)}
+                    className="flex items-center justify-center h-9 w-9 rounded-full bg-blue-100 text-blue-950 hover:bg-blue-200 transition-colors"
+                    aria-label={t("editMeeting")}
+                  >
+                    <Pencil size={16} />
+                  </button>
 
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-500 mb-1">Total Tharav</div>
-                  <div className="text-2xl font-bold text-blue-950">-</div>
+                  <button
+                    onClick={(e) => handleDeleteMeeting(meeting.id, e)}
+                    className="flex items-center justify-center h-9 w-9 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                    aria-label={t("deleteMeeting")}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={(e) => handleEditMeeting(meeting, e)}
-                  className="flex items-center justify-center h-9 w-9 rounded-full bg-blue-100 text-blue-950 hover:bg-blue-200 transition-colors"
-                  aria-label="Edit meeting"
-                >
-                  <Pencil size={16} />
-                </button>
-
-                <button
-                  onClick={(e) => handleDeleteMeeting(meeting.id, e)}
-                  className="flex items-center justify-center h-9 w-9 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
-                  aria-label="Delete meeting"
-                >
-                  <Trash2 size={16} />
-                </button>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <ChevronRight className="text-gray-400" />
               </div>
             </div>
-
-            {/* View indicator */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-              <ChevronRight className="text-gray-400" />
-            </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
     </div>
   );
 };

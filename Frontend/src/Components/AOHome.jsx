@@ -13,21 +13,26 @@ import {
   Menu,
   Minimize,
   ListCollapse,
+  DownloadIcon,
 } from "lucide-react"
 import AODash from "./AODash"
 import Documents from "./Documents"
 import FundDist from "./FundDist"
 import SMCSchools from "./SMCSchools"
 import FundReq from "./FundReq"
-import GenReport from "./GenReport"
+import GenReport, {generatePDF} from "./GenReport"
+
 import React, { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next" 
+
+
 
 const AOHome = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const [fontSize, setFontSize] = React.useState(16)
-  const [language, setLanguage] = React.useState("en")
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { t, i18n } = useTranslation() // Use the useTranslation hook
 
   // Close sidebar when route changes on mobile
   useEffect(() => {
@@ -56,6 +61,10 @@ const AOHome = () => {
     }
   }
 
+  
+
+
+
   const increaseTextSize = () => {
     setFontSize((prev) => Math.min(prev + 2, 24))
   }
@@ -64,26 +73,8 @@ const AOHome = () => {
     setFontSize((prev) => Math.max(prev - 2, 12))
   }
 
-  const handleLanguageChange = (e) => {
-    setLanguage(e.target.value)
-    console.log("Language changed to:", e.target.value)
-  }
-
-  const translations = {
-    en: {
-      dashboard: "Dashboard",
-      documents: "Documents",
-      fundDist: "Fund Distribution",
-      smcSchools: "SMC Done Schools",
-      logout: "Logout",
-    },
-    es: {
-      dashboard: "Tablero",
-      documents: "Documentos",
-      fundDist: "Distribución de Fondos",
-      smcSchools: "Escuelas SMC Completadas",
-      logout: "Cerrar sesión",
-    },
+  const changeLanguage = (event) => {
+    i18n.changeLanguage(event.target.value)
   }
 
   const getBreadcrumbs = () => {
@@ -91,24 +82,24 @@ const AOHome = () => {
     const breadcrumbs = [{ name: "Account Officer", path: "/aohome" }]
 
     if (pathnames.includes("aodashboard")) {
-      breadcrumbs.push({ name: "Dashboard", path: "/aohome/aodashboard" })
+      breadcrumbs.push({ name: t("Dashboard"), path: "/aohome/aodashboard" })
     } else if (pathnames.includes("funddist")) {
-      breadcrumbs.push({ name: "Fund Distribution", path: "/aohome/funddist" })
+      breadcrumbs.push({ name: t("Fund Distribution"), path: "/aohome/funddist" })
     } else if (pathnames.includes("fundreq")) {
-      breadcrumbs.push({ name: "Fund Request", path: "/aohome/fundreq" })
+      breadcrumbs.push({ name: t("Fund Request"), path: "/aohome/fundreq" })
     } else if (pathnames.includes("documents")) {
-      breadcrumbs.push({ name: "Documents", path: "/aohome/documents" })
+      breadcrumbs.push({ name: t("Documents"), path: "/aohome/documents" })
     } else if (pathnames.includes("genreport")) {
-      breadcrumbs.push({ name: "Generate Report", path: "/aohome/genreport" })
+      breadcrumbs.push({ name: t("Generate Report"), path: "/aohome/genreport" })
     } else if (pathnames.includes("smcschools")) {
-      breadcrumbs.push({ name: "SMC Schools", path: "/aohome/smcschools" })
+      breadcrumbs.push({ name: t("SMC Schools"), path: "/aohome/smcschools" })
     }
 
     return breadcrumbs
   }
 
   return (
-    <div className="flex min-h-screen bg-neutral-200" style={{ fontSize: `${fontSize}px` }}>
+    <div className="flex min-h-screen bg-[#E5EAF5]" style={{ fontSize: `${fontSize}px` }}>
       {/* Overlay for mobile sidebar - FIXED: removed the black background */}
       {sidebarOpen && <div className="fixed inset-0 z-40 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
 
@@ -133,42 +124,62 @@ const AOHome = () => {
         <div className="flex flex-col space-y-4 flex-1 px-3 pt-4 realfont overflow-y-auto">
           <NavLink
             to="/aohome/funddist"
-            label={translations[language].fundDist}
+            label={t("Fund Distribution")}
             path={location.pathname}
             icon={<IndianRupee size={20} />}
           />
 
-          <NavLink
+<NavLink
             to="/aohome/fundreq"
-            label="Fund Request"
+            label={t("Fund Request")}
             path={location.pathname}
             icon={<BadgeIndianRupee size={20} />}
-          />
+          />  
 
           <NavLink
             to="/aohome/documents"
-            label={translations[language].documents}
+            label={t("Documents")}
             path={location.pathname}
             icon={<FileText size={20} />}
           />
 
-          <NavLink
-            to="/aohome/genreport"
-            label="Generate Report"
-            path={location.pathname}
-            icon={<Download size={20} />}
-          />
+<button
+  onClick={generatePDF} 
+  className={`flex items-center px-4 py-2 transition-all duration-200 ease-in-out font-medium relative overflow-hidden
+    ${location.pathname === "/aohome/genreport" ? "text-blue-950 font-semibold shadow-md rounded-r-[7px]" : "text-white hover:text-cyan-400"}
+  `}
+>
+
+  <span
+    className={`absolute inset-0 bg-white transition-transform duration-500 ease-in-out ${
+      location.pathname === "/aohome/genreport" ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+    }`}
+  />
+
+ 
+  <span
+    className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
+      location.pathname === "/aohome/genreport" ? "opacity-100" : "opacity-0"
+    }`}
+  />
+
+  {/* Keep content on top */}
+  <span className="relative flex items-center">
+    <DownloadIcon size={20} /> {/* Icon */}
+    <span className="ml-2">{t("Generate Report")}</span> {/* Label */}
+  </span>
+</button>
 
           <NavLink
             to="/aohome/smcschools"
-            label={translations[language].smcSchools}
+            label={t("SMC Schools")}
             path={location.pathname}
             icon={<Check size={20} />}
           />
 
           <NavLink
             to="/aohome/aodashboard"
-            label={translations[language].dashboard}
+            label={t("Dashboard")}
             path={location.pathname}
             icon={<ChartColumnIncreasing size={20} />}
           />
@@ -186,7 +197,7 @@ const AOHome = () => {
 
           {/* Left-aligned text */}
           <div className="text-[16px] md:text-[18px] text-blue-950 font2 hidden md:block">
-            Welcome, Account Officer.
+            {t("Welcome, Account Officer.")}
           </div>
 
           {/* Right-aligned controls - make more compact on mobile */}
@@ -210,13 +221,14 @@ const AOHome = () => {
             </button>
 
             <select
-              value={language}
-              onChange={handleLanguageChange}
+              value={i18n.language}
+              onChange={changeLanguage}
               className="p-1 md:p-2 text-neutral-800 rounded hover:bg-neutral-300 realfont2"
               title="Select language"
             >
-              <option value="en">EN</option>
-              <option value="es">ES</option>
+              <option value="en">English</option>
+              <option value="hi">हिन्दी</option>
+              <option value="mr">मराठी</option>
             </select>
 
             <button
@@ -262,7 +274,6 @@ const AOHome = () => {
             <Route path="smcschools" element={<SMCSchools />} />
             <Route path="fundreq" element={<FundReq />} />
             <Route path="genreport" element={<GenReport />} />
-
           </Routes>
         </div>
 
@@ -306,4 +317,3 @@ const NavLink = ({ to, label, path, icon }) => (
 )
 
 export default AOHome
-

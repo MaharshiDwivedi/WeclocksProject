@@ -25,4 +25,8 @@ const Remarks = connection.define("tbl_new_smc_nirnay_remarks", {
   },
 });
 
+<<<<<<< HEAD
 module.exports = Remarks; // ✅ Fix: Properly export the model
+=======
+module.exports = Remarks; // ✅ Fix: Properly export the model
+>>>>>>> 5d04b33ccdeca0e39c7bd1e2f381c74d906fb64b

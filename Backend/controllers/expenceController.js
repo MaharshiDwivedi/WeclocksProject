@@ -67,7 +67,6 @@ const expenceController = {
                 };
             });
 
-            console.log("Response sent to frontend:", response); // Debugging log
             res.status(200).json({
                 success: true,
                 data: response || [], // Ensure it returns an array

@@ -1,9 +1,12 @@
+// NewMember.jsx
 import { useEffect, useState } from "react";
 import { Menu } from "@headlessui/react";
 import { FaEllipsisV, FaTrash, FaEdit } from "react-icons/fa";
 import { Plus } from "lucide-react";
+import { useTranslation } from "react-i18next"; 
 
-export default function Ui() {
+export default function NewMember() {
+  const { t } = useTranslation(); 
   const API_URL = "http://localhost:5000/api/member";
   const [members, setMembers] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -18,47 +21,48 @@ export default function Ui() {
     year: "",
   });
   const [insertdate, setinsertdate] = useState("");
-  // const [syncDateTime, setSyncDateTime] = useState(""); // New state for sync date & time
+
   const representativeOptions = [
-    "Principal EX (प्राचार्य माजी)",
-    "board representative (मंडळ प्रतिनिधी)",
-    "parent representative (पालक प्रतिनिधी)",
-    "teacher representative (शिक्षक प्रतिनिधी)",
-    "student representative (विद्यार्थी प्रतिनिधी)",
+    { value: "Principal EX (प्राचार्य माजी)", label: t("principalEx") },
+    { value: "board representative (मंडळ प्रतिनिधी)", label: t("boardRepresentative") },
+    { value: "parent representative (पालक प्रतिनिधी)", label: t("parentRepresentative") },
+    { value: "teacher representative (शिक्षक प्रतिनिधी)", label: t("teacherRepresentative") },
+    { value: "student representative (विद्यार्थी प्रतिनिधी)", label: t("studentRepresentative") },
   ];
 
-  const castOptions = ["GEN", "OBC", "ST", "SC"];
+  const castOptions = [
+    { value: "GEN", label: t("gen") },
+    { value: "OBC", label: t("obc") },
+    { value: "ST", label: t("st") },
+    { value: "SC", label: t("sc") },
+  ];
 
   const designationOptions = [
-    "अध्यक्",
-    "उपाध्यक्",
-    "सदस्य",
-    "सदस्य सचिव",
-    "सह सचिव",
+    { value: "अध्यक्ष", label: t("chairman") },
+    { value: "उपाध्यक्ष", label: t("viceChairman") },
+    { value: "सदस्य", label: t("member") },
+    { value: "सदस्य सचिव", label: t("memberSecretary") },
+    { value: "सह सचिव", label: t("coSecretary") },
   ];
 
-  const genderoption = ["Male", "Female"];
+  const genderOptions = [
+    { value: "Male", label: t("male") },
+    { value: "Female", label: t("female") },
+  ];
 
-  const yearoption = [
-    {
-      lable: "2023-24",
-      value: "2023-2024",
-    },
-    {
-      lable: "2024-25",
-      value: "2024-2025",
-    },
+  const yearOptions = [
+    { label: "2023-24", value: "2023-2024" },
+    { label: "2024-25", value: "2024-2025" },
   ];
 
   useEffect(() => {
     fetchMembers();
   }, []);
 
-  // Fetch all members
   const fetchMembers = async () => {
     try {
       const res = await fetch(API_URL);
-      if (!res.ok) throw new Error("Failed to fetch data");
+      if (!res.ok) throw new Error(t("fetchMembersError"));
       const data = await res.json();
       console.log("Fetched Members:", data);
       setMembers(Array.isArray(data) ? data : []);
@@ -67,7 +71,7 @@ export default function Ui() {
       setMembers([]);
     }
   };
-  
+
   const handleEdit = (member) => {
     const recordData = member.member_record.split("|");
     setinsertdate(recordData[6]);
@@ -84,36 +88,30 @@ export default function Ui() {
     setCurrentMemberId(member.member_id);
     setIsEditing(true);
     setIsModalOpen(true);
-    // Set sync date/time on edit as well
-    // const now = new Date();
-    // setSyncDateTime(now.toLocaleString());
   };
 
-  // Handle delete member
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this member?")) return;
+    if (!window.confirm(t("confirmDeleteMember"))) return;
     try {
       const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete member");
+      if (!res.ok) throw new Error(t("deleteMemberError"));
       fetchMembers();
     } catch (error) {
       console.error("Error deleting member:", error);
+      alert(t("deleteMemberError"));
     }
   };
-  const currentDate = new Date();
 
+  const currentDate = new Date();
   const year = currentDate.getFullYear();
-  const month = String(currentDate.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const month = String(currentDate.getMonth() + 1).padStart(2, "0");
   const day = String(currentDate.getDate()).padStart(2, "0");
   const hours = String(currentDate.getHours()).padStart(2, "0");
   const minutes = String(currentDate.getMinutes()).padStart(2, "0");
   const seconds = String(currentDate.getSeconds()).padStart(2, "0");
-
   const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 
-  // Handle form submit (Add or Update)
   const handleSubmit = async () => {
-    // Prepare member data
     const memberData = `${newMember.name}|${newMember.mobile}|${
       newMember.representative
     }|${newMember.cast}|14|34|${isEditing ? insertdate : formattedDate}|${
@@ -130,12 +128,12 @@ export default function Ui() {
         body: JSON.stringify({ member_record: memberData }),
       });
 
-      if (!res.ok) throw new Error("Failed to save member");
+      if (!res.ok) throw new Error(t("saveMemberError"));
       fetchMembers();
       closeModal();
     } catch (error) {
       console.error("Error saving member:", error);
-      alert(`Error: ${error.message}`);
+      alert(t("saveMemberError"));
     }
   };
 
@@ -152,7 +150,6 @@ export default function Ui() {
       year: "",
     });
     setCurrentMemberId(null);
-    // setSyncDateTime(""); // Clear the sync date/time when closing the modal
   };
 
   const handlerepresentativeChange = (value) => {
@@ -164,17 +161,16 @@ export default function Ui() {
   };
 
   const handledesignationChange = (value) => {
-    setNewMember({ ...newMember, designation: value, year: value });
+    setNewMember({ ...newMember, designation: value });
   };
+
   const handleyear = (value) => {
     setNewMember({ ...newMember, year: value });
   };
+
   const handlegender = (value) => {
     setNewMember({ ...newMember, gender: value });
   };
-  // const handlegenderChange = (value) => {
-  //     setNewMember({ ...newMember, gender: value });
-  // };
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -186,26 +182,22 @@ export default function Ui() {
       gender: "",
       mobile: "",
       cast: "",
+      year: "",
     });
-    // Set the sync date/time when the modal opens
-    // const now = new Date();
-    // setSyncDateTime(now.toLocaleString());
   };
 
   return (
-    <div className="p-4 bg-purple-100 w-full">
-      <div className="bg-purple-600 text-white text-xl font-bold p-4 text-center rounded-t-md realfont2">
-        <span>Committee Members</span>
+    <div className="p-4 w-full">
+      <div className="bg-blue-950 text-white text-xl font-bold p-4 text-center rounded-t-md realfont2">
+        <span>{t("committeeMembers")}</span>
       </div>
       <div className="flex justify-end p-4">
         <button
           onClick={handleOpenModal}
-          className="bg-blue-500  hover:bg-blue-700 text-white font-bold py-2 px-4 rounded realfont2 flex"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded realfont2 flex"
         >
-
-<Plus />
-
-           ADD MEMBER
+          <Plus />
+          {t("addMember")}
         </button>
       </div>
       <div className="overflow--auto">
@@ -213,32 +205,32 @@ export default function Ui() {
           <thead className="bg-gray-100">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Name
+                {t("name")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Mobile
+                {t("mobile")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Representative
+                {t("representative")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Designation
+                {t("designation")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Gender
+                {t("gender")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Year
+                {t("year")}
               </th>
               <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Cast
+                {t("cast")}
               </th>
               <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Actions
+                {t("actions")}
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200 ">
+          <tbody className="divide-y divide-gray-200">
             {members.map((member) => {
               const recordData = member.member_record
                 ? member.member_record.split("|")
@@ -247,49 +239,41 @@ export default function Ui() {
                 <tr key={member.member_id} className="mb-2">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {recordData[0] || "N/A"}
+                      {recordData[0] || t("na")}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {recordData[1] || "N/A"}
+                      {recordData[1] || t("na")}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {recordData[2] || "N/A"}
-                    </div>
-                  </td>
-
-                  {/* 
-                                    <td className="px-6 py-4 whitespace-nowrap">
-                                        <div className="text-sm text-gray-900">{recordData[10] || 'N/A'}</div>
-                                    </td> */}
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      {recordData[8] || "N/A"}
+                      {recordData[2] || t("na")}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {recordData[9] || "N/A"}
+                      {recordData[8] || t("na")}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {yearoption.find(
+                      {recordData[9] || t("na")}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">
+                      {yearOptions.find(
                         (option) => option.value === recordData[10]
-                      )?.lable || "N/A"}
+                      )?.label || t("na")}
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {recordData[3] || "N/A"}
+                      {recordData[3] || t("na")}
                     </div>
                   </td>
-
                   <td className="px-6 py-4 whitespace-nowrap text-right">
                     <Menu as="div" className="relative inline-block text-left">
                       <Menu.Button className="text-gray-500 hover:text-purple-600">
@@ -304,7 +288,7 @@ export default function Ui() {
                                 active ? "bg-gray-100" : ""
                               } text-purple-600`}
                             >
-                              <FaEdit className="mr-2" /> Edit
+                              <FaEdit className="mr-2" /> {t("edit")}
                             </button>
                           )}
                         </Menu.Item>
@@ -316,7 +300,7 @@ export default function Ui() {
                                 active ? "bg-gray-100" : ""
                               } text-red-600`}
                             >
-                              <FaTrash className="mr-2" /> Delete
+                              <FaTrash className="mr-2" /> {t("delete")}
                             </button>
                           )}
                         </Menu.Item>
@@ -328,27 +312,21 @@ export default function Ui() {
             })}
           </tbody>
         </table>
-      </div>{" "}
+      </div>
       {members.length === 0 && (
-        <p className="text-center text-gray-500 mt-4">No members found</p>
+        <p className="text-center text-gray-500 mt-4">{t("noMembersFound")}</p>
       )}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 overflow-scroll">
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl transition-transform transform">
-            {" "}
-            {/* Increased max-w for wider screens */}
             <h2 className="text-2xl font-bold mb-4 text-center text-purple-600">
-              {isEditing ? "Edit Member" : "Add New Member"}
+              {isEditing ? t("editMember") : t("addMember")}
             </h2>
             <div className="border border-b w-full border-purple-900 mb-5"></div>
-            {/* Grid Container */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {" "}
-              {/* Responsive grid: 1 column on small screens, 2 on medium and up */}
-              {/* Full Name Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Full Name
+                  {t("name")}
                 </label>
                 <input
                   type="text"
@@ -357,13 +335,12 @@ export default function Ui() {
                     setNewMember({ ...newMember, name: e.target.value })
                   }
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                  placeholder="Enter full name"
+                  placeholder={t("enterFullName")}
                 />
               </div>
-              {/* Mobile No Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Mobile No
+                  {t("mobile")}
                 </label>
                 <input
                   type="text"
@@ -372,120 +349,112 @@ export default function Ui() {
                     setNewMember({ ...newMember, mobile: e.target.value })
                   }
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                  placeholder="Enter mobile number"
+                  placeholder={t("enterMobileNumber")}
                 />
               </div>
-              {/* Representative Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Representative
+                  {t("representative")}
                 </label>
                 <select
                   value={newMember.representative}
                   onChange={(e) => handlerepresentativeChange(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
-                  <option value="">Select representative</option>
+                  <option value="">{t("selectRepresentative")}</option>
                   {representativeOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
               </div>
-              {/* Gender Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Gender
+                  {t("gender")}
                 </label>
                 <select
                   value={newMember.gender}
                   onChange={(e) => handlegender(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
-                  <option value="">Select Gender</option>
-                  {genderoption.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
+                  <option value="">{t("selectGender")}</option>
+                  {genderOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
               </div>
-              {/* Designation Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Designation
+                  {t("designation")}
                 </label>
                 <select
                   value={newMember.designation}
                   onChange={(e) => handledesignationChange(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
-                  <option value="">Select Designation</option>
+                  <option value="">{t("selectDesignation")}</option>
                   {designationOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
               </div>
-              {/* Year Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Year
+                  {t("year")}
                 </label>
                 <select
                   value={newMember.year}
                   onChange={(e) => handleyear(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
-                  <option value="">Select Year</option>
-                  {yearoption.map((option) => (
-                    <option key={option} value={option.value}>
-                      {option.lable}
+                  <option value="">{t("selectYear")}</option>
+                  {yearOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
               </div>
-              {/* Cast Field */}
               <div className="mb-4">
                 <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  Cast
+                  {t("cast")}
                 </label>
                 <select
                   value={newMember.cast}
                   onChange={(e) => handlecastChange(e.target.value)}
                   className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
-                  <option value="">Select Cast</option>
+                  <option value="">{t("selectCast")}</option>
                   {castOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
+                    <option key={option.value} value={option.value}>
+                      {option.label}
                     </option>
                   ))}
                 </select>
               </div>
-            </div>{" "}
-            {/* End Grid Container */}
-            {/* Action Buttons */}
+            </div>
             <div className="flex justify-end space-x-2 mt-6">
               <button
                 onClick={closeModal}
                 className="bg-gray-400 px-4 py-2 rounded text-white hover:bg-gray-500 transition duration-200"
               >
-                Cancel
+                {t("cancel")}
               </button>
               <button
                 onClick={handleSubmit}
                 className="bg-purple-600 px-4 py-2 rounded text-white hover:bg-purple-700 transition duration-200"
               >
-                {isEditing ? "Update" : "Submit"}
+                {isEditing ? t("update") : t("submit")}
               </button>
             </div>
           </div>
         </div>
       )}
-      {/* Add Member Button - Moved to the Bottom */}
     </div>
   );
 }

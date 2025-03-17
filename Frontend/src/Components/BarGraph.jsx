@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useTranslation } from "react-i18next";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -20,9 +21,9 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
   const actual = actualExpense || 0;
   const expected = expectedExpense || 0;
 
-  useEffect(() => {
-    console.log(" API Data:", { actual, expected });
+  const { t } = useTranslation();
 
+  useEffect(() => {
     const maxValue = Math.max(actual, expected);
 
     if (maxValue === 0) {
@@ -64,28 +65,83 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
           stepSize: stepSize,
           callback: (value) =>
             unit === "K" ? `${value / 1000}K` : `${value / 100000}L`,
+          font: {
+            family: "'Poppins', sans-serif",
+            size: 12,
+          },
+          color: "#555",
+        },
+      },
+      x: {
+        ticks: {
+          font: {
+            family: "'Poppins', sans-serif",
+            size: 12,
+          },
+          color: "#333",
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        labels: {
+          generateLabels: (chart) => {
+            return chart.data.datasets.map((dataset, i) => {
+              const text = dataset.label;
+              return {
+                text,
+                fillStyle: dataset.backgroundColor,
+                hidden: !chart.isDatasetVisible(i),
+                index: i,
+                fontColor: "#333",
+                fontFamily: "'Poppins', sans-serif",
+                fontSize: 14,
+                lineWidth: 2,
+                lineCap: "round",
+                className: "realfont", // ✅ Apply realfont class
+              };
+            });
+          },
+          font: {
+            family: "'Poppins', sans-serif",
+            size: 14,
+          },
+          usePointStyle: true,
+          padding: 20,
         },
       },
     },
   };
 
+
+
+
   const data = {
-    labels: ["Total Expense"],
+    labels: [t("totalExpense")],
     datasets: [
       {
-        label: "Actual Expense",
+        label: t("actualExpense"),
         data: [actual],
         backgroundColor: "darkgreen",
       },
       {
-        label: "Expected Expense",
+        label: t("expectedExpense"),
         data: [expected],
         backgroundColor: "gray",
       },
     ],
   };
 
+
+
+
+
+
+
+
+
   return (
+    
     <div style={{ width, height } } >
       <Bar data={data} options={options}  />
     </div>

@@ -3,15 +3,32 @@ const path = require("path");
 const fs = require("fs");
 
 // Get all Tharav records
+// const getTharav = async (req, res) => {
+//     try {
+//         const results = await tharavModel.getAllTharav();
+//         res.json(results);
+//     } catch (err) {
+//         console.error("Error fetching Tharavs:", err);
+//         res.status(500).json({ error: "Database error" });
+//     }
+// };
+
 const getTharav = async (req, res) => {
     try {
-        const results = await tharavModel.getAllTharav();
+        const { meeting_number, school_id } = req.query;
+
+        if (!meeting_number || !school_id) {
+            return res.status(400).json({ error: "Meeting Number and School ID are required" });
+        }
+
+        const results = await tharavModel.getTharav(meeting_number, school_id);
         res.json(results);
     } catch (err) {
         console.error("Error fetching Tharavs:", err);
         res.status(500).json({ error: "Database error" });
     }
 };
+
 
 // Add a new Tharav record
 const addTharav = async (req, res) => {
@@ -107,8 +124,9 @@ const deleteTharav = async (req, res) => {
 
 // Export controller functions
 module.exports = {
-    getTharav,
+    // getTharav,
     addTharav,
     updateTharav,
     deleteTharav,
+    getTharav,
 };

@@ -1,11 +1,24 @@
 const connection = require('../Config/Connection');
 
-// Fetch all tharavs
-const getAllTharav = async () => {
-    const sql = "SELECT * FROM tbl_new_smc_nirnay WHERE status = 'Active'";
-    const [rows] = await connection.query(sql);
+// // Fetch all tharavs
+// const getAllTharav = async () => {
+//     const sql = "SELECT * FROM tbl_new_smc_nirnay WHERE status = 'Active'";
+//     const [rows] = await connection.query(sql);
+//     return rows;
+// };
+
+const getTharav = async (meetingNumber, schoolId) => {
+    const sql = `
+        SELECT * FROM tbl_new_smc_nirnay 
+        WHERE status = 'Active'
+        AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 1), '|', -1) = ?
+        AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?;
+    `;
+
+    const [rows] = await connection.query(sql, [meetingNumber, schoolId]); 
     return rows;
 };
+
 
 // Get a single tharav by ID
 const getTharavById = async (id) => {
@@ -36,9 +49,10 @@ const deleteTharav = async (id) => {
 };
 
 module.exports = {
-    getAllTharav,
+    // getAllTharav,
     getTharavById,
     insertTharav,
     updateTharav,
     deleteTharav,
+    getTharav,
 };
