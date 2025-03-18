@@ -14,6 +14,7 @@ import {
   Minimize,
   ListCollapse,
   DownloadIcon,
+  ChartColumnBig,
 } from "lucide-react"
 import AODash from "./AODash"
 import Documents from "./Documents"
@@ -181,7 +182,7 @@ const AOHome = () => {
             to="/aohome/aodashboard"
             label={t("Dashboard")}
             path={location.pathname}
-            icon={<ChartColumnIncreasing size={20} />}
+            icon={<ChartColumnBig size={20} />}
           />
         </div>
       </aside>

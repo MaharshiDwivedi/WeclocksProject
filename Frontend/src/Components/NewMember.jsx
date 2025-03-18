@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { Menu } from "@headlessui/react";
 import { FaEllipsisV, FaTrash, FaEdit } from "react-icons/fa";
-import { Plus } from "lucide-react";
+import { Plus } from 'lucide-react';
 import { useTranslation } from "react-i18next"; 
 
 export default function NewMember() {
@@ -187,45 +187,47 @@ export default function NewMember() {
   };
 
   return (
-    <div className="p-4 w-full">
-      <div className="bg-blue-950 text-white text-xl font-bold p-4 text-center rounded-t-md realfont2">
+    <div className="p-2 md:p-4 w-full">
+      <div className="bg-blue-950 text-white text-lg md:text-xl font-bold p-3 md:p-4 text-center rounded-t-md realfont2">
         <span>{t("committeeMembers")}</span>
       </div>
-      <div className="flex justify-end p-4">
+      <div className="flex justify-end p-2 md:p-4">
         <button
           onClick={handleOpenModal}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded realfont2 flex"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 md:py-2 px-3 md:px-4 rounded realfont2 flex items-center text-sm md:text-base"
         >
-          <Plus />
+          <Plus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
           {t("addMember")}
         </button>
       </div>
-      <div className="overflow--auto">
+      
+      {/* Responsive table container */}
+      <div className="overflow-x-auto">
         <table className="min-w-full bg-white rounded-lg shadow-md">
           <thead className="bg-gray-100">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 {t("name")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 {t("mobile")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                 {t("representative")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                 {t("designation")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                 {t("gender")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                 {t("year")}
               </th>
-              <th className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
                 {t("cast")}
               </th>
-              <th className="px-6 py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+              <th className="px-2 md:px-6 py-2 md:py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 {t("actions")}
               </th>
             </tr>
@@ -237,47 +239,47 @@ export default function NewMember() {
                 : [];
               return (
                 <tr key={member.member_id} className="mb-2">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {recordData[0] || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {recordData[1] || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {recordData[2] || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {recordData[8] || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {recordData[9] || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {yearOptions.find(
                         (option) => option.value === recordData[10]
                       )?.label || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
+                    <div className="text-xs md:text-sm text-gray-900">
                       {recordData[3] || t("na")}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap text-right">
                     <Menu as="div" className="relative inline-block text-left">
                       <Menu.Button className="text-gray-500 hover:text-purple-600">
-                        <FaEllipsisV size={18} />
+                        <FaEllipsisV size={16} />
                       </Menu.Button>
                       <Menu.Items className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md border border-gray-200 py-1 z-10">
                         <Menu.Item>
@@ -313,19 +315,22 @@ export default function NewMember() {
           </tbody>
         </table>
       </div>
+      
       {members.length === 0 && (
         <p className="text-center text-gray-500 mt-4">{t("noMembersFound")}</p>
       )}
+      
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-opacity-50 overflow-scroll">
-          <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-3xl transition-transform transform">
-            <h2 className="text-2xl font-bold mb-4 text-center text-purple-600">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-2 md:p-0 z-50 overflow-y-auto">
+          <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg w-full max-w-3xl transition-transform transform">
+            <h2 className="text-xl md:text-2xl font-bold mb-4 text-center text-purple-600">
               {isEditing ? t("editMember") : t("addMember")}
             </h2>
             <div className="border border-b w-full border-purple-900 mb-5"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("name")}
                 </label>
                 <input
@@ -334,12 +339,12 @@ export default function NewMember() {
                   onChange={(e) =>
                     setNewMember({ ...newMember, name: e.target.value })
                   }
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                   placeholder={t("enterFullName")}
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("mobile")}
                 </label>
                 <input
@@ -348,18 +353,18 @@ export default function NewMember() {
                   onChange={(e) =>
                     setNewMember({ ...newMember, mobile: e.target.value })
                   }
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                   placeholder={t("enterMobileNumber")}
                 />
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("representative")}
                 </label>
                 <select
                   value={newMember.representative}
                   onChange={(e) => handlerepresentativeChange(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
                   <option value="">{t("selectRepresentative")}</option>
                   {representativeOptions.map((option) => (
@@ -369,14 +374,14 @@ export default function NewMember() {
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("gender")}
                 </label>
                 <select
                   value={newMember.gender}
                   onChange={(e) => handlegender(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
                   <option value="">{t("selectGender")}</option>
                   {genderOptions.map((option) => (
@@ -386,14 +391,14 @@ export default function NewMember() {
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("designation")}
                 </label>
                 <select
                   value={newMember.designation}
                   onChange={(e) => handledesignationChange(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
                   <option value="">{t("selectDesignation")}</option>
                   {designationOptions.map((option) => (
@@ -403,14 +408,14 @@ export default function NewMember() {
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("year")}
                 </label>
                 <select
                   value={newMember.year}
                   onChange={(e) => handleyear(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
                   <option value="">{t("selectYear")}</option>
                   {yearOptions.map((option) => (
@@ -420,14 +425,14 @@ export default function NewMember() {
                   ))}
                 </select>
               </div>
-              <div className="mb-4">
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
+              <div className="mb-3 md:mb-4">
+                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
                   {t("cast")}
                 </label>
                 <select
                   value={newMember.cast}
                   onChange={(e) => handlecastChange(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
+                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
                 >
                   <option value="">{t("selectCast")}</option>
                   {castOptions.map((option) => (
@@ -438,16 +443,17 @@ export default function NewMember() {
                 </select>
               </div>
             </div>
-            <div className="flex justify-end space-x-2 mt-6">
+            
+            <div className="flex justify-end space-x-2 mt-4 md:mt-6">
               <button
                 onClick={closeModal}
-                className="bg-gray-400 px-4 py-2 rounded text-white hover:bg-gray-500 transition duration-200"
+                className="bg-gray-400 px-3 md:px-4 py-1.5 md:py-2 rounded text-white text-sm hover:bg-gray-500 transition duration-200"
               >
                 {t("cancel")}
               </button>
               <button
                 onClick={handleSubmit}
-                className="bg-purple-600 px-4 py-2 rounded text-white hover:bg-purple-700 transition duration-200"
+                className="bg-purple-600 px-3 md:px-4 py-1.5 md:py-2 rounded text-white text-sm hover:bg-purple-700 transition duration-200"
               >
                 {isEditing ? t("update") : t("submit")}
               </button>
