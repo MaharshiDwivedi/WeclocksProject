@@ -9,7 +9,6 @@ export const generatePDF = () => {
   const img = new Image();
   img.src = logo;
   
-  // Once the image is loaded, add it to the PDF
   img.onload = function() {
    
     doc.addImage(img, 'PNG', 10, 10, 40, 40); 

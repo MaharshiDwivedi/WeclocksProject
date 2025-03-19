@@ -2,31 +2,25 @@
 
 import { Routes, Route, Link, Navigate, useLocation, useNavigate } from "react-router-dom"
 import {
-  CodeIcon as ChartColumnIncreasing,
   FileText,
   IndianRupee,
   Check,
   CirclePower,
   BadgeIndianRupee,
-  Download,
-  X,
-  Menu,
   Minimize,
   ListCollapse,
   DownloadIcon,
-  ChartColumnBig,
+  BarChartBigIcon as ChartColumnBig,
 } from "lucide-react"
 import AODash from "./AODash"
 import Documents from "./Documents"
 import FundDist from "./FundDist"
 import SMCSchools from "./SMCSchools"
 import FundReq from "./FundReq"
-import GenReport, {generatePDF} from "./GenReport"
+import GenReport, { generatePDF } from "./GenReport"
 
 import React, { useState, useEffect } from "react"
-import { useTranslation } from "react-i18next" 
-
-
+import { useTranslation } from "react-i18next"
 
 const AOHome = () => {
   const location = useLocation()
@@ -61,10 +55,6 @@ const AOHome = () => {
       navigate("/login")
     }
   }
-
-  
-
-
 
   const increaseTextSize = () => {
     setFontSize((prev) => Math.min(prev + 2, 24))
@@ -101,7 +91,7 @@ const AOHome = () => {
 
   return (
     <div className="flex min-h-screen bg-[#E5EAF5]" style={{ fontSize: `${fontSize}px` }}>
-      {/* Overlay for mobile sidebar - FIXED: removed the black background */}
+      {/* Overlay for mobile sidebar */}
       {sidebarOpen && <div className="fixed inset-0 z-40 md:hidden" onClick={() => setSidebarOpen(false)}></div>}
 
       {/* Sidebar - Full Height */}
@@ -118,7 +108,7 @@ const AOHome = () => {
 
         {/* Close button for mobile */}
         <button className="md:hidden absolute top-2 right-2 text-white p-2" onClick={() => setSidebarOpen(false)}>
-          <Minimize size={24} color="red"/>
+          <Minimize size={24} color="red" />
         </button>
 
         {/* Sidebar Links */}
@@ -130,12 +120,12 @@ const AOHome = () => {
             icon={<IndianRupee size={20} />}
           />
 
-<NavLink
+          <NavLink
             to="/aohome/fundreq"
             label={t("Fund Request")}
             path={location.pathname}
             icon={<BadgeIndianRupee size={20} />}
-          />  
+          />
 
           <NavLink
             to="/aohome/documents"
@@ -144,32 +134,14 @@ const AOHome = () => {
             icon={<FileText size={20} />}
           />
 
-<button
-  onClick={generatePDF} 
-  className={`flex items-center px-4 py-2 transition-all duration-200 ease-in-out font-medium relative overflow-hidden
-    ${location.pathname === "/aohome/genreport" ? "text-blue-950 font-semibold shadow-md rounded-r-[7px]" : "text-white hover:text-cyan-400"}
-  `}
->
-
-  <span
-    className={`absolute inset-0 bg-white transition-transform duration-500 ease-in-out ${
-      location.pathname === "/aohome/genreport" ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-    }`}
-  />
-
- 
-  <span
-    className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
-      location.pathname === "/aohome/genreport" ? "opacity-100" : "opacity-0"
-    }`}
-  />
-
-  {/* Keep content on top */}
-  <span className="relative flex items-center">
-    <DownloadIcon size={20} /> {/* Icon */}
-    <span className="ml-2">{t("Generate Report")}</span> {/* Label */}
-  </span>
-</button>
+          <NavLink
+            to="/aohome/genreport"
+            label={t("Generate Report")}
+            path={location.pathname}
+            icon={<DownloadIcon size={20} />}
+            onClick={generatePDF}
+            isButton={true}
+          />
 
           <NavLink
             to="/aohome/smcschools"
@@ -197,7 +169,7 @@ const AOHome = () => {
           </button>
 
           {/* Left-aligned text */}
-          <div className="text-[16px] md:text-[18px] text-blue-950 font2 hidden md:block">
+          <div className="text-sm md:text-[18px] text-blue-950 font2 inline-block">
             {t("Welcome, Account Officer.")}
           </div>
 
@@ -224,7 +196,7 @@ const AOHome = () => {
             <select
               value={i18n.language}
               onChange={changeLanguage}
-              className="p-1 md:p-2 text-neutral-800 rounded hover:bg-neutral-300 realfont2"
+              className="p-1 md:p-2 border rounded text-neutral-800 hover:bg-neutral-300 realfont2 text-xs md:text-sm"
               title="Select language"
             >
               <option value="en">English</option>
@@ -288,33 +260,57 @@ const AOHome = () => {
 }
 
 // Custom NavLink Component
-const NavLink = ({ to, label, path, icon }) => (
-  <Link
-    to={to}
-    className={`flex items-center px-4 py-2 transition-all duration-200 ease-in-out font-medium relative overflow-hidden
-      ${path === to ? "text-blue-950 font-semibold shadow-md rounded-r-[7px]" : "text-white hover:text-cyan-400"}
-    `}
-  >
-    {/* Smooth background transition */}
-    <span
-      className={`absolute inset-0 bg-white transition-transform duration-500 ease-in-out ${
-        path === to ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
-      }`}
-    />
+const NavLink = ({ to, label, path, icon, onClick, isButton }) => {
+  if (isButton) {
+    return (
+      <button
+        onClick={onClick}
+        className={`flex items-center px-4 py-2 transition-all duration-200 ease-in-out font-medium relative overflow-hidden w-full text-left
+          ${path === to ? "text-blue-950 font-semibold shadow-md rounded-r-[7px]" : "text-white hover:text-cyan-400"}
+        `}
+      >
+        <span
+          className={`absolute inset-0 bg-white transition-transform duration-500 ease-in-out ${
+            path === to ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+          }`}
+        />
+        <span
+          className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
+            path === to ? "opacity-100" : "opacity-0"
+          }`}
+        />
+        <span className="relative flex items-center">
+          {icon}
+          <span className="ml-2">{label}</span>
+        </span>
+      </button>
+    )
+  }
 
-    {/* Cyan left border */}
-    <span
-      className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
-        path === to ? "opacity-100" : "opacity-0"
-      }`}
-    />
-
-    {/* Keep content on top */}
-    <span className="relative flex items-center">
-      {icon}
-      <span className="ml-2">{label}</span>
-    </span>
-  </Link>
-)
+  return (
+    <Link
+      to={to}
+      className={`flex items-center px-4 py-2 transition-all duration-200 ease-in-out font-medium relative overflow-hidden
+        ${path === to ? "text-blue-950 font-semibold shadow-md rounded-r-[7px]" : "text-white hover:text-cyan-400"}
+      `}
+    >
+      <span
+        className={`absolute inset-0 bg-white transition-transform duration-500 ease-in-out ${
+          path === to ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"
+        }`}
+      />
+      <span
+        className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
+          path === to ? "opacity-100" : "opacity-0"
+        }`}
+      />
+      <span className="relative flex items-center">
+        {icon}
+        <span className="ml-2">{label}</span>
+      </span>
+    </Link>
+  )
+}
 
 export default AOHome
+
