@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { X, Plus, AlertCircle, Search } from "lucide-react"
 import DataTable from "react-data-table-component"
+import { useTranslation } from "react-i18next";
+import Swal from 'sweetalert2'
 
 const FundDist = () => {
   const [fundData, setFundData] = useState([])
@@ -24,6 +26,8 @@ const FundDist = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteFundId, setDeleteFundId] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+
+  const { t, i18n } = useTranslation();  
 
   // Add responsive detection
   useEffect(() => {
@@ -88,6 +92,13 @@ const FundDist = () => {
         const response = await axios.get("http://localhost:5000/api/fund-distribution")
         setFundData(response.data)
         setFilteredFundData(response.data)
+        Swal.fire({
+          icon: 'success',
+          title: t('Success'),
+          text: t('Fund updated successfully'),
+          timer: 2000,
+          showConfirmButton: false
+        })
         resetForm()
       } else {
         const payload = {
@@ -99,21 +110,76 @@ const FundDist = () => {
         const updatedResponse = await axios.get("http://localhost:5000/api/fund-distribution")
         setFundData(updatedResponse.data)
         setFilteredFundData(updatedResponse.data)
+        Swal.fire({
+          icon: 'success',
+          title: t('Success'),
+          text: t('Fund added successfully'),
+          timer: 2000,
+          showConfirmButton: false
+        })
         resetForm()
       }
     } catch (err) {
       if (err.response && err.response.status === 409) {
         setFormError(err.response.data.message)
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: err.response.data.message
+        })
       } else {
         console.error("Error saving fund:", err)
         setError("Failed to save fund")
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t('Failed to save fund')
+        })
       }
     }
   }
 
-  const handleDelete = (id) => {
-    setDeleteFundId(id)
-    setIsDeleteModalOpen(true)
+  // const handleDelete = (id) => {
+  //   setDeleteFundId(id)
+  //   setIsDeleteModalOpen(true)
+  // }
+
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: t('Are you sure?'),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: t('Yes, delete it!'),
+      cancelButtonText: t('Cancel')
+    })
+
+    if (result.isConfirmed) {
+      try {
+        await axios.delete(`http://localhost:5000/api/fund-distribution/${id}`)
+        setFundData((prevFundData) => prevFundData.filter((fund) => fund.demand_master_id !== id))
+        setFilteredFundData((prevFilteredFundData) =>
+          prevFilteredFundData.filter((fund) => fund.demand_master_id !== id)
+        )
+        
+        Swal.fire({
+          icon: 'success',
+          title: t('Deleted!'),
+          text: t('Fund has been deleted.'),
+          timer: 2000,
+          showConfirmButton: false
+        })
+      } catch (err) {
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t('Failed to delete fund')
+        })
+        console.error("Error deleting fund:", err)
+        setError("Failed to delete fund")
+      }
+    }
   }
 
   const handleEdit = (fund) => {
@@ -152,47 +218,47 @@ const FundDist = () => {
   // Updated columns with responsive design - FIXED: Using text-only buttons on small screens
   const columns = [
     {
-      name: "Sr. No.",
+      name: t("Sr. No."),
       selector: (row, index) => index + 1,
       sortable: false,
       width: "80px",
       hide: "sm",
     },
     {
-      name: "School Name",
+      name: t("School Name"),
       selector: (row) => row.school_name,
       sortable: true,
       wrap: true,
       minWidth: "200px",
     },
     {
-      name: "Amount",
+      name: t("Amount"),
       selector: (row) => `₹${row.amount}`,
       sortable: true,
       minWidth: "120px",
     },
     {
-      name: "Date",
+      name: t("Date"),
       selector: (row) => new Date(row.ins_date_time).toLocaleDateString("en-GB").replace(/\//g, "-"),
       sortable: true,
       hide: "md",
       minWidth: "120px",
     },
     {
-      name: "Actions",
+      name: t("Actions"),
       cell: (row) => (
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
           <button
             onClick={() => handleEdit(row)}
             className=" text-teal-600 x-3 py-1 rounded-md hover:bg-teal-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
           >
-            EDIT
+            {t("EDIT")}
           </button>
           <button
             onClick={() => handleDelete(row.demand_master_id)}
             className=" text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
           >
-            DELETE
+           {t("DELETE")}
           </button>
         </div>
       ),
@@ -207,7 +273,7 @@ const FundDist = () => {
     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 realfont">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
-          <h2 className="text-xl md:text-2xl font-bold">Fund Distribution</h2>
+        <h2 className="text-xl md:text-2xl font-bold">{t("Fund Distribution")}</h2>
         </div>
 
         {/* Make search and add button responsive */}
@@ -215,7 +281,7 @@ const FundDist = () => {
           <div className="relative w-full sm:w-[300px]">
             <input
               type="text"
-              placeholder="Search"
+              placeholder={t("Search")}
               value={searchTerm}
               onChange={handleSearch}
               className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
@@ -230,7 +296,7 @@ const FundDist = () => {
             }}
             className="bg-blue-950 text-white hover:bg-blue-900 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont w-[200px] sm:w-auto justify-center sm:justify-start"
           >
-            <Plus className="mr-2" size={18} /> Add Fund
+            <Plus className="mr-2" size={18} /> {t("Add Fund")}
           </button>
         </div>
 
@@ -279,7 +345,7 @@ const FundDist = () => {
           />
         </div>
 
-        {filteredFundData.length === 0 && <div className="text-center p-4 md:p-8 text-gray-500">No funds found</div>}
+        {filteredFundData.length === 0 && <div className="text-center p-4 md:p-8 text-gray-500">{t("No funds found")}</div>}
       </div>
 
       {/* Make modals responsive */}
@@ -288,7 +354,7 @@ const FundDist = () => {
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
               <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-                {isEditMode ? "Edit Fund" : "Fund Distribution"}
+                {isEditMode ? t("Edit Fund") : t("Fund Distribution")}
               </h2>
               <button
                 onClick={resetForm}
@@ -310,7 +376,7 @@ const FundDist = () => {
               {isEditMode ? (
                 <>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">School</label>
+                    <label className="block mb-2 text-sm font-medium">{t("School")}</label>
                     <input
                       type="text"
                       value={schools.find((s) => String(s.school_id) === String(selectedSchool))?.school_name || ""}
@@ -319,7 +385,7 @@ const FundDist = () => {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">Year</label>
+                    <label className="block mb-2 text-sm font-medium">{t("Year")}</label>
                     <input
                       type="text"
                       value={selectedYear}
@@ -328,7 +394,7 @@ const FundDist = () => {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">Current Amount</label>
+                    <label className="block mb-2 text-sm font-medium">{t("Current Amount")}</label>
                     <input
                       type="number"
                       value={amount}
@@ -337,7 +403,7 @@ const FundDist = () => {
                     />
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">Additional Amount</label>
+                    <label className="block mb-2 text-sm font-medium">{t("Additional Amount")}</label>
                     <input
                       type="number"
                       value={additionalAmount}
@@ -347,7 +413,7 @@ const FundDist = () => {
                           ? "border-red-500 focus:ring-red-500"
                           : "border-gray-300 focus:border-blue-500"
                       }`}
-                      placeholder="Enter additional amount"
+                      placeholder={t("Enter additional amount")}
                     />
                     {errors.additionalAmount && (
                       <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -359,7 +425,7 @@ const FundDist = () => {
               ) : (
                 <>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">School</label>
+                    <label className="block mb-2 text-sm font-medium">{t("School")}</label>
                     <select
                       value={selectedSchool}
                       onChange={(e) => setSelectedSchool(e.target.value)}
@@ -367,7 +433,7 @@ const FundDist = () => {
                         errors.school ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
                       }`}
                     >
-                      <option value="">Select School</option>
+                      <option value="">{t("Select School")}</option>
                       {schools.map((school) => (
                         <option key={school.school_id} value={school.school_id}>
                           {school.school_name}
@@ -381,7 +447,7 @@ const FundDist = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">Year</label>
+                    <label className="block mb-2 text-sm font-medium">{t("Year")}</label>
                     <select
                       value={selectedYear}
                       onChange={(e) => setSelectedYear(e.target.value)}
@@ -392,7 +458,7 @@ const FundDist = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block mb-2 text-sm font-medium">Amount</label>
+                    <label className="block mb-2 text-sm font-medium">{t("Amount")}</label>
                     <input
                       type="number"
                       value={amount}
@@ -400,7 +466,7 @@ const FundDist = () => {
                       className={`w-full px-3 py-2 border rounded-md ${
                         errors.amount ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
                       }`}
-                      placeholder="Enter amount"
+                      placeholder={t("Enter amount")}
                     />
                     {errors.amount && (
                       <p className="text-red-500 text-sm mt-1 flex items-center">
@@ -417,7 +483,7 @@ const FundDist = () => {
                 onClick={handleSubmit}
                 className="w-full sm:w-[60%] md:w-[40%] bg-blue-950 text-white py-2 md:py-3 rounded-md hover:bg-blue-900 transition-colors font-semibold text-lg md:text-xl"
               >
-                {isEditMode ? "SUBMIT" : "SUBMIT"}
+               {t("SUBMIT")}
               </button>
             </div>
           </div>
@@ -425,11 +491,11 @@ const FundDist = () => {
       )}
 
       {/* Make delete modal responsive */}
-      {isDeleteModalOpen && (
+      {/* {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 realfont p-4">
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">Confirm Delete</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950">{t("Confirm Delete")}</h2>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
@@ -439,7 +505,7 @@ const FundDist = () => {
             </div>
 
             <div className="p-4 md:p-6 space-y-4">
-              <p className="text-gray-700 font-bold">Are you sure you want to delete this fund?</p>
+              <p className="text-gray-700 font-bold">{t("Are you sure you want to delete this fund?")}</p>
             </div>
 
             <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
@@ -447,7 +513,7 @@ const FundDist = () => {
                 onClick={() => setIsDeleteModalOpen(false)}
                 className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
               >
-                Cancel
+            {t("Cancel")}
               </button>
               <button
                 onClick={async () => {
@@ -465,12 +531,12 @@ const FundDist = () => {
                 }}
                 className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
               >
-                Delete
+              {t("Delete")}
               </button>
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   )
 }

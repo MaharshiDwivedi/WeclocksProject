@@ -1,13 +1,10 @@
-"use client"
-
 import { useEffect, useState, useRef } from "react"
-import { Plus, X, Image, AlertCircle, Search, Upload } from "lucide-react"
-import axios from "axios"
+import { Plus, X, AlertCircle, Search, Upload, Trash2, Edit, MessageSquare } from "lucide-react"
 import DataTable from "react-data-table-component"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 
-export default function Tharavopration({ meetingNumber, meetingId }) {
+export default function TharavOperation({ meetingNumber, meetingId }) {
   const navigate = useNavigate()
   const API_URL = "http://localhost:5000/api/tharav"
   const API_URL_Purpose = "http://localhost:5000/api/purpose"
@@ -319,20 +316,20 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
     }
   }
 
-  const handleWebcamCapture = (capturedImage) => {
-    if (capturedImage) {
-      fetch(capturedImage)
-        .then((res) => res.blob())
-        .then((blob) => {
-          const file = new File([blob], `webcam_capture_${Date.now()}.jpg`, {
-            type: "image/jpeg",
-          })
-          setTharav((prev) => ({
-            ...prev,
-            photo: file,
-          }))
-          setPreviewImage(capturedImage)
-        })
+  const confirmDelete = async () => {
+    try {
+      const res = await fetch(`${API_URL}/${deleteNirnayId}`, {
+        method: "DELETE",
+      })
+
+      if (!res.ok) throw new Error("Failed to delete tharav")
+
+      setNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId))
+      setFilteredNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId))
+      setIsDeleteModalOpen(false)
+    } catch (error) {
+      console.error("Error deleting Tharav:", error)
+      setFormError("Failed to delete Tharav")
     }
   }
 
@@ -446,24 +443,30 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
     {
       name: "Actions",
       cell: (row) => (
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => handleEdit(row)}
-            className="text-teal-500 px-3 py-1 rounded-md hover:bg-teal-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+            title="Edit"
           >
-            EDIT
+            <Edit size={18} />
+            <span className="sr-only">Edit</span>
           </button>
           <button
             onClick={() => handleDelete(row.nirnay_id)}
-            className="text-red-500 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
+            className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            title="Delete"
           >
-            DELETE
+            <Trash2 size={18} />
+            <span className="sr-only">Delete</span>
           </button>
           <button
             onClick={() => handleRemarks(row)}
-            className="text-blue-500 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center"
+            className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors"
+            title="Remarks"
           >
-            REMARKS
+            <MessageSquare size={18} />
+            <span className="sr-only">Remarks</span>
           </button>
         </div>
       ),
@@ -473,33 +476,35 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
   ]
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
-      <div className="bg-white shadow-md w-full mx-auto rounded-lg overflow-hidden">
-        <div className="bg-blue-950 text-white px-4 sm:px-6 py-2 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 realfont2">
-          <h2 className="text-xl md:text-2xl font-bold">{t("tharavManagement")}</h2>
+    <div className="container mx-auto px-4 py-6">
+      <div className="bg-white shadow-lg rounded-xl overflow-hidden border border-gray-100">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-900 to-blue-800 text-white px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <h2 className="text-2xl font-bold">{t("tharavManagement")}</h2>
           <button
             onClick={handleOpenModal}
-            className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200 w-full sm:w-auto justify-center"
+            className="bg-white text-blue-900 px-4 py-2 rounded-lg hover:bg-blue-50 flex items-center gap-2 font-medium shadow-sm transition-all duration-200 w-full sm:w-auto justify-center"
           >
-            <Plus className="mr-1 sm:mr-2" size={isMobile ? 16 : 20} />
-            <span className="text-sm sm:text-base">{t("addTharav")}</span>
+            <Plus size={18} />
+            <span>{t("addTharav")}</span>
           </button>
         </div>
 
-        <div className="p-3 md:p-4 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-          <div className="relative flex-grow max-w-full sm:max-w-[300px]">
+        {/* Search Bar */}
+        <div className="p-4 bg-gray-50 border-b">
+          <div className="relative max-w-md">
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search tharavs..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           </div>
         </div>
 
-        {/* Responsive table container with horizontal scrolling */}
+        {/* Data Table */}
         <div className="overflow-x-auto">
           <DataTable
             columns={columns}
@@ -514,23 +519,20 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
             customStyles={{
               headCells: {
                 style: {
-                  backgroundColor: "#f3f4f6",
-                  fontSize: "15px",
+                  backgroundColor: "#f8fafc",
+                  fontSize: "14px",
                   fontWeight: "600",
-                  justifyContent: "center",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                  whiteSpace: "nowrap",
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  borderBottom: "1px solid #e2e8f0",
                 },
               },
               cells: {
                 style: {
                   fontSize: "14px",
-                  fontFamily: "Poppins",
-                  color: "#333",
-                  justifyContent: "center",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  borderBottom: "1px solid #f1f5f9",
                 },
               },
               pagination: {
@@ -539,70 +541,21 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
                   minHeight: "56px",
                   borderTopStyle: "solid",
                   borderTopWidth: "1px",
-                  borderTopColor: "#f3f4f6",
+                  borderTopColor: "#e2e8f0",
                 },
               },
             }}
+            noDataComponent={<div className="p-10 text-center text-gray-500">No tharavs found</div>}
           />
         </div>
-
-        {filteredNirnay.length === 0 && <div className="text-center p-4 md:p-8 text-gray-500">No tharavs found</div>}
       </div>
 
-      {/* Delete Confirmation Modal - Responsive */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
-            <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">Confirm Delete</h2>
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-4 md:p-6 space-y-4">
-              <p className="text-gray-700 font-bold">Are you sure you want to delete this Tharav?</p>
-            </div>
-
-            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={async () => {
-                  try {
-                    await axios.delete(`http://localhost:5000/api/tharav/${deleteNirnayId}`)
-                    setNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId))
-                    setFilteredNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId))
-                    setIsDeleteModalOpen(false)
-                  } catch (error) {
-                    console.error("Error deleting Tharav:", error)
-                    setFormError("Failed to delete Tharav")
-                  }
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Add/Edit Modal - Responsive */}
+      {/* Add/Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-[900px] max-h-[90vh] overflow-y-auto">
-            <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-                {isEditing ? "Edit Tharav" : "Add Tharav"}
-              </h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto animate-fadeIn">
+            <div className="sticky top-0 bg-white z-10 px-6 py-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold text-gray-900">{isEditing ? "Edit Tharav" : "Add New Tharav"}</h2>
               <button
                 onClick={closeModal}
                 className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
@@ -611,44 +564,44 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-6">
               {formError && (
-                <div className="text-red-500 text-sm mb-4 flex items-center p-3 bg-red-50 rounded-md">
-                  <AlertCircle className="mr-2 flex-shrink-0" size={20} />
+                <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2">
+                  <AlertCircle size={20} />
                   <span>{formError}</span>
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Tharav No.</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Tharav No.</label>
                   <input
                     type="text"
                     name="tharavNo"
                     value={tharav.tharavNo}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.tharavNo ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
+                      errors.tharavNo ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                     placeholder="Enter tharav no"
                   />
                   {errors.tharavNo && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.tharavNo}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Purpose</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Purpose</label>
                   <select
                     name="purpose"
                     value={tharav.purpose}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.purpose ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
+                      errors.purpose ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                   >
                     <option value="">Select Purpose</option>
                     {purpose.map((item) => (
@@ -659,7 +612,7 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
                   </select>
                   {errors.purpose && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.purpose}
                     </p>
                   )}
@@ -667,105 +620,103 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium">Problem Found</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Problem Found</label>
                 <textarea
                   name="problemFounded"
                   value={tharav.problemFounded}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.problemFounded
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500"
-                  }`}
+                  className={`w-full px-4 py-2.5 rounded-lg border ${
+                    errors.problemFounded ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                  } focus:outline-none focus:ring-2 transition-all`}
                   rows="3"
                   placeholder="Describe the problem"
                 ></textarea>
                 {errors.problemFounded && (
                   <p className="text-red-500 text-xs mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                    <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                     {errors.problemFounded}
                   </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Where</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Where</label>
                   <input
                     type="text"
                     name="where"
                     value={tharav.where}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.where ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
+                      errors.where ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                     placeholder="Location"
                   />
                   {errors.where && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.where}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-medium">What</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">What</label>
                   <input
                     type="text"
                     name="what"
                     value={tharav.what}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.what ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
+                      errors.what ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                     placeholder="Item/Issue"
                   />
                   {errors.what && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.what}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 text-sm font-medium">How Many</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">How Many</label>
                   <input
                     type="text"
                     name="howMany"
                     value={tharav.howMany}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.howMany ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
+                      errors.howMany ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                     placeholder="Quantity"
                   />
                   {errors.howMany && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.howMany}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Dead Stock Number</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Dead Stock Number</label>
                   <input
                     type="text"
                     name="deadStockNumber"
                     value={tharav.deadStockNumber}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
                       errors.deadStockNumber
                         ? "border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-blue-500"
-                    }`}
+                        : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                     placeholder="Stock number if applicable"
                   />
                   {errors.deadStockNumber && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.deadStockNumber}
                     </p>
                   )}
@@ -773,61 +724,61 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium">Decision Taken</label>
+                <label className="block mb-2 text-sm font-medium text-gray-700">Decision Taken</label>
                 <textarea
                   name="decisionTaken"
                   value={tharav.decisionTaken}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.decisionTaken ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                  }`}
+                  className={`w-full px-4 py-2.5 rounded-lg border ${
+                    errors.decisionTaken ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                  } focus:outline-none focus:ring-2 transition-all`}
                   rows="3"
                   placeholder="Decision details"
                 ></textarea>
                 {errors.decisionTaken && (
                   <p className="text-red-500 text-xs mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                    <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                     {errors.decisionTaken}
                   </p>
                 )}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Expected Expenditure</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Expected Expenditure</label>
                   <input
                     type="text"
                     name="expectedExpenditure"
                     value={tharav.expectedExpenditure}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
                       errors.expectedExpenditure
                         ? "border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:border-blue-500"
-                    }`}
+                        : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                     placeholder="Amount in ₹"
                   />
                   {errors.expectedExpenditure && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.expectedExpenditure}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className="block mb-2 text-sm font-medium">Fixed Date</label>
+                  <label className="block mb-2 text-sm font-medium text-gray-700">Fixed Date</label>
                   <input
                     type="date"
                     name="fixedDate"
                     value={tharav.fixedDate}
                     onChange={handleInputChange}
-                    className={`w-full px-3 py-2 border rounded-md ${
-                      errors.fixedDate ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                    }`}
+                    className={`w-full px-4 py-2.5 rounded-lg border ${
+                      errors.fixedDate ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"
+                    } focus:outline-none focus:ring-2 transition-all`}
                   />
                   {errors.fixedDate && (
                     <p className="text-red-500 text-xs mt-1 flex items-center">
-                      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+                      <AlertCircle className="mr-1 flex-shrink-0" size={14} />
                       {errors.fixedDate}
                     </p>
                   )}
@@ -835,8 +786,8 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium">Photo</label>
-                <div className="flex flex-wrap items-center gap-2">
+                <label className="block mb-2 text-sm font-medium text-gray-700">Photo</label>
+                <div className="flex flex-wrap items-center gap-3">
                   <input
                     type="file"
                     ref={fileInputRef}
@@ -847,17 +798,10 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current.click()}
-                    className="flex items-center px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
+                    className="flex items-center px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-gray-700"
                   >
                     <Upload className="mr-2" size={18} />
                     Upload Photo
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center px-4 py-2 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors"
-                  >
-                    <Image className="mr-2" size={18} />
-                    Use Webcam
                   </button>
                 </div>
 
@@ -866,7 +810,7 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
                     <img
                       src={previewImage || "/placeholder.svg"}
                       alt="Preview"
-                      className="w-full max-h-40 object-contain rounded-md border"
+                      className="w-full max-h-48 object-contain rounded-lg border"
                     />
                     <button
                       type="button"
@@ -874,7 +818,7 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
                         setPreviewImage(null)
                         setTharav((prev) => ({ ...prev, photo: "" }))
                       }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-md"
                     >
                       <X size={16} />
                     </button>
@@ -882,22 +826,54 @@ export default function Tharavopration({ meetingNumber, meetingId }) {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 mt-6">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 order-2 sm:order-1"
+                  className="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 order-1 sm:order-2"
+                  className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors shadow-sm"
                 >
                   {isEditing ? "Update Tharav" : "Save Tharav"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md animate-fadeIn">
+            <div className="p-6 border-b">
+              <h2 className="text-xl font-bold text-gray-900">Confirm Delete</h2>
+            </div>
+
+            <div className="p-6">
+              <p className="text-gray-700">
+                Are you sure you want to delete this Tharav? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="p-6 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 text-gray-700 font-medium transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-medium transition-colors shadow-sm"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

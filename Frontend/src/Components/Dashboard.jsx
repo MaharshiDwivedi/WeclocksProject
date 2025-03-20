@@ -5,8 +5,12 @@ import BarGraph from "./BarGraph"
 import axios from "axios"
 import { Card, CardContent } from "@mui/material"
 import { MonthPicker, MonthInput } from "react-lite-month-picker"
+import { useTranslation } from "react-i18next"
+
 
 const Dashboard = () => {
+  const { t } = useTranslation()  
+
   const [values, setValues] = useState({
     actualExpense: 0,
     expectedExpense: 0,
@@ -24,10 +28,10 @@ const Dashboard = () => {
 
     if (value === 0) {
       numericValue = "0"
-      unit = "Lakh"
+      unit = t("lakh")
     } else if (value >= 100000) {
       numericValue = (value / 100000).toFixed(2)
-      unit = "Lakh"
+      unit = t("lakh")
     } else if (value >= 1000) {
       numericValue = (value / 1000).toFixed(2)
       unit = "K"
@@ -113,7 +117,7 @@ const Dashboard = () => {
 
         {/* Total Expense Cards */}
         <div className="flex flex-col items-center w-full lg:w-[40%] lg:ml-0">
-          <h2 className="text-xl md:text-2xl font-bold text-blue-950 realfont2">Total Expense</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-blue-950 realfont2">{t("totalExpense")}</h2>
           <div className="flex flex-col gap-4 md:gap-6 p-4 rounded-lg w-full max-w-xs">
             <Card
               variant="outlined"
@@ -132,7 +136,7 @@ const Dashboard = () => {
             >
               <CardContent className="p-4 md:p-6">
                 <div className="text-center text-blue-950 text-base md:text-lg realfont font-semibold">
-                  Actual Expense
+                  {t("actualExpense")}
                 </div>
                 <div className="mt-3">{formatNumber(values.actualExpense)}</div>
               </CardContent>
@@ -155,7 +159,7 @@ const Dashboard = () => {
             >
               <CardContent className="p-4 md:p-6">
                 <div className="text-center text-blue-950 text-base md:text-lg realfont font-semibold">
-                  Expected Expense
+                  {t("expectedExpense")}
                 </div>
                 <div className="mt-3">{formatNumber(values.expectedExpense)}</div>
               </CardContent>
@@ -167,7 +171,7 @@ const Dashboard = () => {
       {/* Head Wise Expense Section */}
       <div className="mt-6 rounded-[10px] p-3 md:p-5 bg-gradient-to-br from-neutral-50 to-neutral-300 shadow-md">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-blue-950 text-center mb-4 md:mb-6 realfont2">
-          HEADWISE EXPENSE
+          {t("headwiseExpense")}
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {headwiseData.length > 0 ? (

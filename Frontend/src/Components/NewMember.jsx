@@ -1,17 +1,28 @@
-// NewMember.jsx
-import { useEffect, useState } from "react";
-import { Menu } from "@headlessui/react";
-import { FaEllipsisV, FaTrash, FaEdit } from "react-icons/fa";
-import { Plus } from 'lucide-react';
-import { useTranslation } from "react-i18next"; 
+"use client"
+
+import { useEffect, useState } from "react"
+import DataTable from "react-data-table-component"
+import { FaTrash, FaEdit } from "react-icons/fa"
+import Swal from "sweetalert2"
+import { Plus, Search, X, AlertCircle } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { useLocation } from "react-router-dom" // Added for consistency with Home.jsx
 
 export default function NewMember() {
-  const { t } = useTranslation(); 
-  const API_URL = "http://localhost:5000/api/member";
-  const [members, setMembers] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [currentMemberId, setCurrentMemberId] = useState(null);
+  const { t } = useTranslation()
+  const location = useLocation() // Added to track route changes like Home.jsx
+  const API_URL = "http://localhost:5000/api/member"
+  const [members, setMembers] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [currentMemberId, setCurrentMemberId] = useState(null)
+  const [errors, setErrors] = useState({})
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filteredMembers, setFilteredMembers] = useState([])
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [deleteId, setDeleteId] = useState(null)
+
   const [newMember, setNewMember] = useState({
     name: "",
     representative: "",
@@ -19,441 +30,552 @@ export default function NewMember() {
     gender: "",
     cast: "",
     year: "",
-  });
-  const [insertdate, setinsertdate] = useState("");
+    designation: "",
+  })
 
-  const representativeOptions = [
-    { value: "Principal EX (प्राचार्य माजी)", label: t("principalEx") },
-    { value: "board representative (मंडळ प्रतिनिधी)", label: t("boardRepresentative") },
-    { value: "parent representative (पालक प्रतिनिधी)", label: t("parentRepresentative") },
-    { value: "teacher representative (शिक्षक प्रतिनिधी)", label: t("teacherRepresentative") },
-    { value: "student representative (विद्यार्थी प्रतिनिधी)", label: t("studentRepresentative") },
-  ];
-
-  const castOptions = [
-    { value: "GEN", label: t("gen") },
-    { value: "OBC", label: t("obc") },
-    { value: "ST", label: t("st") },
-    { value: "SC", label: t("sc") },
-  ];
-
-  const designationOptions = [
-    { value: "अध्यक्ष", label: t("chairman") },
-    { value: "उपाध्यक्ष", label: t("viceChairman") },
-    { value: "सदस्य", label: t("member") },
-    { value: "सदस्य सचिव", label: t("memberSecretary") },
-    { value: "सह सचिव", label: t("coSecretary") },
-  ];
-
-  const genderOptions = [
-    { value: "Male", label: t("male") },
-    { value: "Female", label: t("female") },
-  ];
-
-  const yearOptions = [
+  const yearoption = [
     { label: "2023-24", value: "2023-2024" },
     { label: "2024-25", value: "2024-2025" },
-  ];
+  ]
 
+  // Responsive detection aligned with Home.jsx
   useEffect(() => {
-    fetchMembers();
-  }, []);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+    window.addEventListener("resize", handleResize)
+    return () => window.removeEventListener("resize", handleResize)
+  }, [])
+
+  // Fetch members
+  useEffect(() => {
+    fetchMembers()
+  }, [])
 
   const fetchMembers = async () => {
     try {
-      const res = await fetch(API_URL);
-      if (!res.ok) throw new Error(t("fetchMembersError"));
-      const data = await res.json();
-      console.log("Fetched Members:", data);
-      setMembers(Array.isArray(data) ? data : []);
+      const res = await fetch(API_URL)
+      if (!res.ok) throw new Error(t("fetchMembersError"))
+      const data = await res.json()
+      const mySchoolID = localStorage.getItem("school_id")
+      const formattedMembers = data
+        .filter((request) => {
+          const recordData = request.member_record.split("|")
+          return recordData[4] == mySchoolID
+        })
+        .map((member) => {
+          const recordData = member.member_record.split("|")
+          const dbYear = recordData[10] || "N/A"
+          const yearOption = yearoption.find((option) => option.value === dbYear)
+          const displayYear = yearOption ? yearOption.label : dbYear
+          return {
+            member_id: member.member_id,
+            name: recordData[0] || "N/A",
+            mobile: recordData[1] || "N/A",
+            representative: recordData[2] || "N/A",
+            cast: recordData[3] || "N/A",
+            year: displayYear,
+            rawYear: dbYear,
+            designation: recordData[8] || "N/A",
+            gender: recordData[9] || "N/A",
+          }
+        })
+      setMembers(formattedMembers)
+      setFilteredMembers(formattedMembers)
     } catch (error) {
-      console.error("Error fetching members:", error);
-      setMembers([]);
+      console.error("Error fetching members:", error)
     }
-  };
+  }
 
   const handleEdit = (member) => {
-    const recordData = member.member_record.split("|");
-    setinsertdate(recordData[6]);
+    setNewMember(member)
+    setCurrentMemberId(member.member_id)
+    setIsEditing(true)
+    setIsModalOpen(true)
+  }
 
-    setNewMember({
-      name: recordData[0] || "",
-      mobile: recordData[1] || "",
-      representative: recordData[2] || "",
-      cast: recordData[3] || "",
-      year: recordData[10] || "",
-      designation: recordData[8] || "",
-      gender: recordData[9] || "",
-    });
-    setCurrentMemberId(member.member_id);
-    setIsEditing(true);
-    setIsModalOpen(true);
-  };
+  const confirmDelete = (id) => {
+    setDeleteId(id)
+    setIsDeleteModalOpen(true)
+  }
 
   const handleDelete = async (id) => {
-    if (!window.confirm(t("confirmDeleteMember"))) return;
     try {
-      const res = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error(t("deleteMemberError"));
-      fetchMembers();
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+      Swal.fire({
+        title: t("delete"),
+        text: t("deleteMemberSuccess"),
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+      })
+      fetchMembers()
+      setIsDeleteModalOpen(false)
     } catch (error) {
-      console.error("Error deleting member:", error);
-      alert(t("deleteMemberError"));
+      Swal.fire({
+        title: t("error"),
+        text: t("deleteMemberError"),
+        icon: "error",
+      })
+      console.error("Error deleting member:", error)
     }
-  };
+  }
 
-  const currentDate = new Date();
-  const year = currentDate.getFullYear();
-  const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-  const day = String(currentDate.getDate()).padStart(2, "0");
-  const hours = String(currentDate.getHours()).padStart(2, "0");
-  const minutes = String(currentDate.getMinutes()).padStart(2, "0");
-  const seconds = String(currentDate.getSeconds()).padStart(2, "0");
-  const formattedDate = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+  const validateForm = () => {
+    const newErrors = {}
+    let isValid = true
+    if (!newMember.name.trim()) {
+      newErrors.name = t("enterFullName")
+      isValid = false
+    }
+    if (!newMember.mobile.trim()) {
+      newErrors.mobile = t("enterMobileNumber")
+      isValid = false
+    } else if (!/^[0-9]{10}$/.test(newMember.mobile.trim())) {
+      newErrors.mobile = t("mobileError")
+      isValid = false
+    }
+    if (!newMember.representative) {
+      newErrors.representative = t("selectRepresentative")
+      isValid = false
+    }
+    if (!newMember.designation) {
+      newErrors.designation = t("selectDesignation")
+      isValid = false
+    }
+    if (!newMember.gender) {
+      newErrors.gender = t("selectGender")
+      isValid = false
+    }
+    if (!newMember.year) {
+      newErrors.year = t("selectYear")
+      isValid = false
+    }
+    if (!newMember.cast) {
+      newErrors.cast = t("selectCast")
+      isValid = false
+    }
+    setErrors(newErrors)
+    return isValid
+  }
 
   const handleSubmit = async () => {
-    const memberData = `${newMember.name}|${newMember.mobile}|${
-      newMember.representative
-    }|${newMember.cast}|14|34|${isEditing ? insertdate : formattedDate}|${
-      isEditing ? formattedDate : "0000-00-00 00:00:00"
-    }|${newMember.designation}|${newMember.gender}|${newMember.year}`;
-
-    const method = isEditing ? "PUT" : "POST";
-    const url = isEditing ? `${API_URL}/${currentMemberId}` : API_URL;
-
+    if (!validateForm()) return
+    const result = await Swal.fire({
+      title: isEditing ? t("update") : t("submit"),
+      text: isEditing ? t("confirmUpdateMember") : t("confirmAddMember"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: isEditing ? t("update") : t("submit"),
+      cancelButtonText: t("cancel"),
+    })
+    if (!result.isConfirmed) return
+    const schoolId = localStorage.getItem("school_id")
+    const userId = localStorage.getItem("user_id")
+    const date = new Date()
+    const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(
+      date.getDate()
+    ).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(
+      2,
+      "0"
+    )}:${String(date.getSeconds()).padStart(2, "0")} ${date.getHours() < 12 ? "AM" : "PM"}`
+    const memberData = `${newMember.name}|${newMember.mobile}|${newMember.representative}|${newMember.cast}|${schoolId}|${userId}|${formattedDate}|0000-00-00|${newMember.designation}|${newMember.gender}|${newMember.year}`
+    const method = isEditing ? "PUT" : "POST"
+    const url = isEditing ? `${API_URL}/${currentMemberId}` : API_URL
     try {
+      Swal.fire({
+        title: isEditing ? t("updating") : t("adding"),
+        text: t("pleaseWait"),
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading()
+        },
+      })
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ member_record: memberData }),
-      });
-
-      if (!res.ok) throw new Error(t("saveMemberError"));
-      fetchMembers();
-      closeModal();
+      })
+      if (!res.ok) throw new Error(t("saveMemberError"))
+      await Swal.fire({
+        icon: "success",
+        title: isEditing ? t("updateSuccess") : t("addSuccess"),
+        text: isEditing ? t("updateMemberSuccess") : t("addMemberSuccess"),
+      })
+      fetchMembers()
+      closeModal()
     } catch (error) {
-      console.error("Error saving member:", error);
-      alert(t("saveMemberError"));
+      console.error("Error saving member:", error)
+      Swal.fire({
+        icon: "error",
+        title: t("error"),
+        text: error.message || t("saveMemberError"),
+      })
     }
-  };
+  }
+
+  useEffect(() => {
+    const filterMembers = () => {
+      if (!searchTerm) {
+        setFilteredMembers(members)
+        return
+      }
+      const lowercasedSearchTerm = searchTerm.toLowerCase()
+      const filtered = members.filter((member) =>
+        Object.values(member).some(
+          (value) => value.toString().toLowerCase().includes(lowercasedSearchTerm)
+        )
+      )
+      setFilteredMembers(filtered)
+    }
+    filterMembers()
+  }, [searchTerm, members])
+
+  const handleSearchChange = (e) => setSearchTerm(e.target.value)
 
   const closeModal = () => {
-    setIsModalOpen(false);
-    setIsEditing(false);
+    setIsModalOpen(false)
+    setIsEditing(false)
     setNewMember({
       name: "",
       representative: "",
-      designation: "",
-      gender: "",
       mobile: "",
+      gender: "",
       cast: "",
       year: "",
-    });
-    setCurrentMemberId(null);
-  };
-
-  const handlerepresentativeChange = (value) => {
-    setNewMember({ ...newMember, representative: value });
-  };
-
-  const handlecastChange = (value) => {
-    setNewMember({ ...newMember, cast: value });
-  };
-
-  const handledesignationChange = (value) => {
-    setNewMember({ ...newMember, designation: value });
-  };
-
-  const handleyear = (value) => {
-    setNewMember({ ...newMember, year: value });
-  };
-
-  const handlegender = (value) => {
-    setNewMember({ ...newMember, gender: value });
-  };
-
-  const handleOpenModal = () => {
-    setIsModalOpen(true);
-    setIsEditing(false);
-    setNewMember({
-      name: "",
-      representative: "",
       designation: "",
-      gender: "",
-      mobile: "",
-      cast: "",
-      year: "",
-    });
-  };
+    })
+    setErrors({})
+  }
+
+  const columns = [
+    { name: t("name"), selector: (row) => row.name, sortable: true, minWidth: "150px" },
+    { name: t("mobile"), selector: (row) => row.mobile, sortable: true, minWidth: "120px" },
+    {
+      name: t("representative"),
+      selector: (row) => row.representative,
+      sortable: true,
+      minWidth: "180px",
+    },
+    {
+      name: t("designation"),
+      selector: (row) => row.designation,
+      sortable: true,
+      minWidth: "120px",
+    },
+    { name: t("gender"), selector: (row) => row.gender, sortable: true, minWidth: "100px" },
+    { name: t("year"), selector: (row) => row.year, sortable: true, minWidth: "100px" },
+    { name: t("cast"), selector: (row) => row.cast, sortable: true, minWidth: "100px" },
+    {
+      name: t("actions"),
+      cell: (row) => (
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
+          <button
+            onClick={() => handleEdit(row)}
+            className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center whitespace-nowrap"
+          >
+            <FaEdit className="mr-2" /> {t("edit")}
+          </button>
+          <button
+            onClick={() => confirmDelete(row.member_id)}
+            className="bg-red-600 text-white px-3 py-1 rounded-md hover:bg-red-700 transition-colors text-sm font-medium min-w-[60px] flex items-center justify-center whitespace-nowrap"
+          >
+            <FaTrash className="mr-2" /> {t("delete")}
+          </button>
+        </div>
+      ),
+      minWidth: "150px",
+      allowOverflow: true,
+    },
+  ]
 
   return (
-    <div className="p-2 md:p-4 w-full">
-      <div className="bg-blue-950 text-white text-lg md:text-xl font-bold p-3 md:p-4 text-center rounded-t-md realfont2">
-        <span>{t("committeeMembers")}</span>
-      </div>
-      <div className="flex justify-end p-2 md:p-4">
+    <div className="flex-1 flex flex-col w-full">
+      {/* Header aligned with Home.jsx */}
+      <header className="bg-blue-950 rounded-md p-3 md:p-4 flex justify-between items-center h-[60px] shadow-lg sticky top-0 ">
+        <div className="text-[16px] md:text-[20px] lg:text-[22px] text-white font-medium realfont2">
+          {t("committeeMembers")}
+        </div>
         <button
-          onClick={handleOpenModal}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1.5 md:py-2 px-3 md:px-4 rounded realfont2 flex items-center text-sm md:text-base"
+          onClick={() => setIsModalOpen(true)}
+          className="bg-white text-blue-950 px-3 py-1.5 md:px-4 md:py-2 rounded-md hover:text-white hover:bg-blue-800 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
         >
-          <Plus className="w-4 h-4 md:w-5 md:h-5 mr-1 md:mr-2" />
-          {t("addMember")}
+          <Plus className="mr-1 md:mr-2" size={isMobile ? 16 : 20} />
+          <span className="text-sm md:text-base">{t("addMember")}</span>
         </button>
-      </div>
-      
-      {/* Responsive table container */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white rounded-lg shadow-md">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                {t("name")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                {t("mobile")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
-                {t("representative")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
-                {t("designation")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
-                {t("gender")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
-                {t("year")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider hidden md:table-cell">
-                {t("cast")}
-              </th>
-              <th className="px-2 md:px-6 py-2 md:py-3 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                {t("actions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {members.map((member) => {
-              const recordData = member.member_record
-                ? member.member_record.split("|")
-                : [];
-              return (
-                <tr key={member.member_id} className="mb-2">
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {recordData[0] || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {recordData[1] || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {recordData[2] || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {recordData[8] || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {recordData[9] || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {yearOptions.find(
-                        (option) => option.value === recordData[10]
-                      )?.label || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap hidden md:table-cell">
-                    <div className="text-xs md:text-sm text-gray-900">
-                      {recordData[3] || t("na")}
-                    </div>
-                  </td>
-                  <td className="px-2 md:px-6 py-2 md:py-4 whitespace-nowrap text-right">
-                    <Menu as="div" className="relative inline-block text-left">
-                      <Menu.Button className="text-gray-500 hover:text-purple-600">
-                        <FaEllipsisV size={16} />
-                      </Menu.Button>
-                      <Menu.Items className="absolute right-0 mt-2 w-40 bg-white shadow-lg rounded-md border border-gray-200 py-1 z-10">
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              onClick={() => handleEdit(member)}
-                              className={`flex items-center w-full px-4 py-2 text-sm ${
-                                active ? "bg-gray-100" : ""
-                              } text-purple-600`}
-                            >
-                              <FaEdit className="mr-2" /> {t("edit")}
-                            </button>
-                          )}
-                        </Menu.Item>
-                        <Menu.Item>
-                          {({ active }) => (
-                            <button
-                              onClick={() => handleDelete(member.member_id)}
-                              className={`flex items-center w-full px-4 py-2 text-sm ${
-                                active ? "bg-gray-100" : ""
-                              } text-red-600`}
-                            >
-                              <FaTrash className="mr-2" /> {t("delete")}
-                            </button>
-                          )}
-                        </Menu.Item>
-                      </Menu.Items>
-                    </Menu>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      
-      {members.length === 0 && (
-        <p className="text-center text-gray-500 mt-4">{t("noMembersFound")}</p>
-      )}
-      
-      {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-2 md:p-0 z-50 overflow-y-auto">
-          <div className="bg-white p-4 md:p-8 rounded-lg shadow-lg w-full max-w-3xl transition-transform transform">
-            <h2 className="text-xl md:text-2xl font-bold mb-4 text-center text-purple-600">
-              {isEditing ? t("editMember") : t("addMember")}
-            </h2>
-            <div className="border border-b w-full border-purple-900 mb-5"></div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("name")}
-                </label>
-                <input
-                  type="text"
-                  value={newMember.name}
-                  onChange={(e) =>
-                    setNewMember({ ...newMember, name: e.target.value })
-                  }
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                  placeholder={t("enterFullName")}
-                />
-              </div>
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("mobile")}
-                </label>
-                <input
-                  type="text"
-                  value={newMember.mobile}
-                  onChange={(e) =>
-                    setNewMember({ ...newMember, mobile: e.target.value })
-                  }
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                  placeholder={t("enterMobileNumber")}
-                />
-              </div>
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("representative")}
-                </label>
-                <select
-                  value={newMember.representative}
-                  onChange={(e) => handlerepresentativeChange(e.target.value)}
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                >
-                  <option value="">{t("selectRepresentative")}</option>
-                  {representativeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("gender")}
-                </label>
-                <select
-                  value={newMember.gender}
-                  onChange={(e) => handlegender(e.target.value)}
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                >
-                  <option value="">{t("selectGender")}</option>
-                  {genderOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("designation")}
-                </label>
-                <select
-                  value={newMember.designation}
-                  onChange={(e) => handledesignationChange(e.target.value)}
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                >
-                  <option value="">{t("selectDesignation")}</option>
-                  {designationOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("year")}
-                </label>
-                <select
-                  value={newMember.year}
-                  onChange={(e) => handleyear(e.target.value)}
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                >
-                  <option value="">{t("selectYear")}</option>
-                  {yearOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="mb-3 md:mb-4">
-                <label className="block text-xs md:text-sm font-semibold mb-1 text-gray-700">
-                  {t("cast")}
-                </label>
-                <select
-                  value={newMember.cast}
-                  onChange={(e) => handlecastChange(e.target.value)}
-                  className="w-full p-2 md:p-3 border border-gray-300 rounded text-sm focus:outline-none focus:ring focus:ring-purple-500 transition duration-200"
-                >
-                  <option value="">{t("selectCast")}</option>
-                  {castOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 px-3 md:px-8 py-5 bg-[#E5EAF5] w-full md:max-w-[1000px]">
+        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+          {/* Search Bar */}
+          <div className="p-3 md:p-4 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="relative flex-grow max-w-full sm:max-w-[300px]">
+              <input
+                type="text"
+                placeholder={t("search")}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+              />
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={18}
+              />
             </div>
-            
-            <div className="flex justify-end space-x-2 mt-4 md:mt-6">
+          </div>
+
+          {/* DataTable */}
+          <div className="overflow-x-auto">
+            <DataTable
+              columns={columns}
+              data={filteredMembers}
+              pagination
+              paginationPerPage={10}
+              paginationRowsPerPageOptions={[10, 20, 30, 50]}
+              highlightOnHover
+              responsive
+              fixedHeader
+              fixedHeaderScrollHeight="calc(100vh - 250px)" // Adjusted for header and padding
+              customStyles={{
+                headCells: {
+                  style: {
+                    backgroundColor: "#f3f4f6",
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    justifyContent: "center",
+                    padding: "8px",
+                    whiteSpace: "normal", // Allow wrapping for smaller screens
+                  },
+                },
+                cells: {
+                  style: {
+                    fontSize: "14px",
+                    fontFamily: "Poppins",
+                    color: "#333",
+                    justifyContent: "center",
+                    padding: "8px",
+                    whiteSpace: "normal",
+                  },
+                },
+                table: {
+                  style: {
+                    minWidth: "100%", // Full width instead of fixed minWidth
+                  },
+                },
+                pagination: {
+                  style: {
+                    fontSize: "13px",
+                    minHeight: "56px",
+                    borderTop: "1px solid #f3f4f6",
+                  },
+                },
+              }}
+            />
+          </div>
+
+          {filteredMembers.length === 0 && (
+            <div className="text-center p-4 md:p-8 text-gray-500">{t("noMembersFound")}</div>
+          )}
+        </div>
+      </main>
+
+      {/* Add/Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-[90vw] md:max-w-[800px] max-h-[90vh] overflow-y-auto">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950 realfont2">
+                {isEditing ? t("editMember") : t("addMember")}
+              </h2>
               <button
                 onClick={closeModal}
-                className="bg-gray-400 px-3 md:px-4 py-1.5 md:py-2 rounded text-white text-sm hover:bg-gray-500 transition duration-200"
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 md:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("name")} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newMember.name}
+                    onChange={(e) => setNewMember({ ...newMember, name: e.target.value })}
+                    className={`w-full p-3 border ${
+                      errors.name ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                    placeholder={t("enterFullName")}
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.name}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("mobile")} <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={newMember.mobile}
+                    onChange={(e) => setNewMember({ ...newMember, mobile: e.target.value })}
+                    className={`w-full p-3 border ${
+                      errors.mobile ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                    placeholder={t("enterMobileNumber")}
+                    maxLength={10}
+                  />
+                  {errors.mobile && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.mobile}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("representative")} <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newMember.representative}
+                    onChange={(e) =>
+                      setNewMember({ ...newMember, representative: e.target.value })
+                    }
+                    className={`w-full p-3 border ${
+                      errors.representative ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                  >
+                    <option value="">{t("selectRepresentative")}</option>
+                    <option value="Principal EX (प्राचार्य माजी)">{t("principalEx")}</option>
+                    <option value="board representative (मंडळ प्रतिनिधी)">
+                      {t("boardRepresentative")}
+                    </option>
+                    <option value="parent representative (पालक प्रतिनिधी)">
+                      {t("parentRepresentative")}
+                    </option>
+                    <option value="teacher representative (शिक्षक प्रतिनिधी)">
+                      {t("teacherRepresentative")}
+                    </option>
+                    <option value="student representative (विद्यार्थी प्रतिनिधी)">
+                      {t("studentRepresentative")}
+                    </option>
+                  </select>
+                  {errors.representative && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.representative}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("gender")} <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newMember.gender}
+                    onChange={(e) => setNewMember({ ...newMember, gender: e.target.value })}
+                    className={`w-full p-3 border ${
+                      errors.gender ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                  >
+                    <option value="">{t("selectGender")}</option>
+                    <option value="Male">{t("male")}</option>
+                    <option value="Female">{t("female")}</option>
+                  </select>
+                  {errors.gender && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.gender}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("designation")} <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newMember.designation}
+                    onChange={(e) => setNewMember({ ...newMember, designation: e.target.value })}
+                    className={`w-full p-3 border ${
+                      errors.designation ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                  >
+                    <option value="">{t("selectDesignation")}</option>
+                    <option value="अध्यक्">{t("president")}</option>
+                    <option value="उपाध्यक्">{t("vicePresident")}</option>
+                    <option value="सदस्य">{t("member")}</option>
+                    <option value="सदस्य सचिव">{t("memberSecretary")}</option>
+                    <option value="सह सचिव">{t("coSecretary")}</option>
+                  </select>
+                  {errors.designation && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.designation}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("year")} <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newMember.year}
+                    onChange={(e) => setNewMember({ ...newMember, year: e.target.value })}
+                    className={`w-full p-3 border ${
+                      errors.year ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                  >
+                    <option value="">{t("selectYear")}</option>
+                    {yearoption.map((option, index) => (
+                      <option key={index} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.year && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.year}
+                    </p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold mb-1 text-gray-700">
+                    {t("cast")} <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newMember.cast}
+                    onChange={(e) => setNewMember({ ...newMember, cast: e.target.value })}
+                    className={`w-full p-3 border ${
+                      errors.cast ? "border-red-500" : "border-gray-300"
+                    } rounded focus:outline-none focus:ring focus:ring-blue-500`}
+                  >
+                    <option value="">{t("selectCast")}</option>
+                    <option value="GEN">{t("gen")}</option>
+                    <option value="OBC">{t("obc")}</option>
+                    <option value="ST">{t("st")}</option>
+                    <option value="SC">{t("sc")}</option>
+                  </select>
+                  {errors.cast && (
+                    <p className="text-red-500 text-xs mt-1 flex items-center">
+                      <AlertCircle className="mr-2" size={16} /> {errors.cast}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={closeModal}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
               >
                 {t("cancel")}
               </button>
               <button
                 onClick={handleSubmit}
-                className="bg-purple-600 px-3 md:px-4 py-1.5 md:py-2 rounded text-white text-sm hover:bg-purple-700 transition duration-200"
+                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors w-full sm:w-auto"
               >
                 {isEditing ? t("update") : t("submit")}
               </button>
@@ -461,6 +583,42 @@ export default function NewMember() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[90vw] md:max-w-[400px] max-h-[90vh] overflow-y-auto">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950 realfont2">
+                {t("confirmDeleteMember")}
+              </h2>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-4 md:p-6 space-y-4">
+              <p className="text-gray-700 font-bold">{t("confirmDeleteMember")}</p>
+            </div>
+            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
+              >
+                {t("cancel")}
+              </button>
+              <button
+                onClick={() => handleDelete(deleteId)}
+                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
+              >
+                {t("delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
