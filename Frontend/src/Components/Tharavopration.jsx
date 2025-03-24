@@ -141,6 +141,12 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
 
   const handleRemarks = (row) => {
     const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : []
+
+    console.log("recordData:", recordData); // Debug log
+    console.log("headId from recordData[11]:", recordData[11]); // Debug headId
+
+
+
     navigate(`/home/meetings/tharav/${row.nirnay_id}/remarks`, {
       state: {
         tharavNo: recordData[1] || "N/A",
@@ -149,6 +155,11 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
         expectedAmount: recordData[3] || "N/A",
         decisionTaken: recordData[2] || "N/A",
         photo: recordData[4] ? `${SERVER_URL}${recordData[4]}` : null,
+        meetingNumber: meetingNumber, // Pass meetingNumber
+        meetingId: meetingId, // Pass meetingId
+        schoolId: schoolId, // Pass schoolId
+        userId: userId, // Pass userId
+        headId: recordData[11] || "N/A", // Add head_id from nirnay_reord
       },
     })
   }

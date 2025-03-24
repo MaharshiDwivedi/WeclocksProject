@@ -1,32 +1,51 @@
 const connection = require('../Config/Connection');
 
-// Fetch all Request
 const getAllReq = async () => {
-  const sql = "SELECT * FROM tbl_demand_master where demanded= 'Yes' and status = 'Active'";
-  
+  const sql = `
+    SELECT 
+      dm.demand_master_id, 
+      dm.demand_master_record, 
+      dm.demand_status, 
+      dm.active_reject_record, 
+      s.school_name 
+    FROM tbl_demand_master dm
+    LEFT JOIN tbl_schools s ON SUBSTRING_INDEX(dm.demand_master_record, '|', 1) = s.school_id
+    WHERE dm.demanded = 'Yes' AND dm.status = 'Active'
+  `;
   const [rows] = await connection.query(sql);
   return rows;
 };
 
-// Insert a new Request
-const insertReq = async (fundReq,demand_status,demanded) => {
- 
-  const sql = "INSERT INTO tbl_demand_master (demand_master_record,demand_status,demanded) VALUES (?,? ,?)";
+const insertReq = async (fundReq, demand_status, demanded) => {
+  const sql = "INSERT INTO tbl_demand_master (demand_master_record, demand_status, demanded, ins_date_time) VALUES (?, ?, ?, NOW())";
   const [result] = await connection.query(sql, [fundReq, demand_status, demanded]);
   return result;
 };
 
-// Update a Request
 const updateReq = async (id, fundReq) => {
-  const sql = "UPDATE tbl_demand_master SET demand_master_record = ? WHERE 	demand_master_id = ?";
+  const sql = "UPDATE tbl_demand_master SET demand_master_record = ?, update_date_time_record = NOW() WHERE demand_master_id = ?";
   const [result] = await connection.query(sql, [fundReq, id]);
   return result;
 };
 
-// Delete a Request
 const deleteReq = async (id) => {
-  const sql = "DELETE FROM tbl_demand_master WHERE 	demand_master_id = ?";
+  const sql = "UPDATE tbl_demand_master SET status = 'Inactive' WHERE demand_master_id = ?";
   const [result] = await connection.query(sql, [id]);
+  return result;
+};
+
+const acceptReq = async (id) => {
+  const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const sql = "UPDATE tbl_demand_master SET demand_status = 'Accepted', active_reject_record = ? WHERE demand_master_id = ?";
+  const [result] = await connection.query(sql, [currentDateTime, id]);
+  return result;
+};
+
+const rejectReq = async (id, reason) => {
+  const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
+  const rejectData = `${reason}|${currentDateTime}`;
+  const sql = "UPDATE tbl_demand_master SET demand_status = 'Rejected', active_reject_record = ? WHERE demand_master_id = ?";
+  const [result] = await connection.query(sql, [rejectData, id]);
   return result;
 };
 
@@ -35,4 +54,6 @@ module.exports = {
   insertReq,
   updateReq,
   deleteReq,
+  acceptReq,
+  rejectReq,
 };

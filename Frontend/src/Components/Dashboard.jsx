@@ -50,31 +50,44 @@ const Dashboard = () => {
 
   const fetchExpenseData = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/api/expenceData", {
-        month: selectedDate.month.toString(),
-        year: selectedDate.year.toString(),
-        category_id: "4",
-        school_id: "14",
-      })
+        const response = await axios.post("http://localhost:5000/api/expenceData", {
+            month: selectedDate.month.toString(),
+            year: selectedDate.year.toString(),
+            category_id: "4",
+            school_id: "14",
+        });
 
-      if (!response.data || !Array.isArray(response.data.data)) {
-        console.error("❌ API response is not an array:", response.data)
-        return
-      }
+        // ✅ Log the full API response
+        console.log("🚀 API Response Data:", response.data);
 
-      const expenseData = response.data.data
-      const totalActual = expenseData.reduce((sum, head) => sum + (Number.parseFloat(head.actual_cost) || 0), 0)
-      const totalExpected = expenseData.reduce((sum, head) => sum + (Number.parseFloat(head.expected_cost) || 0), 0)
+        if (!response.data || !Array.isArray(response.data.data)) {
+            console.error("❌ API response is not an array:", response.data);
+            return;
+        }
 
-      setValues({
-        actualExpense: Number(totalActual),
-        expectedExpense: Number(totalExpected),
-      })
-      setHeadwiseData(expenseData)
+        const expenseData = response.data.data;
+
+        // ✅ Log each item received to check actual_cost values
+        expenseData.forEach((head, index) => {
+            console.log(`🟢 Head ${index}:`, head);
+        });
+
+        const totalActual = expenseData.reduce((sum, head) => sum + (Number.parseFloat(head.actual_cost) || 0), 0);
+        const totalExpected = expenseData.reduce((sum, head) => sum + (Number.parseFloat(head.expected_cost) || 0), 0);
+
+        console.log("✅ Total Actual Expense Calculated:", totalActual);
+        console.log("✅ Total Expected Expense Calculated:", totalExpected);
+
+        setValues({
+            actualExpense: Number(totalActual),
+            expectedExpense: Number(totalExpected),
+        });
+
+        setHeadwiseData(expenseData);
     } catch (error) {
-      console.error("❌ Error fetching expense data:", error)
+        console.error("❌ Error fetching expense data:", error);
     }
-  }
+};
 
   useEffect(() => {
     fetchExpenseData()
