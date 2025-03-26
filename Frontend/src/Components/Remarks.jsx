@@ -1,7 +1,8 @@
 import { useLocation } from "react-router-dom";
 import { useState, useEffect, useCallback } from "react";
-import { Image } from "lucide-react";
+import { Image, Edit, Trash2 } from "lucide-react";
 import axios from "axios";
+import Swal from "sweetalert2";
 
 export default function Remarks() {
   const location = useLocation();
@@ -22,6 +23,7 @@ export default function Remarks() {
   // State management
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddRemarkModalOpen, setIsAddRemarkModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [remarkDate, setRemarkDate] = useState("");
   const [remarkText, setRemarkText] = useState("");
   const [actualExpense, setActualExpense] = useState("");
@@ -29,6 +31,7 @@ export default function Remarks() {
   const [remarks, setRemarks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [editingRemark, setEditingRemark] = useState(null);
 
   // Memoized remark parser
   const parseRemarks = useCallback((data) => {
@@ -90,47 +93,128 @@ export default function Remarks() {
   const handleAddRemark = async (e) => {
     e.preventDefault();
     
-    // Basic validation
     if (!remarkText || !actualExpense) {
-      setError("Remark text and actual expense are required");
+      Swal.fire('Error!', 'Remark text and actual expense are required', 'error');
       return;
     }
 
-    const formData = new FormData();
-    formData.append("tharavNo", tharavNo);
-    formData.append("remarkDate", remarkDate || new Date().toISOString());
-    formData.append("remarkText", remarkText);
-    formData.append("actualExpense", actualExpense);
-    if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto);
-    formData.append("meetingNumber", meetingNumber);
-    formData.append("schoolId", schoolId);
-    formData.append("userId", userId);
-    formData.append("headId", headId);
-
     try {
       setIsLoading(true);
-      setError(null);
-      
       await axios.post("http://localhost:5000/api/remarks", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
 
-      // Refresh remarks after successful submission
       await fetchRemarks();
-      
-      // Reset form
       setRemarkDate("");
       setRemarkText("");
       setActualExpense("");
       setRemarkPhoto(null);
       setIsAddRemarkModalOpen(false);
+      
+      Swal.fire('Success!', 'Remark added successfully', 'success');
     } catch (err) {
       console.error("Failed to add remark:", err);
-      setError(err.response?.data?.message || "Failed to add remark");
+      Swal.fire(
+        'Error!', 
+        err.response?.data?.message || 'Failed to add remark', 
+        'error'
+      );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Edit remark handler
+  const handleEditRemark = (remark) => {
+    setEditingRemark(remark);
+    setRemarkText(remark.text);
+    setActualExpense(remark.amount);
+    setRemarkDate(remark.date);
+    setIsEditModalOpen(true);
+  };
+
+  // Submit edited remark
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!remarkText || !actualExpense) {
+      Swal.fire('Error!', 'Remark text and actual expense are required', 'error');
+      return;
+    }
+
+    // Create FormData for the edit request
+    const formData = new FormData();
+    formData.append("remarkText", remarkText);
+    formData.append("actualExpense", actualExpense);
+    formData.append("schoolId", schoolId);
+    formData.append("userId", userId);
+    if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto);
+
+    try {
+      setIsLoading(true);
+      await axios.put(
+        `http://localhost:5000/api/remarks/${editingRemark.id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      await fetchRemarks();
+      setIsEditModalOpen(false);
+      setEditingRemark(null);
+      setRemarkPhoto(null);
+      
+      Swal.fire('Success!', 'Remark updated successfully', 'success');
+    } catch (err) {
+      console.error("Failed to update remark:", err);
+      Swal.fire(
+        'Error!', 
+        err.response?.data?.message || 'Failed to update remark', 
+        'error'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete remark handler
+  const handleDeleteRemark = async (id) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, delete it!'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        setIsLoading(true);
+        await axios.delete(`http://localhost:5000/api/remarks/${id}`);
+        await fetchRemarks();
+        
+        Swal.fire(
+          'Deleted!',
+          'Your remark has been deleted.',
+          'success'
+        );
+      } catch (err) {
+        console.error("Failed to delete remark:", err);
+        Swal.fire(
+          'Error!',
+          err.response?.data?.message || 'Failed to delete remark',
+          'error'
+        );
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -155,6 +239,38 @@ export default function Remarks() {
       minimumFractionDigits: 0
     }).format(num);
   };
+
+  // Render individual remark card
+  const renderRemarkCard = (remark) => (
+    <div key={remark.id} className="bg-gray-100 p-4 rounded-lg mb-4 relative">
+      <div className="absolute top-2 right-2 flex gap-2">
+        <button 
+          onClick={() => handleEditRemark(remark)}
+          className="text-blue-600 hover:text-blue-800"
+          disabled={isLoading}
+        >
+          <Edit size={16} />
+        </button>
+        <button 
+          onClick={() => handleDeleteRemark(remark.id)}
+          className="text-red-600 hover:text-red-800"
+          disabled={isLoading}
+        >
+          <Trash2 size={16} />
+        </button>
+      </div>
+      <p><strong>Date:</strong> {formatDate(remark.date)}</p>
+      <p><strong>Remark:</strong> {remark.text}</p>
+      <p><strong>Actual Expense:</strong> {formatCurrency(remark.amount)}</p>
+      {remark.photo && (
+        <img 
+          src={`http://localhost:5000/${remark.photo}`}
+          alt="Remark proof"
+          className="mt-2 max-w-xs rounded-lg border border-gray-300"
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="container mx-auto px-4 py-8 realfont">
@@ -227,20 +343,7 @@ export default function Remarks() {
             <div className="text-center py-8">Loading remarks...</div>
           ) : remarks.length > 0 ? (
             <div className="space-y-4">
-              {remarks.map((remark) => (
-                <div key={remark.id} className="bg-gray-100 p-4 rounded-lg">
-                  <p><strong>Date:</strong> {formatDate(remark.date)}</p>
-                  <p><strong>Remark:</strong> {remark.text}</p>
-                  <p><strong>Actual Expense:</strong> {formatCurrency(remark.amount)}</p>
-                  {remark.photo && (
-                    <img 
-                      src={`http://localhost:5000/${remark.photo}`}
-                      alt="Remark proof"
-                      className="mt-2 max-w-xs rounded-lg border border-gray-300"
-                    />
-                  )}
-                </div>
-              ))}
+              {remarks.map(renderRemarkCard)}
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
@@ -342,6 +445,99 @@ export default function Remarks() {
                 disabled={isLoading}
               >
                 {isLoading ? "Submitting..." : "Submit Remark"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Remark Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
+            <button
+              onClick={() => {
+                setIsEditModalOpen(false);
+                setEditingRemark(null);
+                setRemarkPhoto(null);
+              }}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+              disabled={isLoading}
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl font-bold text-blue-950 mb-6">Edit Remark</h2>
+            <form onSubmit={handleEditSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date
+                </label>
+                <input
+                  type="date"
+                  value={remarkDate}
+                  onChange={(e) => setRemarkDate(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Remark
+                </label>
+                <textarea
+                  value={remarkText}
+                  onChange={(e) => setRemarkText(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Actual Expense (₹)
+                </label>
+                <input
+                  type="number"
+                  value={actualExpense}
+                  onChange={(e) => setActualExpense(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  required
+                  min="0"
+                  step="1"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Upload New Photo (optional)
+                </label>
+                <input
+                  type="file"
+                  onChange={(e) => setRemarkPhoto(e.target.files?.[0] || null)}
+                  className="w-full p-2 border border-gray-300 rounded-md"
+                  accept="image/*"
+                />
+                {editingRemark?.photo && !remarkPhoto && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">Current Photo:</p>
+                    <img 
+                      src={`http://localhost:5000/${editingRemark.photo}`}
+                      alt="Current remark proof"
+                      className="mt-1 max-w-xs rounded-lg border border-gray-300"
+                    />
+                  </div>
+                )}
+              </div>
+              {error && (
+                <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? "Updating..." : "Update Remark"}
               </button>
             </form>
           </div>

@@ -1,4 +1,3 @@
-// In remarksRoute.js
 const express = require("express");
 const router = express.Router();
 const remarksController = require("../controllers/remarksController");
@@ -15,7 +14,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Create remark
 router.post("/", upload.single("remarkPhoto"), remarksController.create);
-router.get("/", remarksController.getRemarksByTharavNo); // New endpoint
+
+// Get remarks by tharavNo
+router.get("/", remarksController.getRemarksByTharavNo);
+
+// Update remark
+router.put("/:id", upload.single("remarkPhoto"), remarksController.updateRemark);
+
+// Delete remark
+router.delete("/:id", remarksController.deleteRemark);
 
 module.exports = router;

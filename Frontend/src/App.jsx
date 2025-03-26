@@ -30,7 +30,7 @@ function App() {
 
 const LoginPage = () => {
   return (
-    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden ">
       {/* Background Image Section - Full screen on mobile */}
       <div
         className="w-full md:w-[65%] h-[40vh] sm:h-[45vh] md:h-full flex items-center justify-center border-2 border-amber-300 relative"
@@ -64,12 +64,12 @@ const LoginPage = () => {
         {/* Logo - Larger size */}
         <img
           src={Logo || "/placeholder.svg"}
-          className="w-[110px] h-[120px] sm:w-[150px] sm:h-[145px] mb-6 shadow-md rounded-md"
+          className="w-[110px] h-[120px] sm:w-[130px] sm:h-[135px] mb-6"
           alt="Logo"
         />
 
         {/* Login Form */}
-        <div className="w-full max-w-xs sm:max-w-sm flex justify-center bg-white rounded-lg shadow-md shadow-gray-200 ">
+        <div className="w-full max-w-xs sm:max-w-sm flex justify-center bg-white rounded-lg  ">
           <LoginForm />
         </div>
       </div>

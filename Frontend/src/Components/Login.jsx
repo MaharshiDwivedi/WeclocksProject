@@ -50,8 +50,9 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="bg-white p-5 sm:p-8 w-full max-w-xs sm:max-w-sm rounded-lg shadow-lg border border-gray-200">
-      <h2 className="text-center text-2xl sm:text-3xl font-semibold mb-6 realfont">Login</h2>
+    <div className="bg-white p-5 sm:p-8 w-full max-w-xs sm:max-w-sm rounded-lg shadow-[0_3px_10px_rgb(0,0,0,0.2)]
+    border border-neutral-300  ">
+      <h2 className="text-center text-2xl sm:text-3xl font-semibold mb-6 realfont">Enter Details</h2>
 
       <form onSubmit={handleLogin}>
         <div className="mb-5 relative">
@@ -60,7 +61,7 @@ const LoginForm = () => {
           </span>
           <input
             type="text"
-            placeholder="Username"
+            placeholder="USERNAME"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="w-full pl-10 pr-4 py-3 border border-red-400 rounded-[4px] outline-none focus:border-red-600 realfont text-base shadow-sm"
@@ -73,7 +74,7 @@ const LoginForm = () => {
           </span>
           <input
             type={showPassword ? "text" : "password"}
-            placeholder="Password"
+            placeholder="PASSWORD"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full pl-10 pr-12 py-3 border border-red-400 rounded-[4px] outline-none focus:border-red-600 realfont text-base shadow-sm"
@@ -95,7 +96,7 @@ const LoginForm = () => {
         </button>
       </form>
 
-      {message && <p className="text-center mt-4 text-red-500 text-base">{message}</p>}
+      {message && <p className="text-center mt-4 text-red-500  realfont text-[15px]">{message} !</p>}
       {loading && (
         <div className="flex justify-center mt-4">
           <Loader />
