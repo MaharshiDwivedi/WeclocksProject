@@ -6,32 +6,66 @@ exports.create = async (req, res) => {
     const { tharavNo, remarkDate, remarkText, actualExpense, meetingNumber, schoolId, userId, headId } = req.body;
     const remarkPhoto = req.file ? req.file.path : null;
 
+    // 1. Create remark record for tbl_new_smc_nirnay_remarks
     const nirnay_remarks_record = `${tharavNo}|${meetingNumber}|${schoolId}|${userId}|${remarkText}|${remarkPhoto}|${actualExpense}|${headId}|${new Date().toISOString()}|${new Date().toISOString()}`;
     
-    const query = `
-      INSERT INTO tbl_new_smc_nirnay_remarks 
-      (nirnay_remarks_record, previous_date, disable_edit_delete, status, sync_date_time) 
-      VALUES (?, ?, ?, "Active", ?)
-    `;
+    // 2. Create demand record for tbl_demand_master
+    const currentYear = new Date().getFullYear();
+    const financialYear = `${currentYear}-${currentYear + 1}`;
+    const demand_master_record = `${schoolId}|${financialYear}|${actualExpense}|Debit|${userId}`;
 
-    const values = [
-      nirnay_remarks_record,
-      remarkDate || new Date(),
-      0,
-      1,
-      new Date()
-    ];
+    // Start transaction
+    const conn = await connection.getConnection();
+    await conn.beginTransaction();
 
-    const [result] = await connection.query(query, values);
+    try {
+      // Insert into tbl_new_smc_nirnay_remarks
+      const [remarkResult] = await conn.query(`
+        INSERT INTO tbl_new_smc_nirnay_remarks 
+        (nirnay_remarks_record, previous_date, disable_edit_delete, status, sync_date_time) 
+        VALUES (?, ?, ?, "Active", ?)
+      `, [
+        nirnay_remarks_record,
+        remarkDate || new Date(),
+        0,
+        new Date()
+      ]);
 
-    res.status(201).json({ id: result.insertId, ...req.body });
+      // Insert into tbl_demand_master
+      const [demandResult] = await conn.query(`
+        INSERT INTO tbl_demand_master 
+        (demand_master_record, demand_status, demanded, status, ins_date_time, update_date_time_record) 
+        VALUES (?, "Pending", 1, "Active", ?, ?)
+      `, [
+        demand_master_record,
+        new Date(),
+        new Date()
+      ]);
+
+      await conn.commit();
+      
+      res.status(201).json({ 
+        success: true,
+        remarkId: remarkResult.insertId,
+        demandId: demandResult.insertId
+      });
+    } catch (error) {
+      await conn.rollback();
+      throw error;
+    } finally {
+      conn.release();
+    }
   } catch (error) {
     console.error("Error in create function:", error);
-    res.status(500).json({ message: "Internal Server Error", error: error.message });
+    res.status(500).json({ 
+      success: false,
+      message: "Internal Server Error",
+      error: error.message 
+    });
   }
 };
 
-// ✅ Add this function to fetch remarks by tharavNo
+// Get remarks by tharavNo
 exports.getRemarksByTharavNo = async (req, res) => {
   try {
     const { tharavNo } = req.query;
@@ -61,9 +95,15 @@ exports.getRemarksByTharavNo = async (req, res) => {
       };
     });
 
-    res.status(200).json(parsedRemarks);
+    res.status(200).json({ 
+      success: true,
+      data: parsedRemarks 
+    });
   } catch (error) {
     console.error("Error fetching remarks:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    res.status(500).json({ 
+      success: false,
+      error: "Internal Server Error" 
+    });
   }
 };

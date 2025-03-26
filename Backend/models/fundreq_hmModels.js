@@ -36,7 +36,7 @@ const deleteReq = async (id) => {
 
 const acceptReq = async (id) => {
   const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
-  const sql = "UPDATE tbl_demand_master SET demand_status = 'Accepted', active_reject_record = ? WHERE demand_master_id = ?";
+  const sql = "UPDATE tbl_demand_master SET demand_status = 'Accept', active_reject_record = ? WHERE demand_master_id = ?";
   const [result] = await connection.query(sql, [currentDateTime, id]);
   return result;
 };
@@ -44,7 +44,7 @@ const acceptReq = async (id) => {
 const rejectReq = async (id, reason) => {
   const currentDateTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
   const rejectData = `${reason}|${currentDateTime}`;
-  const sql = "UPDATE tbl_demand_master SET demand_status = 'Rejected', active_reject_record = ? WHERE demand_master_id = ?";
+  const sql = "UPDATE tbl_demand_master SET demand_status = 'Reject', active_reject_record = ? WHERE demand_master_id = ?";
   const [result] = await connection.query(sql, [rejectData, id]);
   return result;
 };

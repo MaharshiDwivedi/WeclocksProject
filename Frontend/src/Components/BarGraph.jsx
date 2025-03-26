@@ -122,12 +122,12 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
         {
             label: t("actualExpense"),
             data: [actual],
-            backgroundColor: "darkgreen",
+            backgroundColor: "#B91C1C",
         },
         {
             label: t("expectedExpense"),
             data: [expected],
-            backgroundColor: "gray",
+            backgroundColor: "#10B981",
         },
     ],
 };

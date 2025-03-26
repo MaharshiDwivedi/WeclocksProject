@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Image } from "lucide-react";
 import axios from "axios";
 
@@ -16,9 +16,10 @@ export default function Remarks() {
     meetingId,
     schoolId,
     userId,
-    headId, // Add headId from state
+    headId,
   } = location.state || {};
 
+  // State management
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddRemarkModalOpen, setIsAddRemarkModalOpen] = useState(false);
   const [remarkDate, setRemarkDate] = useState("");
@@ -27,14 +28,28 @@ export default function Remarks() {
   const [remarkPhoto, setRemarkPhoto] = useState(null);
   const [remarks, setRemarks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Helper function to parse remarks consistently
-  const parseRemarks = (data) => {
-    return data.map(remark => {
-      // If already parsed by backend, use as-is
-      if (remark.text && remark.amount) return remark;
+  // Memoized remark parser
+  const parseRemarks = useCallback((data) => {
+    if (!data) return [];
+    
+    // Normalize data to always be an array
+    const dataArray = Array.isArray(data) ? data : (data.data || []);
+    
+    return dataArray.map(remark => {
+      // Use parsedData if available from backend
+      if (remark.parsedData) {
+        return {
+          id: remark.nirnay_remarks_id,
+          date: remark.previous_date || new Date().toISOString(),
+          text: remark.parsedData.remarkText || "No remark",
+          amount: remark.parsedData.actualExpense || "0",
+          photo: remark.parsedData.remarkPhoto || null
+        };
+      }
       
-      // Otherwise parse the raw record
+      // Fallback to parsing the raw record
       const parts = remark.nirnay_remarks_record?.split('|') || [];
       return {
         id: remark.nirnay_remarks_id,
@@ -44,70 +59,82 @@ export default function Remarks() {
         photo: parts[5]?.trim() || null
       };
     });
-  };
+  }, []);
 
+  // Fetch remarks with error handling
+  const fetchRemarks = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const response = await axios.get(
+        `http://localhost:5000/api/remarks?tharavNo=${tharavNo}`
+      );
+      
+      setRemarks(parseRemarks(response.data));
+    } catch (err) {
+      console.error("Failed to fetch remarks:", err);
+      setError("Failed to load remarks. Please try again later.");
+      setRemarks([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [tharavNo, parseRemarks]);
+
+  // Initial fetch and refetch when tharavNo changes
   useEffect(() => {
-    const fetchRemarks = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `http://localhost:5000/api/remarks?tharavNo=${tharavNo}`
-        );
-        
-        // Use the parseRemarks helper function
-        setRemarks(parseRemarks(response.data));
-      } catch (error) {
-        console.error("Error fetching remarks:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (tharavNo) fetchRemarks();
-  }, [tharavNo]);
+  }, [tharavNo, fetchRemarks]);
 
+  // Submit new remark
   const handleAddRemark = async (e) => {
     e.preventDefault();
-  
+    
+    // Basic validation
+    if (!remarkText || !actualExpense) {
+      setError("Remark text and actual expense are required");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("tharavNo", tharavNo);
-    formData.append("remarkDate", remarkDate);
+    formData.append("remarkDate", remarkDate || new Date().toISOString());
     formData.append("remarkText", remarkText);
     formData.append("actualExpense", actualExpense);
-    formData.append("remarkPhoto", remarkPhoto);
+    if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto);
     formData.append("meetingNumber", meetingNumber);
     formData.append("schoolId", schoolId);
     formData.append("userId", userId);
-    formData.append("headId", headId); // Add headId to FormData
+    formData.append("headId", headId);
+
     try {
       setIsLoading(true);
+      setError(null);
+      
       await axios.post("http://localhost:5000/api/remarks", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-  
-      // Re-fetch remarks after adding
-      const response = await axios.get(
-        `http://localhost:5000/api/remarks?tharavNo=${tharavNo}`
-      );
+
+      // Refresh remarks after successful submission
+      await fetchRemarks();
       
-      // Use the same parsing function here as well
-      setRemarks(parseRemarks(response.data));
-  
       // Reset form
       setRemarkDate("");
       setRemarkText("");
       setActualExpense("");
       setRemarkPhoto(null);
       setIsAddRemarkModalOpen(false);
-    } catch (error) {
-      console.error("Error adding remark:", error);
+    } catch (err) {
+      console.error("Failed to add remark:", err);
+      setError(err.response?.data?.message || "Failed to add remark");
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Helper functions
   const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString('en-IN', {
@@ -135,6 +162,13 @@ export default function Remarks() {
         <h1 className="text-3xl font-bold text-blue-950 mb-8 text-center">
           Tharav No. {tharavNo}
         </h1>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {error}
+          </div>
+        )}
 
         {/* Tharav Details */}
         <div className="grid grid-cols-2 gap-6 mb-8">
@@ -169,6 +203,7 @@ export default function Remarks() {
           <button
             onClick={() => setIsModalOpen(true)}
             className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2"
+            disabled={isLoading}
           >
             <Image size={18} />
             View Tharav Photo
@@ -179,8 +214,9 @@ export default function Remarks() {
         <button
           onClick={() => setIsAddRemarkModalOpen(true)}
           className="mt-6 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 flex items-center gap-2"
+          disabled={isLoading}
         >
-          Add Remark
+          {isLoading ? "Processing..." : "Add Remark"}
         </button>
 
         {/* Remarks List */}
@@ -190,23 +226,25 @@ export default function Remarks() {
           {isLoading ? (
             <div className="text-center py-8">Loading remarks...</div>
           ) : remarks.length > 0 ? (
-            remarks.map((remark) => (
-              <div key={remark.id} className="bg-gray-100 p-4 rounded-lg mb-4">
-                <p><strong>Date:</strong> {formatDate(remark.date)}</p>
-                <p><strong>Remark:</strong> {remark.text}</p>
-                <p><strong>Actual Expense:</strong> {formatCurrency(remark.amount)}</p>
-                {remark.photo && (
-                  <img 
-                    src={`http://localhost:5000/${remark.photo}`}
-                    alt="Remark proof"
-                    className="mt-2 max-w-xs rounded-lg border border-gray-300"
-                  />
-                )}
-              </div>
-            ))
+            <div className="space-y-4">
+              {remarks.map((remark) => (
+                <div key={remark.id} className="bg-gray-100 p-4 rounded-lg">
+                  <p><strong>Date:</strong> {formatDate(remark.date)}</p>
+                  <p><strong>Remark:</strong> {remark.text}</p>
+                  <p><strong>Actual Expense:</strong> {formatCurrency(remark.amount)}</p>
+                  {remark.photo && (
+                    <img 
+                      src={`http://localhost:5000/${remark.photo}`}
+                      alt="Remark proof"
+                      className="mt-2 max-w-xs rounded-lg border border-gray-300"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No remarks added yet
+              {error ? "Error loading remarks" : "No remarks added yet"}
             </div>
           )}
         </div>
@@ -238,6 +276,7 @@ export default function Remarks() {
             <button
               onClick={() => setIsAddRemarkModalOpen(false)}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+              disabled={isLoading}
             >
               &times;
             </button>
@@ -277,6 +316,8 @@ export default function Remarks() {
                   onChange={(e) => setActualExpense(e.target.value)}
                   className="w-full p-2 border border-gray-300 rounded-md"
                   required
+                  min="0"
+                  step="1"
                 />
               </div>
               <div className="mb-4">
@@ -290,9 +331,14 @@ export default function Remarks() {
                   accept="image/*"
                 />
               </div>
+              {error && (
+                <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                 disabled={isLoading}
               >
                 {isLoading ? "Submitting..." : "Submit Remark"}
