@@ -216,5 +216,16 @@
   "Are you sure you want to delete this fund request?": "Are you sure you want to delete this fund request?",
   "schoolId": "School ID",
   "schoolName": "School Name",
-  "Schools with SMC Meetings" : "Schools with SMC Meetings"
+  "Schools with SMC Meetings": "Schools with SMC Meetings",
+  "Generated Report": "Generated Report",
+  "-- Select Year --": "-- Select Year --",
+  "Generate Financial Report": "Generate Financial Report",
+  "Close": "Close",
+  "Financial Year": "Financial Year",
+  "Please select financial year": "Please select financial year",
+  "School ID not found": "School ID not found",
+  "Invalid PDF generated": "Invalid PDF generated",
+  "Failed to generate report": "Failed to generate report",
+  "Download Report": "Download Report",
+  "Generating...": "Generating..."
 }

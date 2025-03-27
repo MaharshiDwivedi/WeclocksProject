@@ -15,13 +15,14 @@ import {
   ListCollapse,
   DownloadIcon,
   BarChartBigIcon as ChartColumnBig,
+  X,
 } from "lucide-react";
 import AODash from "./AODash";
 import Documents from "./Documents";
 import FundDist from "./FundDist";
 import SMCSchools from "./SMCSchools";
-import GenReport, { generatePDF } from "./GenReport";
-import FundDemand from "./FundDemand"; // New component import
+import GenerateReport from "./GenerateReport"; //sdjddis
+import FundDemand from "./FundDemand";
 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,6 +32,7 @@ const AOHome = () => {
   const navigate = useNavigate();
   const [fontSize, setFontSize] = React.useState(16);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const { t, i18n } = useTranslation();
 
   useEffect(() => {
@@ -93,11 +95,6 @@ const AOHome = () => {
       });
     } else if (pathnames.includes("documents")) {
       breadcrumbs.push({ name: t("Documents"), path: "/aohome/documents" });
-    } else if (pathnames.includes("genreport")) {
-      breadcrumbs.push({
-        name: t("Generate Report"),
-        path: "/aohome/genreport",
-      });
     } else if (pathnames.includes("smcschools")) {
       breadcrumbs.push({ name: t("SMC Schools"), path: "/aohome/smcschools" });
     }
@@ -162,14 +159,24 @@ const AOHome = () => {
             path={location.pathname}
             icon={<FileText size={18} />}
           />
-          <NavLink
-            to="/aohome/genreport"
-            label={t("Generate Report")}
-            path={location.pathname}
-            icon={<DownloadIcon size={18} />}
-            onClick={generatePDF}
-            isButton={true}
-          />
+          <button
+            onClick={() => setReportModalOpen(true)}
+            className={`flex items-center px-3 py-2 transition-all duration-300 ease-in-out font-medium relative overflow-hidden text-sm ${
+              location.pathname === "/aohome/genreport"
+                ? "text-blue-950 font-semibold shadow-md rounded-r-[5px]"
+                : "text-white hover:bg-gray-700 hover:text-gray-300"
+            }`}
+          >
+            <span
+              className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
+                location.pathname === "/aohome/genreport" ? "opacity-100" : "opacity-0"
+              }`}
+            />
+            <span className="relative flex items-center">
+              <DownloadIcon size={18} />
+              <span className="ml-2"> {t("Generated Report")}</span>
+            </span>
+          </button>
           <NavLink
             to="/aohome/smcschools"
             label={t("SMC Schools")}
@@ -261,51 +268,23 @@ const AOHome = () => {
             <Route path="funddist" element={<FundDist />} />
             <Route path="funddemand" element={<FundDemand />} />
             <Route path="smcschools" element={<SMCSchools />} />
-            <Route path="genreport" element={<GenReport />} />
             <Route path="*" element={<Navigate to="aodashboard" replace />} />
           </Routes>
         </main>
+        
         <footer className="bg-blue-100 text-center text-neutral-500 p-3 mt-auto realfont">
           Developed by WeClocks Technology Pvt. Ltd. @ 2025
         </footer>
+
+        {reportModalOpen && (
+          <GenerateReport onClose={() => setReportModalOpen(false)} />
+        )}
       </div>
     </div>
   );
 };
 
-const NavLink = ({ to, label, path, icon, onClick, isButton }) => {
-  if (isButton) {
-    return (
-      <button
-        onClick={onClick}
-        className={`flex items-center px-3 py-2 transition-all duration-300 ease-in-out font-medium relative overflow-hidden text-sm
-          ${
-            path === to
-              ? "text-blue-950 font-semibold shadow-md rounded-r-[5px]"
-              : "text-white hover:bg-gray-700 hover:text-gray-300"
-          }
-        `}
-      >
-        <span
-          className={`absolute inset-0 bg-white transition-transform duration-300 ease-in-out ${
-            path === to
-              ? "translate-x-0 opacity-100"
-              : "-translate-x-full opacity-0"
-          }`}
-        />
-        <span
-          className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
-            path === to ? "opacity-100" : "opacity-0"
-          }`}
-        />
-        <span className="relative flex items-center">
-          {icon}
-          <span className="ml-2">{label}</span>
-        </span>
-      </button>
-    );
-  }
-
+const NavLink = ({ to, label, path, icon }) => {
   return (
     <Link
       to={to}

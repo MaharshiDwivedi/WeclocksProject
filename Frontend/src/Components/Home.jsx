@@ -14,12 +14,14 @@ import {
   BadgeIndianRupee,
   Menu,
   X,
+  DownloadIcon,
 } from "lucide-react";
 import Meetings from "./Meetings";
 import Dashboard from "./Dashboard";
 import NewMember from "./NewMember";
 import Tharav from "./Tharav";
 import FundReq from "./FundReq";
+import GenerateReport from "./GenerateReport";
 import React, { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -29,8 +31,10 @@ const Home = () => {
   const [fontSize, setFontSize] = useState(16);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
-
+  const [isTablet, setIsTablet] = useState(
+    window.innerWidth >= 768 && window.innerWidth < 1024
+  );
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const { i18n, t } = useTranslation();
 
   // Enhanced responsive detection
@@ -62,7 +66,9 @@ const Home = () => {
   );
 
   const handleLogout = useCallback(() => {
-    if (window.confirm(t("confirmLogout") || "Are you sure you want to logout?")) {
+    if (
+      window.confirm(t("confirmLogout") || "Are you sure you want to logout?")
+    ) {
       localStorage.clear(); // Clear all localStorage items
       navigate("/login", { replace: true }); // Replace history to prevent back navigation
     }
@@ -113,7 +119,10 @@ const Home = () => {
     } else if (pathnames.includes("meetings")) {
       breadcrumbs.push({ name: t("Meetings"), path: "/home/meetings" });
       if (pathnames.includes("tharav")) {
-        breadcrumbs.push({ name: t("tharavManagement"), path: location.pathname });
+        breadcrumbs.push({
+          name: t("tharavManagement"),
+          path: location.pathname,
+        });
       }
       if (pathnames.includes("remarks")) {
         breadcrumbs.push({ name: t("remarks"), path: location.pathname });
@@ -121,14 +130,21 @@ const Home = () => {
     } else if (pathnames.includes("fundreq")) {
       breadcrumbs.push({ name: t("Fund Requests"), path: "/home/fundreq" });
     } else if (pathnames.includes("newmember")) {
-      breadcrumbs.push({ name: t("Committee Members"), path: "/home/newmember" });
+      breadcrumbs.push({
+        name: t("Committee Members"),
+        path: "/home/newmember",
+      });
     }
 
     return breadcrumbs;
   }, [location.pathname, t]);
 
   return (
-    <div className="flex min-h-screen bg-[#E5EAF5]" style={{ fontSize: `${fontSize}px` }} role="main">
+    <div
+      className="flex min-h-screen bg-[#E5EAF5]"
+      style={{ fontSize: `${fontSize}px` }}
+      role="main"
+    >
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 md:hidden"
@@ -181,6 +197,27 @@ const Home = () => {
             path={location.pathname}
             icon={<BadgeIndianRupee size={18} />}
           />
+
+          <button
+            onClick={() => setReportModalOpen(true)}
+            className={`flex items-center px-3 py-2 transition-all duration-300 ease-in-out font-medium relative overflow-hidden text-sm ${
+              location.pathname === "/aohome/genreport"
+                ? "text-blue-950 font-semibold shadow-md rounded-r-[5px]"
+                : "text-white hover:bg-gray-700 hover:text-gray-300"
+            }`}
+          >
+            <span
+              className={`absolute left-0 top-0 bottom-0 w-2 bg-cyan-400 transition-all duration-300 ${
+                location.pathname === "/aohome/genreport"
+                  ? "opacity-100"
+                  : "opacity-0"
+              }`}
+            />
+            <span className="relative flex items-center">
+              <DownloadIcon size={18} />
+              <span className="ml-2">{t("Generate Report")}</span>
+            </span>
+          </button>
         </div>
       </aside>
 
@@ -274,6 +311,10 @@ const Home = () => {
         <footer className="bg-blue-100 text-center text-neutral-500 p-3 mt-auto realfont">
           Developed by WeClocks Technology Pvt. Ltd. @ 2025
         </footer>
+
+        {reportModalOpen && (
+          <GenerateReport onClose={() => setReportModalOpen(false)} />
+        )}
       </div>
     </div>
   );
