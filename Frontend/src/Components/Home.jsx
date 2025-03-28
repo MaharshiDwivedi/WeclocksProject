@@ -131,7 +131,7 @@ const Home = () => {
       breadcrumbs.push({ name: t("Fund Requests"), path: "/home/fundreq" });
     } else if (pathnames.includes("newmember")) {
       breadcrumbs.push({
-        name: t("Committee Members"),
+        name: t("committeeMembers"),
         path: "/home/newmember",
       });
     }
@@ -187,7 +187,7 @@ const Home = () => {
           />
           <NavLink
             to="/home/newmember"
-            label={t("Committee Members")}
+            label={t("committeeMembers")}
             path={location.pathname}
             icon={<UsersRound size={18} />}
           />

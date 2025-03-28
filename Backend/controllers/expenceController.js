@@ -2,107 +2,161 @@
 const expenceModel = require('../models/expenceModel');
 
 const expenceController = {
-    async getData(req, res) {
-      try {
-        const { month, year, category_id, school_id } = req.body;
-        console.log("Request:", { month, year, category_id, school_id });
-  
-        const heads = await expenceModel.getActiveHeads();
-        const niryan = await expenceModel.getActiveNiryan(); // Fetch tharav data
-        const niryanRemarks = await expenceModel.getActiveNiryanRemarks(); // Fetch remarks data
-  
-        console.log("All Tharavs (niryan):", niryan);
-        console.log("All Remarks (niryanRemarks):", niryanRemarks);
-  
-        const response = heads.map(head => {
-          const headId = head.head_id;
-  
-          // Expected Cost (from tbl_new_smc_nirnay)
-          const filteredNiryan = niryan.filter(n => {
-            const parts = n.nirnay_reord.split('|');
-            if (parts.length >= 12) {
-              const date = new Date(parts[8]); // Insert date from tharav
-              const formattedMonth = date.getMonth() + 1;
-              const formattedYear = date.getFullYear();
-  
-              const matches = (
-                parts[11] == headId && // head_id at index 11
-                formattedMonth == parseInt(month) &&
-                formattedYear == parseInt(year) &&
-                (category_id == '4' ? parts[5] == school_id : true)
-              );
-              console.log(`Tharav: ${n.nirnay_reord}, Head: ${headId}, Month: ${formattedMonth}/${month}, Year: ${formattedYear}/${year}, School: ${parts[5]}/${school_id}, Matches: ${matches}`);
-              return matches;
-            }
-            return false;
-          });
-  
-          const expectedCost = filteredNiryan.reduce((sum, n) => {
-            const amount = Number(n.nirnay_reord.split('|')[3].trim()); // expectedExpenditure at index 3
-            console.log(`Adding expectedCost for head ${headId}: ${amount}`);
+  // Existing method for monthly data (unchanged)
+  async getData(req, res) {
+    try {
+      const { month, year, category_id, school_id } = req.body;
+
+      const heads = await expenceModel.getActiveHeads();
+      const niryan = await expenceModel.getActiveNiryan();
+      const niryanRemarks = await expenceModel.getActiveNiryanRemarks();
+      
+
+      const response = heads.map(head => {
+        const headId = head.head_id;
+
+        const filteredNiryan = niryan.filter(n => {
+          const parts = n.nirnay_reord.split('|');
+          if (parts.length >= 12) {
+            const date = new Date(parts[8]);
+            const formattedMonth = date.getMonth() + 1;
+            const formattedYear = date.getFullYear();
+
+            const matches = (
+              parts[11] == headId &&
+              formattedMonth == parseInt(month) &&
+              formattedYear == parseInt(year) &&
+              (category_id == '4' ? parts[5] == school_id : true)
+            );
+            return matches;
+          }
+          return false;
+        });
+
+        const expectedCost = filteredNiryan.reduce((sum, n) => {
+          const amount = Number(n.nirnay_reord.split('|')[3].trim());
+          return sum + amount;
+        }, 0);
+
+        const filteredNiryanRemarks = niryanRemarks.filter(nr => {
+          const parts = nr.nirnay_remarks_record.split('|');
+          if (parts.length >= 9) {
+            const date = new Date(nr.previous_date);
+            const formattedMonth = date.getMonth() + 1;
+            const formattedYear = date.getFullYear();
+
+            const matches = (
+              parts[7].trim() == headId &&
+              formattedMonth == parseInt(month) &&
+              formattedYear == parseInt(year) &&
+              (category_id == '4' ? parts[2] === school_id : true)
+            );
+            return matches;
+          }
+          return false;
+        });
+
+        const actualCost = filteredNiryanRemarks.reduce((sum, nr) => {
+          const parts = nr.nirnay_remarks_record.split('|');
+          if (parts.length >= 7) {
+            const amount = Number(parts[6]?.trim()) || 0;
+            console.log(`Adding actualCost for head ${headId}: ${amount}`);
             return sum + amount;
-          }, 0);
-  
-          // Actual Cost (from tbl_new_smc_nirnay_remarks)
-          const filteredNiryanRemarks = niryanRemarks.filter(nr => {
-            const parts = nr.nirnay_remarks_record.split('|');
-            if (parts.length >= 9) {
-              const date = new Date(nr.previous_date);
-              const formattedMonth = date.getMonth() + 1;
-              const formattedYear = date.getFullYear();
-  
-              const matches = (
-                parts[7].trim() == headId && // head_id at index 7
-                formattedMonth == parseInt(month) &&
-                formattedYear == parseInt(year) &&
-                (category_id == '4' ? parts[2] === school_id : true)
-              );
-              console.log(`Remark: ${nr.nirnay_remarks_record}, Previous Date: ${nr.previous_date}, Head: ${headId}, Month: ${formattedMonth}/${month}, Year: ${formattedYear}/${year}, School: ${parts[2]}/${school_id}, Matches: ${matches}`);
-              return matches;
-            }
-            return false;
-          });
-  
-        
-const actualCost = filteredNiryanRemarks.reduce((sum, nr) => {
-    // First try to use parsed data if available
-    if (nr.parsedData && nr.parsedData.actualExpense) {
-      return sum + (Number(nr.parsedData.actualExpense) || 0);
+          }
+          return sum;
+        }, 0);
+
+        return {
+          head_id: head.head_id,
+          head_name: head.head_name,
+          expected_cost: expectedCost,
+          actual_cost: actualCost,
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        data: response || [],
+        message: 'Data fetched successfully'
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
     }
-    
-    // Fallback to parsing the record string
-    const parts = nr.nirnay_remarks_record.split('|');
-    if (parts.length >= 7) {
-      const amount = Number(parts[6]?.trim()) || 0;
-      console.log(`Adding actualCost for head ${headId}: ${amount}`);
-      return sum + amount;
-    }
-    return sum;
-  }, 0);
-  
-          return {
-            head_id: head.head_id,
-            head_name: head.head_name,
-            expected_cost: expectedCost,
-            actual_cost: actualCost,
-          };
+  },
+
+  // New method for yearly data
+  async getYearlyData(req, res) {
+    try {
+      const { year, school_id } = req.body;
+
+      // Validate input
+      if (!year || !school_id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Year and School ID are required'
         });
-  
-        console.log("Response Data:", response);
-        res.status(200).json({
-          success: true,
-          data: response || [],
-          message: 'Data fetched successfully'
-        });
-      } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
       }
+
+      // Fetch active expense heads
+      const heads = await expenceModel.getActiveHeads();
+
+      // Fetch active niryan remarks
+      const niryanRemarks = await expenceModel.getActiveNiryanRemarks();
+
+      // Process data for each expense head
+      const yearlyExpenseData = heads.map(head => {
+        // Filter remarks for the specific year and school
+        const filteredRemarks = niryanRemarks.filter(nr => {
+          const parts = nr.nirnay_remarks_record.split('|');
+          if (parts.length >= 9) {
+            const date = new Date(nr.previous_date);
+            const formattedYear = date.getFullYear();
+
+            return (
+              parts[7].trim() === head.head_id &&  // Head ID match
+              formattedYear === Number(year) &&    // Year match
+              parts[2] === school_id               // School ID match
+            );
+          }
+          return false;
+        });
+
+        // Calculate total actual cost for the head
+        const totalActualCost = filteredRemarks.reduce((sum, nr) => {
+          const parts = nr.nirnay_remarks_record.split('|');
+          if (parts.length >= 7) {
+            const amount = Number(parts[6]?.trim()) || 0;  // 6th index is actual cost
+            return sum + amount;
+          }
+          return sum;
+        }, 0);
+
+        return {
+          head_id: head.head_id,
+          head_name: head.head_name,
+          actual_cost: totalActualCost
+        };
+      });
+
+      // Calculate total expense
+      const totalExpense = yearlyExpenseData.reduce((sum, head) => sum + head.actual_cost, 0);
+
+      res.status(200).json({
+        success: true,
+        data: yearlyExpenseData,
+        total_expense: totalExpense,
+        message: 'Yearly expense data fetched successfully'
+      });
+    } catch (error) {
+      console.error('Yearly Expense Data Error:', error);
+      res.status(500).json({ 
+        success: false,
+        error: 'Internal Server Error',
+        details: error.message 
+      });
     }
-  };
-  
-  module.exports = expenceController;
-  
-  module.exports = expenceController;
+  }
+};
 
 module.exports = expenceController;

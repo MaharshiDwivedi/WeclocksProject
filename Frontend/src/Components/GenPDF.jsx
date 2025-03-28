@@ -1,90 +1,219 @@
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import axios from "axios";
+import NotoSansDevanagari from "../Fonts/NotoSansDevanagari-Regular.ttf";
+import { Page, Text, View, Document, StyleSheet, pdf, Font, Image } from "@react-pdf/renderer";
+import logo from "../assets/logo.jpeg";
 
-export const generateFinancialReportPDF = (financialYear = '2024-25', schoolName = 'Weclocks Technology') => {
-  return new Promise((resolve, reject) => {
-    try {
-      // Create a new PDF document with proper margins
-      const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
+// Register font
+Font.register({
+  family: "NotoSansDevanagari",
+  src: NotoSansDevanagari,
+});
 
-      // Set default font
-      doc.setFont('helvetica');
-      doc.setFontSize(12);
+axios.defaults.baseURL = "http://localhost:5000";
 
-      // Add main header (centered horizontally, 20mm from top)
-      doc.setFontSize(16);
-      doc.setFont('helvetica', 'bold');
-      doc.text('ITDP - Nandurbar', 105, 20, { align: 'center' });
-      
-      // Add financial year (5mm below header)
-      doc.setFontSize(14);
-      doc.text(financialYear, 105, 27, { align: 'center' });
+export const generateFinancialReportPDF = async (financialYear) => {
+  try {
+    const schoolId = localStorage.getItem("school_id");
+    if (!schoolId) throw new Error("School ID not found in localStorage");
 
-      // Add school name (5mm below year)
-      doc.setFontSize(12);
-      doc.text(schoolName, 105, 34, { align: 'center' });
+    const year = financialYear.split("-")[0];
 
-      // Add Marathi title (5mm below school name)
-      doc.setFontSize(11);
-      doc.text('वर्षभरात खालील बाबींवर झालेला खर्च', 105, 41, { align: 'center' });
+    // Fetch school and yearly data
+    const [schoolRes, yearlyRes] = await Promise.all([
+      axios.get("/api/schools-with-smc", { params: { id: schoolId } })
+        .catch(err => {
+          console.error("School API error:", err);
+          return { data: [] };
+        }),
+      axios.post("/api/yearlyExpenseData", { year, school_id: schoolId })
+        .catch(err => {
+          console.error("Yearly expense API error:", err);
+          return { data: { data: [] } };
+        }),
+    ]);
 
-      // Define expense categories in Marathi (exactly as in the sample PDF)
-      const categories = [
-        'शैक्षणिक बाबी',
-        'पाणी स्वच्छता इ. बाबी',
-        'सुरकक्षिता',
-        'किचन अन्न व पोषण',
-        'आरोग्य तपासण्या',
-        'आजारपण व अपघात',
-        'क्रीडा व कला',
-        'शाळेचे शुशोभीकरण',
-        'अन्य खर्च'
-      ];
-
-      // Create the table starting at 50mm from top
-      autoTable(doc, {
-        startY: 50,
-        head: [['वर्ग', 'रक्कम (₹)']],
-        body: categories.map(category => [category, '0']),
-        styles: {
-          font: 'helvetica',
-          fontSize: 10,
-          cellPadding: 4,
-          overflow: 'linebreak',
-          valign: 'middle'
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          halign: 'center'
-        },
-        columnStyles: {
-          0: { cellWidth: 140, fontStyle: 'bold' },
-          1: { cellWidth: 30, halign: 'center' }
-        },
-        margin: { left: 20, right: 20 }
-      });
-
-      // Add page number at bottom 
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(10);
-        doc.text(`${i} / ${pageCount}`, doc.internal.pageSize.width - 20, doc.internal.pageSize.height - 10, { align: 'right' });
-      }
-
-      // Generate the PDF blob
-      const pdfBlob = doc.output('blob');
-      resolve(pdfBlob);
-
-    } catch (error) {
-      console.error('PDF generation failed:', error);
-      reject(new Error('Failed to generate PDF: ' + error.message));
+    // Validate school response
+    const schoolData = Array.isArray(schoolRes.data) 
+      ? schoolRes.data.find(school => String(school.school_id) === String(schoolId)) 
+      : null;
+    
+    const schoolName = schoolData?.school_name || "Unknown School";
+    
+    if (!schoolData) {
+      console.warn("No school data found for ID:", schoolId);
     }
-  });
+
+    const headData = yearlyRes.data.data || [];
+
+    const styles = StyleSheet.create({
+      page: {
+        padding: 20,
+        fontSize: 9,
+        fontFamily: "Helvetica",
+      },
+      header: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: "#000",
+        paddingBottom: 8,
+      },
+      logo: {
+        width: 70,
+        height: 70,
+        marginRight: 15,
+      },
+      headerContent: {
+        flex: 1,
+        textAlign: "center",
+      },
+      headerText: {
+        fontSize: 20,
+        fontWeight: "bold",
+        marginBottom: 4,
+      },
+      yearText: {
+        fontSize: 11,
+        marginBottom: 4,
+      },
+      titleText: {
+        fontSize: 14,
+        fontWeight: "bold",
+        fontFamily: "NotoSansDevanagari",
+      },
+      table: {
+        width: "100%",
+        borderStyle: "solid",
+        borderWidth: 1,
+        borderColor: "#000",
+        marginBottom: 15,
+      },
+      tableRow: {
+        flexDirection: "row",
+        borderBottomWidth: 1,
+        borderBottomColor: "#000",
+      },
+      tableHeader: {
+        backgroundColor: "#f0f0f0",
+        fontWeight: "bold",
+      },
+      headerCell: {
+        flex: 1,
+        padding: 5,
+        borderRightWidth: 1,
+        borderRightColor: "#000",
+        textAlign: "center",
+        fontFamily: "NotoSansDevanagari",
+        fontSize: 8,
+        minWidth: 60,
+        maxWidth: 100,
+        flexWrap: "wrap",
+        lineHeight: 1.2,
+      },
+      amountCell: {
+        flex: 1,
+        padding: 5,
+        borderRightWidth: 1,
+        borderRightColor: "#000",
+        textAlign: "center",
+        fontFamily: "Helvetica",
+        fontSize: 8,
+        minWidth: 60,
+        maxWidth: 100,
+      },
+      lastCell: {
+        borderRightWidth: 0,
+      },
+      pageNumber: {
+        position: "absolute",
+        bottom: 15,
+        left: 0,
+        right: 0,
+        textAlign: "center",
+        fontSize: 8,
+        color: "#666",
+      },
+    });
+
+    const MyDocument = (
+      <Document>
+        <Page size="A4" orientation="landscape" style={styles.page}>
+          <View style={styles.header}>
+            <Image style={styles.logo} src={logo} />
+            <View style={styles.headerContent}>
+              <Text style={styles.headerText}>ITDP - Nandurbar</Text>
+              <Text style={styles.yearText}>{financialYear}</Text>
+              <Text style={styles.titleText}>{schoolName}</Text>
+            </View>
+          </View>
+
+          {headData.length > 0 ? (
+            <View style={styles.table}>
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                {headData.map((head, index) => (
+                  <Text 
+                    key={head.head_id} 
+                    style={[
+                      styles.headerCell,
+                      index === headData.length - 1 && styles.lastCell
+                    ]}
+                  >
+                    {head.head_name || "N/A"}
+                  </Text>
+                ))}
+              </View>
+              <View style={styles.tableRow}>
+                {headData.map((head, index) => (
+                  <Text 
+                    key={head.head_id} 
+                    style={[
+                      styles.amountCell,
+                      index === headData.length - 1 && styles.lastCell
+                    ]}
+                  >
+                    {(head.actual_cost || 0).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </Text>
+                ))}
+              </View>
+            </View>
+          ) : (
+            <Text>No financial data available for {financialYear}</Text>
+          )}
+
+          <Text 
+            style={styles.pageNumber} 
+            render={({ pageNumber, totalPages }) => 
+              `${pageNumber} / ${totalPages}`} 
+            fixed 
+          />
+        </Page>
+      </Document>
+    );
+
+    return await pdf(MyDocument).toBlob();
+  } catch (error) {
+    console.error("PDF Generation Error:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+export const handlePDFGeneration = async (financialYear) => {
+  try {
+    const blob = await generateFinancialReportPDF(financialYear);
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `Financial_Report_${financialYear}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    alert(`Failed to generate PDF: ${error.message}`);
+    throw error;
+  }
 };

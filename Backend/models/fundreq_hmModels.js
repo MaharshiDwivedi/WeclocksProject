@@ -10,7 +10,7 @@ const getAllReq = async () => {
       s.school_name 
     FROM tbl_demand_master dm
     LEFT JOIN tbl_schools s ON SUBSTRING_INDEX(dm.demand_master_record, '|', 1) = s.school_id
-    WHERE dm.demanded = 'Yes' AND dm.status = 'Active'
+    WHERE dm.demanded = 'Yes' AND dm.status = 'Active' order by dm.demand_master_id desc
   `;
   const [rows] = await connection.query(sql);
   return rows;

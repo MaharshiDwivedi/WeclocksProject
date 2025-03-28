@@ -227,5 +227,6 @@
   "Invalid PDF generated": "अमान्य पीडीएफ उत्पन्न हुई",
   "Failed to generate report": "रिपोर्ट उत्पन्न करने में विफल",
   "Download Report": "रिपोर्ट डाउनलोड करें",
-  "Generating...": "उत्पन्न हो रहा है..."
+  "Generating...": "उत्पन्न हो रहा है...",
+  "Total Members" : "कुल सदस्य"
 }

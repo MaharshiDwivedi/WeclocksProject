@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react"
-import { Plus, X, AlertCircle, Search, Upload, Trash2, Edit, MessageSquare } from "lucide-react"
+import { Plus, X, AlertCircle, Search, Upload, Trash2, Edit, MessageSquare, Camera } from "lucide-react"
 import DataTable from "react-data-table-component"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
@@ -24,8 +24,17 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
   const [errors, setErrors] = useState({})
   const [formError, setFormError] = useState("")
   const fileInputRef = useRef(null)
+
+
+
+const [showCamera, setShowCamera] = useState(false);
+const videoRef = useRef(null);
+const [stream, setStream] = useState(null);
+const [cameraError, setCameraError] = useState(null);
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteNirnayId, setDeleteNirnayId] = useState(null)
+   
 
   const schoolId = localStorage.getItem("school_id")
   const userId = localStorage.getItem("user_id")
@@ -44,6 +53,64 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     photo: "",
   })
 
+
+
+  const openCamera = async () => {
+    try {
+      setCameraError(null);
+      setShowCamera(true);
+      
+      // Wait for the video element to be available
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const videoStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Prefer rear camera
+      });
+      
+      setStream(videoStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = videoStream;
+      }
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setCameraError("Could not access camera. Please check permissions.");
+      setShowCamera(false);
+    }
+  };
+  
+  const closeCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+    }
+    setShowCamera(false);
+    setCameraError(null);
+  };
+  
+  const capturePhoto = (e) => {
+    e.preventDefault();
+    
+    if (!videoRef.current || !stream) return;
+  
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+  
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      
+      const file = new File([blob], `tharav-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+      
+      setTharav(prev => ({ ...prev, photo: file }));
+      setPreviewImage(URL.createObjectURL(blob));
+      closeCamera();
+    }, 'image/jpeg', 0.9);
+  };
+
+
+
   // Add responsive detection
   useEffect(() => {
     const handleResize = () => {
@@ -58,6 +125,20 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     fetchTharavs()
     fetchMembers()
   }, [])
+
+
+
+
+  useEffect(() => {
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [stream]);
+
+
+
 
   useEffect(() => {
     if (searchTerm.trim() === "") {
@@ -165,51 +246,119 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
   }
 
   const validateForm = () => {
-    const newErrors = {}
+    let newErrors = {};
+    let isValid = true;
 
-    if (!tharav.tharavNo || !/^[1-9]\d*$/.test(tharav.tharavNo)) {
-      newErrors.tharavNo = "Tharav No must be a positive number starting from 1."
+    // Tharav No: Must be unique and a positive number
+    if (!tharav.tharavNo.trim()) {
+      newErrors.tharavNo = "Tharav No is required";
+      isValid = false;
+    } else if (!/^[1-9]\d*$/.test(tharav.tharavNo.trim())) {
+      newErrors.tharavNo =
+        "Tharav No must be a positive number starting from 1";
+      isValid = false;
+    } else if (
+      !isEditing &&
+      nirnay.some(
+        (item) => item.nirnay_reord?.split("|")[1] === tharav.tharavNo
+      )
+    ) {
+      newErrors.tharavNo = "Tharav No must be unique";
+      isValid = false;
     }
 
-    if (!tharav.purpose) {
-      newErrors.purpose = "Purpose is required."
+    // Purpose: Must be selected
+    if (!tharav.purpose.trim()) {
+      newErrors.purpose = "Purpose is required";
+      isValid = false;
     }
 
-    if (!tharav.problemFounded) {
-      newErrors.problemFounded = "Problem Founded is required."
+    // Problem Founded: Must be a character string
+    if (!tharav.problemFounded.trim()) {
+      newErrors.problemFounded = "Problem Founded is required";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(tharav.problemFounded.trim())) {
+      newErrors.problemFounded =
+        "Problem Founded must contain only letters and spaces";
+      isValid = false;
     }
 
-    if (!tharav.where) {
-      newErrors.where = "This field is required."
+    // Where: Must be a character string
+    if (!tharav.where.trim()) {
+      newErrors.where = "Where is required";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(tharav.where.trim())) {
+      newErrors.where = "Where must contain only letters and spaces";
+      isValid = false;
     }
 
-    if (!tharav.what) {
-      newErrors.what = "This field is required."
+    // What: Must be a character string
+    if (!tharav.what.trim()) {
+      newErrors.what = "What is required";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(tharav.what.trim())) {
+      newErrors.what = "What must contain only letters and spaces";
+      isValid = false;
     }
 
-    if (!tharav.howMany || !/^\d+$/.test(tharav.howMany)) {
-      newErrors.howMany = "How Many must be a number."
+    // How Many: Must be a number
+    if (!tharav.howMany.trim()) {
+      newErrors.howMany = "How Many is required";
+      isValid = false;
+    } else if (!/^\d+$/.test(tharav.howMany.trim())) {
+      newErrors.howMany = "How Many must be a number";
+      isValid = false;
     }
 
-    if (!tharav.deadStockNumber || !/^\d+$/.test(tharav.deadStockNumber)) {
-      newErrors.deadStockNumber = "Dead Stock Number must be a number."
+    // Dead Stock Number: Must be a number
+    if (!tharav.deadStockNumber.trim()) {
+      newErrors.deadStockNumber = "Dead Stock Number is required";
+      isValid = false;
+    } else if (!/^\d+$/.test(tharav.deadStockNumber.trim())) {
+      newErrors.deadStockNumber = "Dead Stock Number must be a number";
+      isValid = false;
     }
 
-    if (!tharav.decisionTaken) {
-      newErrors.decisionTaken = "Decision Taken is required."
+    // Decision Taken: Must be a character string
+    if (!tharav.decisionTaken.trim()) {
+      newErrors.decisionTaken = "Decision Taken is required";
+      isValid = false;
+    } else if (!/^[a-zA-Z\s]+$/.test(tharav.decisionTaken.trim())) {
+      newErrors.decisionTaken =
+        "Decision Taken must contain only letters and spaces";
+      isValid = false;
     }
 
-    if (!tharav.expectedExpenditure || !/^\d+$/.test(tharav.expectedExpenditure)) {
-      newErrors.expectedExpenditure = "Expected Expenditure must be a number."
+    // Expected Expenditure: Must be a number
+    if (!tharav.expectedExpenditure.trim()) {
+      newErrors.expectedExpenditure = "Expected Expenditure is required";
+      isValid = false;
+    } else if (!/^\d+$/.test(tharav.expectedExpenditure.trim())) {
+      newErrors.expectedExpenditure = "Expected Expenditure must be a number";
+      isValid = false;
     }
 
-    if (!tharav.fixedDate) {
-      newErrors.fixedDate = "Fixed Date is required."
+    // Fixed Date: Must be selected
+    if (!tharav.fixedDate.trim()) {
+      newErrors.fixedDate = "Fixed Date is required";
+      isValid = false;
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    if (!tharav.photo) {
+      newErrors.photo = "Photo is required";
+      isValid = false;
+    } else if (
+      tharav.photo instanceof File &&
+      !tharav.photo.type.startsWith("image/")
+    ) {
+      newErrors.photo = "Please upload a valid image file";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -344,6 +493,12 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     }
   }
 
+
+
+
+
+
+  
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value)
   }
@@ -452,6 +607,24 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
       },
     },
     {
+      name: "Photo",
+      cell: (row) => {
+        const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
+        return recordData[4] ? (
+          <img
+            src={`${SERVER_URL}${recordData[4]}`}
+            alt="Tharav Photo"
+            className="w-12 h-12 object-cover rounded-md border shadow hover:scale-150 transition-transform cursor-zoom-in"
+          />
+        ) : (
+          <div className="text-sm text-gray-500">No image</div>
+        );
+      },
+    },
+    
+
+
+    {
       name: "Actions",
       cell: (row) => (
         <div className="flex items-center gap-2">
@@ -460,30 +633,50 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
             className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
             title="Edit"
           >
-            <Edit size={18} />
-            <span className="sr-only">Edit</span>
+            Edit
           </button>
           <button
             onClick={() => handleDelete(row.nirnay_id)}
             className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
             title="Delete"
           >
-            <Trash2 size={18} />
-            <span className="sr-only">Delete</span>
+            Delete
           </button>
           <button
             onClick={() => handleRemarks(row)}
             className="p-2 text-green-600 hover:bg-green-50 rounded-full transition-colors"
             title="Remarks"
           >
-            <MessageSquare size={18} />
-            <span className="sr-only">Remarks</span>
+            Remarks
           </button>
         </div>
       ),
       minWidth: "150px",
       allowOverflow: true,
-    },
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   ]
 
   return (
@@ -795,47 +988,103 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
                   )}
                 </div>
               </div>
+<div>
+  <label className="block mb-2 text-sm font-medium text-gray-700">Photo</label>
+  
+  {/* Camera Preview (shown when camera is active) */}
+  {showCamera && (
+    <div className="mb-4 p-2 border rounded-lg bg-gray-50">
+      {cameraError ? (
+        <div className="bg-red-50 text-red-600 p-4 rounded-lg">
+          {cameraError}
+        </div>
+      ) : (
+        <>
+          <div className="relative mx-auto w-[280px] h-[210px]">
+            <video 
+              ref={videoRef}
+              autoPlay 
+              playsInline
+              muted
+              className="w-full h-auto bg-black rounded-lg"
+            />
+            <button
+              onClick={closeCamera}
+              className="absolute top-2 right-2 bg-white/80 text-gray-800 rounded-full p-1 hover:bg-white"
+              type="button"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="mt-2 flex justify-center">
+            <button
+              onClick={capturePhoto}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              type="button"
+            >
+              <Camera size={18} />
+              Capture Photo
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )}
 
-              <div>
-                <label className="block mb-2 text-sm font-medium text-gray-700">Photo</label>
-                <div className="flex flex-wrap items-center gap-3">
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current.click()}
-                    className="flex items-center px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-gray-700"
-                  >
-                    <Upload className="mr-2" size={18} />
-                    Upload Photo
-                  </button>
-                </div>
+  {/* Photo Upload Controls (shown when camera is not active) */}
+  {!showCamera && (
+    <div className="flex flex-wrap items-center gap-3">
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+        accept="image/*"
+        capture="environment"
+      />
+      <button
+        type="button"
+        onClick={() => fileInputRef.current.click()}
+        className="flex items-center px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-gray-700"
+      >
+        <Upload className="mr-2" size={18} />
+        Upload Photo
+      </button>
+      <button
+        type="button"
+        onClick={openCamera}
+        className="flex items-center px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-gray-700"
+      >
+        <Camera className="mr-2" size={18} />
+        Take Photo
+      </button>
+    </div>
+  )}
 
-                {previewImage && (
-                  <div className="mt-4 relative">
-                    <img
-                      src={previewImage || "/placeholder.svg"}
-                      alt="Preview"
-                      className="w-full max-h-48 object-contain rounded-lg border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewImage(null)
-                        setTharav((prev) => ({ ...prev, photo: "" }))
-                      }}
-                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-md"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
+  {/* Preview of selected/captured image */}
+  {previewImage && (
+    <div className="mt-4 relative">
+      <img
+        src={previewImage}
+        alt="Preview"
+        className="w-full max-h-48 object-contain rounded-lg border"
+      />
+      <button
+        type="button"
+        onClick={() => {
+          setPreviewImage(null);
+          setTharav(prev => ({ ...prev, photo: "" }));
+        }}
+        className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 shadow-md"
+      >
+        <X size={16} />
+      </button>
+    </div>
+  )}
+</div>
+
+
+
 
               <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t">
                 <button
@@ -891,4 +1140,3 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     </div>
   )
 }
-

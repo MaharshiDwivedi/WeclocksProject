@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useEffect } from "react"
 import BarGraph from "./BarGraph"
 import axios from "axios"
@@ -56,9 +54,6 @@ const Dashboard = () => {
             category_id: "4",
             school_id: "14",
         });
-
-        // ✅ Log the full API response
-        console.log("🚀 API Response Data:", response.data);
 
         if (!response.data || !Array.isArray(response.data.data)) {
             console.error("❌ API response is not an array:", response.data);
@@ -232,4 +227,3 @@ const Dashboard = () => {
 }
 
 export default Dashboard
-

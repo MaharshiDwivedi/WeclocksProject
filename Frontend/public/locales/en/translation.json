@@ -227,5 +227,6 @@
   "Invalid PDF generated": "Invalid PDF generated",
   "Failed to generate report": "Failed to generate report",
   "Download Report": "Download Report",
-  "Generating...": "Generating..."
+  "Generating...": "Generating...",
+  "totalMembers ": "Total Members"
 }

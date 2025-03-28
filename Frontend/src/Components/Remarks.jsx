@@ -97,15 +97,27 @@ export default function Remarks() {
       Swal.fire('Error!', 'Remark text and actual expense are required', 'error');
       return;
     }
-
+  
     try {
       setIsLoading(true);
+      
+      // Create FormData and append fields
+      const formData = new FormData();
+      formData.append("remarkText", remarkText);
+      formData.append("actualExpense", actualExpense);
+      formData.append("remarkDate", remarkDate || new Date().toISOString());
+      formData.append("tharavNo", tharavNo);
+      formData.append("schoolId", schoolId);
+      formData.append("userId", userId);
+      formData.append("headId", headId);
+      if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto);
+  
       await axios.post("http://localhost:5000/api/remarks", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-
+  
       await fetchRemarks();
       setRemarkDate("");
       setRemarkText("");

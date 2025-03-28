@@ -227,5 +227,6 @@
   "Invalid PDF generated": "अवैध पीडीएफ तयार झाली",
   "Failed to generate report": "अहवाल तयार करण्यात अयशस्वी",
   "Download Report": "अहवाल डाउनलोड करा",
-  "Generating...": "तयार होत आहे..."
+  "Generating...": "तयार होत आहे...",
+  "Total Members" : "एकूण सदस्य"
 }

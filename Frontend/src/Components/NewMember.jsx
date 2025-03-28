@@ -321,7 +321,7 @@ export default function NewMember() {
       minWidth: "80px",
     },
     {
-      name: t("year"),
+      name: t("Year"),
       selector: (row) => row.year,
       sortable: true,
       minWidth: "80px",
@@ -389,7 +389,7 @@ export default function NewMember() {
             />
           </div>
           <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
-            {t("totalMembers")} :<span className="text-blue-950 font-bold px-2">{filteredMembers.length}</span>
+            {t("Total Members")} :<span className="text-blue-950 font-bold px-2">{filteredMembers.length}</span>
           </div>
         </div>
 

@@ -101,9 +101,19 @@ exports.getRemarksByTharavNo = async (req, res) => {
       };
     });
 
+    // Create a mapping of headId to actualExpense
+    const headExpenseMap = {};
+    parsedRemarks.forEach(remark => {
+      const { headId, actualExpense } = remark.parsedData;
+      if (headId && actualExpense) {
+        headExpenseMap[headId] = actualExpense;
+      }
+    });
+
     res.status(200).json({ 
       success: true,
-      data: parsedRemarks 
+      data: parsedRemarks,
+      headExpenseMap: headExpenseMap
     });
   } catch (error) {
     console.error("Error fetching remarks:", error);
@@ -153,7 +163,6 @@ exports.updateRemark = async (req, res) => {
         [updatedRecord, new Date(), id]
       );
 
-      // Update corresponding demand record
       await updateDemandRecord(schoolId, userId, actualExpense, id);
 
       await conn.commit();
@@ -200,13 +209,11 @@ exports.deleteRemark = async (req, res) => {
     await conn.beginTransaction();
 
     try {
-      // Soft delete remark
       await conn.query(
         "UPDATE tbl_new_smc_nirnay_remarks SET status = 'Inactive' WHERE nirnay_remarks_id = ?",
         [id]
       );
 
-      // Soft delete corresponding demand record
       await conn.query(
         "UPDATE tbl_demand_master SET status = 'Inactive' WHERE demand_master_record LIKE ?",
         [`%${schoolId}|%${actualExpense}%`]

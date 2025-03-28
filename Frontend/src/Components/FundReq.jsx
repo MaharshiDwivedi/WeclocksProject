@@ -243,7 +243,7 @@ export default function FundReq() {
     {
       name: t("Actions"),
       cell: (row) => (
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2 ">
           <button
             onClick={row.demand_status === "Pending" ? () => handleEdit(row) : null}
             className={`${row.demand_status === "Pending" ? "text-blue-600" : "text-gray-600"} px-3 py-1 rounded-md text-lg font-medium min-w-[60px] text-center`}
