@@ -178,7 +178,7 @@ const FundDemand = () => {
       minWidth: "120px",
     },
     {
-      name: t("Status"),
+      name: t("status"),
       selector: (row) => row.status,
       sortable: true,
       minWidth: "120px",

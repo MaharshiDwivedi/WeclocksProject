@@ -14,6 +14,7 @@ const fundRoutes = require('./Routes/FundRoute');
 const remarksRoute = require("./Routes/remarksRoute");
 const fundreq_hmRoutes = require('./Routes/fundreq_hmRoutes');
 const reportRoute = require("./Routes/reportRoute");
+const fundreportRoute = require("./Routes/fundreportRoute");
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/fundreqhm', fundreq_hmRoutes);
 app.use('/api', schoolRoutes);
 app.use('/api', fundRoutes);
 app.use('/api', reportRoute);  
+app.use('/api', fundreportRoute);
 app.get('/', (req, res) => {
     res.send("Server is running");
 });

@@ -87,6 +87,7 @@
   "addMeeting": "बैठक जोडा",
   "editMeeting": "बैठक संपादित करा",
   "date": "तारीख",
+  "status":"स्थिती ",
   "selectedMembers": "निवडलेले सदस्य",
   "latitude": "अक्षांश",
   "longitude": "रेखांश",
@@ -121,6 +122,15 @@
   "studentRepresentative": "विद्यार्थी प्रतिनिधी",
   "Fund Distribution": "निधी वितरण",
   "Fund Request": "निधी विनंती",
+  "Request Funds": " निधी विनंती करा ",
+  "Fund Demands": "निधी मागणी",
+  "Total Demands":"एकूण मागण्या",
+  "Demand Management":"मागणी व्यवस्थापन",
+  "Accept": "मंजूर करा",
+  "Generate All Schools Financial Report":"सर्व शाळांची आर्थिक अहवाल तयार करा",
+  "totalMembers":"एकूण सदस्य",
+
+  "Reject": "नाकार करा",
   "Documents": "कागदपत्रे",
   "Generate Report": "अहवाल तयार करा",
   "SMC Schools": "एसएमसी शाळा",
@@ -229,4 +239,5 @@
   "Download Report": "अहवाल डाउनलोड करा",
   "Generating...": "तयार होत आहे...",
   "Total Members" : "एकूण सदस्य"
+  
 }

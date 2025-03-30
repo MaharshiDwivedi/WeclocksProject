@@ -21,8 +21,8 @@ import AODash from "./AODash";
 import Documents from "./Documents";
 import FundDist from "./FundDist";
 import SMCSchools from "./SMCSchools";
-import GenerateReport from "./GenerateReport"; //sdjddis
 import FundDemand from "./FundDemand";
+import AOGenReport from "./AOGenReport";
 
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -90,7 +90,7 @@ const AOHome = () => {
       });
     } else if (pathnames.includes("funddemand")) {
       breadcrumbs.push({
-        name: t("Fund Demand"),
+        name: t("Fund Demands"),
         path: "/aohome/funddemand",
       });
     } else if (pathnames.includes("documents")) {
@@ -149,7 +149,7 @@ const AOHome = () => {
           />
           <NavLink
             to="/aohome/funddemand"
-            label={t("Fund Demand")}
+            label={t("Fund Demands")}
             path={location.pathname}
             icon={<IndianRupee size={18} />}
           />
@@ -198,7 +198,7 @@ const AOHome = () => {
             <ListCollapse className="h-5 w-5 text-blue-950" />
           </button>
 
-          <div className="text-[16px] text-blue-950 font2">
+          <div className="text-[16px] text-blue-950 font2 ml-5">
             {t("welcome")}, {t("Ao")}.
           </div>
           <div className="flex items-center gap-1.5 p-2">
@@ -277,7 +277,7 @@ const AOHome = () => {
         </footer>
 
         {reportModalOpen && (
-          <GenerateReport onClose={() => setReportModalOpen(false)} />
+          <AOGenReport onClose={() => setReportModalOpen(false)} />
         )}
       </div>
     </div>

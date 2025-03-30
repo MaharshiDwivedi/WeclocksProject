@@ -193,7 +193,7 @@ const Home = () => {
           />
           <NavLink
             to="/home/fundreq"
-            label={t("Fund Requests")}
+            label={t("Request Funds")}
             path={location.pathname}
             icon={<BadgeIndianRupee size={18} />}
           />
@@ -234,7 +234,7 @@ const Home = () => {
             <Menu className="h-5 w-5 text-blue-950" />
           </button>
 
-          <div className="text-[16px] text-blue-950 font2">
+          <div className="text-[16px] text-blue-950 font2 ml-5">
             {t("welcome")}, {t("headmaster")}.
           </div>
           <div className="flex items-center gap-1.5 p-2">
@@ -308,9 +308,9 @@ const Home = () => {
             <Route path="*" element={<Navigate to="dashboard" replace />} />
           </Routes>
         </main>
-        <footer className="bg-blue-100 text-center text-neutral-500 p-3 mt-auto realfont">
-          Developed by WeClocks Technology Pvt. Ltd. @ 2025
-        </footer>
+        <footer className="bg-blue-100 text-center text-black font-bold flex items-center justify-center p-3 mt-auto realfont h-16">
+  Developed by WeClocks Technology Pvt. Ltd. @ 2025
+</footer> 
 
         {reportModalOpen && (
           <GenerateReport onClose={() => setReportModalOpen(false)} />

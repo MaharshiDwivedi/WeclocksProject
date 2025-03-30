@@ -34,8 +34,8 @@ export default function NewMember() {
   })
 
   const yearoption = [
-    { label: "2023-24", value: "2023-2024" },
-    { label: "2024-25", value: "2024-2025" },
+    { label: "2023-2024", value: "2023-2024" },
+    { label: "2024-2025", value: "2024-2025" },
   ]
 
   // Enhanced responsive detection
@@ -120,32 +120,80 @@ export default function NewMember() {
     setIsModalOpen(true)
   }
 
-  const confirmDelete = (id) => {
-    setDeleteId(id)
-    setIsDeleteModalOpen(true)
-  }
+  // const confirmDelete = (id) => {
+  //   setDeleteId(id)
+  //   setIsDeleteModalOpen(true)
+  // }
 
+  // const handleDelete = async (id) => {
+  //   try {
+  //     await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+  //     Swal.fire({
+  //       title: t("delete"),
+  //       text: t("deleteMemberSuccess"),
+  //       icon: "success",
+  //       timer: 2000,
+  //       showConfirmButton: false,
+  //     })
+  //     fetchMembers()
+  //     setIsDeleteModalOpen(false)
+  //   } catch (error) {
+  //     Swal.fire({
+  //       title: t("error"),
+  //       text: t("deleteMemberError"),
+  //       icon: "error",
+  //     })
+  //     console.error("Error deleting member:", error)
+  //   }
+  // }
+
+
+  const confirmDelete = async (id) => {
+    const result = await Swal.fire({
+      title: t("Confirm Delete"),
+      text: t("Are You Sure You Want To Delete?"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: t("yes"),
+      cancelButtonText: t("no"),
+    });
+  
+    if (result.isConfirmed) {
+      handleDelete(id); // Proceed with deletion if confirmed
+    }
+  };
+  
   const handleDelete = async (id) => {
     try {
-      await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+  
+      // Check if the response is successful
+      if (!response.ok) {
+        throw new Error("Failed to delete member");
+      }
+  
+      // Show success message using SweetAlert
       Swal.fire({
         title: t("delete"),
-        text: t("deleteMemberSuccess"),
+        text: t("Deleted Successfully"),
         icon: "success",
         timer: 2000,
         showConfirmButton: false,
-      })
-      fetchMembers()
-      setIsDeleteModalOpen(false)
+      });
+  
+      fetchMembers(); // Refresh the members list
     } catch (error) {
+      // Show error message using SweetAlert
       Swal.fire({
         title: t("error"),
-        text: t("deleteMemberError"),
+        text: t("Delete Member Error"),
         icon: "error",
-      })
-      console.error("Error deleting member:", error)
+      });
+  
+      console.error("Error deleting member:", error);
     }
-  }
+  };
+  
 
   const validateForm = () => {
     const newErrors = {}
@@ -169,7 +217,7 @@ export default function NewMember() {
     if (!validateForm()) return
     const result = await Swal.fire({
       title: isEditing ? t("update") : t("submit"),
-      text: isEditing ? t("confirmUpdateMember") : t("confirmAddMember"),
+      text: isEditing ? t("Confirm Update Member") : t("Confirm Add Member"),
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
@@ -209,8 +257,8 @@ export default function NewMember() {
       if (!res.ok) throw new Error(t("saveMemberError"))
       await Swal.fire({
         icon: "success",
-        title: isEditing ? t("updateSuccess") : t("addSuccess"),
-        text: isEditing ? t("updateMemberSuccess") : t("addMemberSuccess"),
+        title: isEditing ? t("Update Success") : t("Add Success"),
+        text: isEditing ? t("Update Member Success") : t("Add Member Success"),
       })
       fetchMembers()
       closeModal()
@@ -318,10 +366,10 @@ export default function NewMember() {
       name: t("gender"),
       selector: (row) => row.gender,
       sortable: true,
-      minWidth: "80px",
+      minWidth: "60px",
     },
     {
-      name: t("Year"),
+      name: t("year"),
       selector: (row) => row.year,
       sortable: true,
       minWidth: "80px",
@@ -335,61 +383,64 @@ export default function NewMember() {
     {
       name: t("actions"),
       cell: (row) => (
-        <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 px-1 sm:px-2 py-1 sm:py-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
           <button
             onClick={() => handleEdit(row)}
-            className="text-teal-600 px-3 py-1 rounded-md hover:bg-teal-600 hover:text-white transition-colors text-base sm:text-sm text-center"
+            className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
             title={t("edit")}
           >
             {t("EDIT")}
           </button>
           <button
             onClick={() => confirmDelete(row.member_id)}
-            className=" text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-base sm:text-sm text-center"
+            className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
             title={t("delete")}
           >
             {t("DELETE")}
           </button>
-        </div>
+          </div>
       ),
       minWidth: "150px",
       allowOverflow: true,
-    },
+      },
   ]
 
   return (
     <div className="px-2 sm:px-4 py-3 md:py-6 realfont">
-      <div className="bg-white shadow-md rounded-[4px] overflow-hidden">
+     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
+     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      
         {/* Header */}
-        <div className="bg-blue-950 text-white px-3 sm:px-6 py-3 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 realfont2">
-          <h2 className="flex items-center gap-1 sm:gap-2 sm:text-lg md:text-lg font-bold font2">
-            <Users size={isMobile ? 20 : 24} />
-            {t("committeeMembers")}
-          </h2>
+        <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+        
+          <h2 className="flex items-center gap-1 sm:gap-2 text-xl md:text-2xl font-bold font2">
+  <Users size={isMobile ? 20 : 24} />
+  {t("committeeMembers")}
+</h2>
+
+
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-950 px-2 sm:px-2 py-1 sm:py-1 text-sm rounded-sm hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center"
+            className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
           >
             <Plus className="mr-1 sm:mr-1 " size={isMobile ? 14 : 16} /> {t("addMember")}
           </button>
         </div>
 
-        <div className="px-2 sm:px-2 py-1 flex flex-col sm:flex-row gap-2 sm:gap-4 items-center justify-between">
-          <div className="relative w-full sm:w-64 md:w-[250px] text-base sm:text-md md:text-md py-1">
-            <input
-              type="text"
-              placeholder={t("search")}
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full pl-7 sm:pl-8 pr-3 sm:pr-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-6 sm:h-8 text-base sm:text-lg md:text-md"
-            />
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-              size={isMobile ? 14 : 16}
-            />
-          </div>
+        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+        
+           <div className="relative flex-grow max-w-full sm:max-w-[300px]">
+                      <input
+                        type="text"
+                        placeholder={t("Search")}
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                        className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
+                      />
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                 </div>
           <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
-            {t("Total Members")} :<span className="text-blue-950 font-bold px-2">{filteredMembers.length}</span>
+            {t("totalMembers")} :<span className="text-blue-950 font-bold px-2">{filteredMembers.length}</span>
           </div>
         </div>
 
@@ -460,7 +511,7 @@ export default function NewMember() {
           <div className="text-center p-4 md:p-8 text-gray-500">{t("noMembersFound")}</div>
         )}
       </div>
-
+      </div>
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0  backdrop-blur-xs flex items-center justify-center z-50 p-3">

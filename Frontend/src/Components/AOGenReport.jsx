@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DownloadIcon, X } from 'lucide-react';
-import { generateFinancialReportPDF } from './GenPDF';
+import { generateAOFinancialReportPDF } from './AOGenPDF';
 import axios from 'axios';
 
-const GenerateReport = ({ onClose }) => {
+const AOGenReport = ({ onClose }) => {
   const { t } = useTranslation();
   const [financialYear, setFinancialYear] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -28,35 +28,6 @@ const GenerateReport = ({ onClose }) => {
     };
   }, [downloadUrl]);
 
-  const checkAndSaveReport = useCallback(async (year) => {
-    const schoolId = localStorage.getItem('school_id');
-    
-    if (!schoolId) {
-      throw new Error(t('School ID not found'));
-    }
-
-    const fundReportRecord = `${year}|${schoolId}`;
-    
-    try {
-      const response = await axios.post('http://localhost:5000/api/report', {
-        fund_report_record: fundReportRecord
-      });
-      
-      console.log('Report saved to database:', response.data);
-      setStatusMessage(t('Report saved successfully'));
-      return response.data;
-    } catch (err) {
-      if (err.response && err.response.status === 409) {
-        console.log('Report already exists in database');
-        setStatusMessage(t('Report already exists for this financial year'));
-        return null; // Return null to indicate report already exists
-      }
-      
-      console.error('Failed to save report:', err);
-      throw new Error(t('Failed to save report record'));
-    }
-  }, [t]);
-
   const handleGenerate = useCallback(async () => {
     if (!financialYear) {
       setError(t('Please select financial year'));
@@ -65,45 +36,29 @@ const GenerateReport = ({ onClose }) => {
 
     setIsGenerating(true);
     setError(null);
-    setStatusMessage('');
+    setStatusMessage(t('Generating report...'));
 
     try {
-      // Check and save report, if it already exists we get null
-      const reportCheck = await checkAndSaveReport(financialYear);
-      
-      // If report already exists, stop here
-      if (!reportCheck) {
-        setIsGenerating(false);
-        return;
-      }
-
-      // Only generate PDF if report doesn't exist
-      const pdfBlob = await generateFinancialReportPDF(financialYear);
-      
-      if (!(pdfBlob instanceof Blob)) {
-        throw new Error(t('Invalid PDF generated'));
-      }
-
+      const pdfBlob = await generateAOFinancialReportPDF(financialYear);
       const url = URL.createObjectURL(pdfBlob);
       setDownloadUrl(url);
       setReportGenerated(true);
-      
+      setStatusMessage(t('Report generated successfully'));
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || t('Failed to generate report');
       setError(errorMessage);
+      setStatusMessage('');
     } finally {
-      if (!reportGenerated) { // Only reset isGenerating if report wasn't generated
-        setIsGenerating(false);
-      }
+      setIsGenerating(false);
     }
-  }, [financialYear, checkAndSaveReport, t, reportGenerated]);
+  }, [financialYear, t]);
 
   const handleDownload = useCallback(() => {
     if (!downloadUrl) return;
 
     const link = document.createElement('a');
     link.href = downloadUrl;
-    link.download = `ITDP_Report_${financialYear.replace(/-/g, '_')}.pdf`;
+    link.download = `ITDP_AllSchools_Report_${financialYear.replace(/-/g, '_')}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -115,7 +70,7 @@ const GenerateReport = ({ onClose }) => {
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-800">
-            {t('Generate Financial Report')}
+            {t('Generate All Schools Financial Report')}
           </h3>
           <button
             onClick={onClose}
@@ -201,4 +156,4 @@ const GenerateReport = ({ onClose }) => {
   );
 };
 
-export default GenerateReport;
+export default AOGenReport;

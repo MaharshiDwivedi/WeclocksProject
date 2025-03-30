@@ -16,6 +16,7 @@ export default function FundReq() {
   const [errors, setErrors] = useState({})
   const [searchTerm, setSearchTerm] = useState("")
   const [filteredDemands, setFilteredDemands] = useState([])
+  const [selectedYear, setSelectedYear] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteId, setDeleteId] = useState(null)
@@ -69,32 +70,80 @@ export default function FundReq() {
     setIsModalOpen(true)
   }
 
-  const confirmDelete = (id) => {
-    setDeleteId(id)
-    setIsDeleteModalOpen(true)
-  }
+  // const confirmDelete = (id) => {
+  //   setDeleteId(id)
+  //   setIsDeleteModalOpen(true)
+  // }
 
-  const handleDelete = async (id) => {
-    try {
-      await fetch(`${API_URL}/${id}`, { method: "DELETE" })
-      Swal.fire({
-        title: t("Deleted!"),
-        text: t("The fund request has been deleted successfully."),
-        icon: "success",
-        timer: 1000,
-        showConfirmButton: false,
-      })
-      fetchDemands()
-      setIsDeleteModalOpen(false)
-    } catch (error) {
-      Swal.fire({
-        title: t("Error!"),
-        text: t("Failed to delete the fund request."),
-        icon: "error",
-      })
-      console.error("Error deleting fund request:", error)
+  // const handleDelete = async (id) => {
+  //   try {
+  //     await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+  //     Swal.fire({
+  //       title: t("Deleted!"),
+  //       text: t("The fund request has been deleted successfully."),
+  //       icon: "success",
+  //       timer: 1000,
+  //       showConfirmButton: false,
+  //     })
+  //     fetchDemands()
+  //     setIsDeleteModalOpen(false)
+  //   } catch (error) {
+  //     Swal.fire({
+  //       title: t("Error!"),
+  //       text: t("Failed to delete the fund request."),
+  //       icon: "error",
+  //     })
+  //     console.error("Error deleting fund request:", error)
+  //   }
+  // }
+
+
+  const confirmDelete = async (id) => {
+    const result = await Swal.fire({
+        title: t("Are you sure?"),
+        text: t("You won't be able to revert this!"),
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: t("Yes, delete it!"),
+        cancelButtonText: t("Cancel"),
+    });
+
+    if (result.isConfirmed) {
+        handleDelete(id); // Proceed with deletion if confirmed
     }
-  }
+};
+
+const handleDelete = async (id) => {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+
+        // Check if the response is successful
+        if (!response.ok) {
+            throw new Error("Failed to delete fund request");
+        }
+
+        // Show success message using SweetAlert
+        Swal.fire({
+            title: t("Deleted!"),
+            text: t("The fund request has been deleted successfully."),
+            icon: "success",
+            timer: 1000,
+            showConfirmButton: false,
+        });
+
+        fetchDemands(); // Refresh the demands list
+    } catch (error) {
+        // Show error message using SweetAlert
+        Swal.fire({
+            title: t("Error!"),
+            text: t("Failed to delete the fund request."),
+            icon: "error",
+        });
+
+        console.error("Error deleting fund request:", error);
+    }
+};
+
 
   const validateForm = () => {
     const newErrors = {}
@@ -199,9 +248,27 @@ export default function FundReq() {
     filterDemands()
   }, [searchTerm, demands])
 
+
+
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value)
   }
+
+
+  
+  const handleYearChange = (e) => {
+    const year = e.target.value;
+    setSelectedYear(year);
+  
+    // Filter demands based on selected year
+    let filtered = demands.filter((demand) => {
+      const matchesYear = year ? demand.year == (year) : true;
+      return matchesYear;
+    });
+  
+    setFilteredDemands(filtered);
+  };
 
   const closeModal = () => {
     setIsModalOpen(false)
@@ -240,41 +307,54 @@ export default function FundReq() {
       hide: "md",
       minWidth: "120px",
     },
+
     {
       name: t("Actions"),
       cell: (row) => (
-        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2 ">
+        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
           <button
             onClick={row.demand_status === "Pending" ? () => handleEdit(row) : null}
-            className={`${row.demand_status === "Pending" ? "text-blue-600" : "text-gray-600"} px-3 py-1 rounded-md text-lg font-medium min-w-[60px] text-center`}
+            className={`px-3 py-1 rounded-md text-lg font-medium min-w-[60px] text-center cursor-pointer transition-colors ${
+              row.demand_status === "Pending"
+                ? "text-blue-600 hover:bg-blue-600 hover:text-white"
+                : "text-gray-600 cursor-not-allowed"
+            }`}
             disabled={row.demand_status !== "Pending"}
+            title={t("Edit")}
           >
             {t("EDIT")}
           </button>
           <button
             onClick={row.demand_status === "Pending" ? () => confirmDelete(row.id) : null}
-            className={`${row.demand_status === "Pending" ? "text-red-600" : "text-gray-600"} px-3 py-1 rounded-md  text-lg font-medium min-w-[60px] text-center`}
+            className={`px-3 py-1 rounded-md text-lg font-medium min-w-[60px] text-center cursor-pointer transition-colors ${
+              row.demand_status === "Pending"
+                ? "text-red-600 hover:bg-red-600 hover:text-white"
+                : "text-gray-600 cursor-not-allowed"
+            }`}
             disabled={row.demand_status !== "Pending"}
+            title={t("Delete")}
           >
             {t("DELETE")}
           </button>
         </div>
       ),
       minWidth: "150px",
-    },
+    }
+    
   ]
+  
 
   return (
     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
-          <h2 className="text-xl md:text-2xl font-bold">{t("Fund Requests")}</h2>
+        <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+          <h2 className="text-xl md:text-2xl font-bold realfont2">{t("Fund Requests")}</h2>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
           >
             <Plus className="mr-1 sm:mr-2" size={isMobile ? 16 : 20} />
-            <span className="text-sm sm:text-base">{t("Add Fund Request")}</span>
+            <span className="text-sm sm:text-base realfont">{t("Add Fund Request")}</span>
           </button>
         </div>
         <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
@@ -287,8 +367,20 @@ export default function FundReq() {
               className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-          </div>
+       </div>
+       <div className="relative">
+  <select
+    value={selectedYear}
+    onChange={handleYearChange}
+    className="w-full sm:w-[150px] px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+  >
+    <option value="">{t("All Years")}</option>
+    <option value="2023-2024">2023-24</option>
+    <option value="2024-2025">2024-25</option>
+  </select>
+</div>
         </div>
+
         <div className="overflow-x-auto">
           <DataTable
             columns={columns}

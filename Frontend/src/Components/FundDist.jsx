@@ -238,7 +238,7 @@ const FundDist = () => {
       minWidth: "120px",
     },
     {
-      name: t("Date"),
+      name: t("date"),
       selector: (row) => new Date(row.ins_date_time).toLocaleDateString("en-GB").replace(/\//g, "-"),
       sortable: true,
       hide: "md",
