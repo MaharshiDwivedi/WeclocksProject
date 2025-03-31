@@ -91,20 +91,20 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col px-2 sm:px-4 md:px-6 lg:px-10 py-4 md:py-6 min-h-screen gap-4 md:gap-8 shadow-sm">
       {/* Date Picker */}
-     <div className="w-full flex items-center justify-between">
-  <div className="relative transform origin-left realfont">
+      <div className="w-full flex items-center justify-between">
+  <div className="relative transform origin-left realfont scale-90 md:scale-95">
     <MonthInput
       selected={selectedDate}
       setShowMonthPicker={setIsPickerOpen}
       showMonthPicker={isPickerOpen}
-      className="px-1 py-0.5 border bg-white border-blue-950 rounded-sm shadow-sm text-[10px] md:text-xs text-blue-950 cursor-pointer transition-all duration-300 focus:ring-1 focus:ring-blue-500 focus:outline-none hover:border-blue-700 hover:shadow-md realfont"
+      className="px-0.2 py-0 border bg-white border-blue-950 rounded-sm shadow-sm text-[7px] md:text-[8px] text-blue-950 cursor-pointer transition-all duration-300 focus:ring-1 focus:ring-blue-500 focus:outline-none hover:border-blue-700 hover:shadow-md realfont"
     />
     {isPickerOpen && (
       <MonthPicker
         setIsOpen={setIsPickerOpen}
         selected={selectedDate}
         onChange={setSelectedDate}
-        className="absolute top-full left-0 mt-0.5 z-50 scale-75 md:scale-90 font-realfont"
+        className="absolute top-full left-0 mt-0.5 z-50 scale-70 md:scale-65 font-realfont"
       />
     )}
   </div>

@@ -11,6 +11,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
   const SERVER_URL = "http://localhost:5000";
   const { t } = useTranslation();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const modalRef = useRef(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -54,6 +55,28 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isModalOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+        closeModal();
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
+
+
+
+
+
+
+
+
 
   useEffect(() => {
     fetchTharavs();
@@ -214,10 +237,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     if (!tharav.deadStockNumber.trim()) {
       newErrors.deadStockNumber = "Dead Stock Number is required";
       isValid = false;
-    } else if (!/^\d+$/.test(tharav.deadStockNumber.trim())) {
-      newErrors.deadStockNumber = "Dead Stock Number must be a number";
-      isValid = false;
-    }
+    } 
 
     if (!tharav.decisionTaken.trim()) {
       newErrors.decisionTaken = "Decision Taken is required";
@@ -526,11 +546,11 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
         <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
           <button
             onClick={() => handleEdit(row)}
-            title={t("Edit")}
-            className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer"
+            title={t("edit")}
+            className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
             >
             
-            <span>{t("Edit")}</span>
+            <span>{t("edit")}</span>
           </button>
           <button
             onClick={() => handleDelete(row.nirnay_id)}
@@ -556,18 +576,18 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
 
   return (
 <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-8 realfont max-w-[1200px]">
-  <div className="bg-white shadow-md rounded-[4px] overflow-hidden w-full">
+  <div className="bg-white shadow-md rounded-[14px] overflow-hidden w-full">
         <div className="bg-blue-950 text-white px-4 md:px-6 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 realfont2">
-          <h2 className="text-xl md:text-2xl font-bold">{t("Tharav Management")}</h2>
+          <h2 className="text-xl md:text-2xl font-bold">{t("tharavManagement")}</h2>
           <button
             onClick={handleOpenModal}
             className="bg-white text-blue-950 px-4 py-2 rounded-md hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center"
           >
-            <Plus className="mr-2" size={18} /> {t("Add Tharav")}
+            <Plus className="mr-2" size={18} /> {t("addTharav")}
           </button>
         </div>
 
-        <div className="p-4 bg-gray-50 flex flex-col sm:flex-row gap-4">
+        <div className="p-4 bg-gray-50 flex flex-col sm:flex-row gap-4 justify-between">
           <div className="relative flex-grow">
             <input
               type="text"
@@ -581,7 +601,9 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
               size={18}
             />
           </div>
-        </div>
+          <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
+            {t("totalTharav")} :<span className="text-blue-950 font-bold px-2">{filteredNirnay.length}</span>
+          </div>        </div>
 
         <div className="relative">
   <div className="overflow-x-auto w-full">
@@ -654,278 +676,352 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto">
-            <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-                {isEditing ? t("Edit Tharav") : t("Add Tharav")}
-              </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
+  <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-3">
+    <div
+      ref={modalRef}
+      className="bg-white rounded-sm shadow-2xl w-full max-w-[95vw] md:max-w-[850px] max-h-[90vh] overflow-y-auto animate-fade-in"
+    >
+      <div className="p-3 sm:p-4 border-b flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50">
+        <h2 className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 flex items-center">
+          {isEditing ? (
+            <>
+              <Plus className="mr-1 sm:mr-2 text-indigo-600" size={isMobile ? 16 : 18} /> {t("Edit Tharav")}
+            </>
+          ) : (
+            <>
+              <Plus className="mr-1 sm:mr-2 text-indigo-600" size={isMobile ? 16 : 18} /> {t("Add Tharav")}
+            </>
+          )}
+        </h2>
+        <button
+          onClick={closeModal}
+          className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100"
+        >
+          <X size={isMobile ? 16 : 18} />
+        </button>
+      </div>
+      <form onSubmit={handleSubmit} className="p-3 sm:p-4 md:p-6">
+        {formError && (
+          <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2 mb-4">
+            <AlertCircle size={20} />
+            <span>{formError}</span>
+          </div>
+        )}
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          {/* Tharav No */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Tharav No.")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="number"
+              name="tharavNo"
+              value={tharav.tharavNo}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.tharavNo ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+              placeholder={t("Enter tharav no")}
+            />
+            {errors.tharavNo && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.tharavNo}
+              </p>
+            )}
+          </div>
 
-            <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4">
-              {formError && (
-                <div className="bg-red-50 text-red-600 p-4 rounded-lg flex items-center gap-2">
-                  <AlertCircle size={20} />
-                  <span>{formError}</span>
-                </div>
-              )}
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Tharav No.")}</label>
-                <input
-                  type="text"
-                  name="tharavNo"
-                  value={tharav.tharavNo}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.tharavNo ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  placeholder={t("Enter tharav no")}
-                />
-                {errors.tharavNo && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.tharavNo}
-                  </p>
+          {/* Purpose */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Purpose")} <span className="text-red-500">*</span>
+            </label>
+            <select
+              name="purpose"
+              value={tharav.purpose}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.purpose ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm bg-white h-10 sm:h-12 text-sm sm:text-base`}
+            >
+              <option value="">{t("Select Purpose")}</option>
+              {purpose.map((item) => (
+                <option key={item.head_id} value={item.head_id}>{item.head_name}</option>
+              ))}
+            </select>
+            {errors.purpose && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.purpose}
+              </p>
+            )}
+          </div>
+
+          {/* Problem Found */}
+          <div className="mb-2 sm:mb-3 sm:col-span-2">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Problem Found")} <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="problemFounded"
+              value={tharav.problemFounded}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.problemFounded ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm sm:text-base`}
+              rows="3"
+              placeholder={t("Describe the problem")}
+            ></textarea>
+            {errors.problemFounded && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.problemFounded}
+              </p>
+            )}
+          </div>
+
+          {/* Where */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Where")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="where"
+              value={tharav.where}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.where ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+              placeholder={t("Location")}
+            />
+            {errors.where && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.where}
+              </p>
+            )}
+          </div>
+
+          {/* What */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("What")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="what"
+              value={tharav.what}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.what ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+              placeholder={t("Item/Issue")}
+            />
+            {errors.what && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.what}
+              </p>
+            )}
+          </div>
+
+          {/* How Many */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("How Many")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="howMany"
+              value={tharav.howMany}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.howMany ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+              placeholder={t("Quantity")}
+            />
+            {errors.howMany && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.howMany}
+              </p>
+            )}
+          </div>
+
+          {/* Dead Stock Number */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Dead Stock Number")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="deadStockNumber"
+              value={tharav.deadStockNumber}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.deadStockNumber ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+              placeholder={t("Stock number if applicable")}
+            />
+            {errors.deadStockNumber && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.deadStockNumber}
+              </p>
+            )}
+          </div>
+
+          {/* Decision Taken */}
+          <div className="mb-2 sm:mb-3 sm:col-span-2">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Decision Taken")} <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="decisionTaken"
+              value={tharav.decisionTaken}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.decisionTaken ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm sm:text-base`}
+              rows="3"
+              placeholder={t("Decision details")}
+            ></textarea>
+            {errors.decisionTaken && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.decisionTaken}
+              </p>
+            )}
+          </div>
+
+          {/* Expected Expenditure */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Expected Expenditure")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="expectedExpenditure"
+              value={tharav.expectedExpenditure}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.expectedExpenditure ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+              placeholder={t("Amount in ₹")}
+            />
+            {errors.expectedExpenditure && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.expectedExpenditure}
+              </p>
+            )}
+          </div>
+
+          {/* Fixed Date */}
+          <div className="mb-2 sm:mb-3">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Fixed Date")} <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              name="fixedDate"
+              value={tharav.fixedDate}
+              onChange={handleInputChange}
+              className={`w-full p-2 sm:p-2.5 border ${
+                errors.fixedDate ? "border-red-500" : "border-gray-300"
+              } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
+            />
+            {errors.fixedDate && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.fixedDate}
+              </p>
+            )}
+          </div>
+
+          {/* Photo Upload */}
+          <div className="mb-2 sm:mb-3 sm:col-span-2">
+            <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+              {t("Upload Photo")} <span className="text-red-500">*</span>
+            </label>
+            {showCamera && (
+              <div className="mb-4 p-2 border rounded-lg bg-gray-50">
+                {cameraError ? (
+                  <div className="bg-red-50 text-red-600 p-4 rounded-lg">{cameraError}</div>
+                ) : (
+                  <>
+                    <div className="relative mx-auto w-[280px] h-[210px]">
+                      <video ref={videoRef} autoPlay playsInline muted className="w-full h-auto bg-black rounded-lg" />
+                      <button onClick={closeCamera} className="absolute top-2 right-2 bg-white/80 text-gray-800 rounded-full p-1 hover:bg-white" type="button">
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="mt-2 flex justify-center">
+                      <button onClick={capturePhoto} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2" type="button">
+                        <Camera size={18} /> {t("Capture Photo")}
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Purpose")}</label>
-                <select
-                  name="purpose"
-                  value={tharav.purpose}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.purpose ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
+            )}
+            {!showCamera && (
+              <div className="relative">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
+                  capture="environment"
+                  id="photoInput"
+                />
+                <label
+                  htmlFor="photoInput"
+                  className={`inline-flex items-center px-4 py-2 ${
+                    errors.photo ? "bg-red-500 hover:bg-red-600" : "bg-blue-950 hover:bg-blue-900"
+                  } text-white text-sm font-medium rounded-md cursor-pointer transition duration-200`}
                 >
-                  <option value="">{t("Select Purpose")}</option>
-                  {purpose.map((item) => (
-                    <option key={item.head_id} value={item.head_id}>{item.head_name}</option>
-                  ))}
-                </select>
-                {errors.purpose && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.purpose}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Problem Found")}</label>
-                <textarea
-                  name="problemFounded"
-                  value={tharav.problemFounded}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.problemFounded ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  rows="3"
-                  placeholder={t("Describe the problem")}
-                ></textarea>
-                {errors.problemFounded && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.problemFounded}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Where")}</label>
-                <input
-                  type="text"
-                  name="where"
-                  value={tharav.where}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.where ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  placeholder={t("Location")}
-                />
-                {errors.where && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.where}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("What")}</label>
-                <input
-                  type="text"
-                  name="what"
-                  value={tharav.what}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.what ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  placeholder={t("Item/Issue")}
-                />
-                {errors.what && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.what}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("How Many")}</label>
-                <input
-                  type="text"
-                  name="howMany"
-                  value={tharav.howMany}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.howMany ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  placeholder={t("Quantity")}
-                />
-                {errors.howMany && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.howMany}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Dead Stock Number")}</label>
-                <input
-                  type="text"
-                  name="deadStockNumber"
-                  value={tharav.deadStockNumber}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.deadStockNumber ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  placeholder={t("Stock number if applicable")}
-                />
-                {errors.deadStockNumber && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.deadStockNumber}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Decision Taken")}</label>
-                <textarea
-                  name="decisionTaken"
-                  value={tharav.decisionTaken}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.decisionTaken ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  rows="3"
-                  placeholder={t("Decision details")}
-                ></textarea>
-                {errors.decisionTaken && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.decisionTaken}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Expected Expenditure")}</label>
-                <input
-                  type="text"
-                  name="expectedExpenditure"
-                  value={tharav.expectedExpenditure}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.expectedExpenditure ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                  placeholder={t("Amount in ₹")}
-                />
-                {errors.expectedExpenditure && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.expectedExpenditure}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Fixed Date")}</label>
-                <input
-                  type="date"
-                  name="fixedDate"
-                  value={tharav.fixedDate}
-                  onChange={handleInputChange}
-                  className={`w-full px-3 py-2 border rounded-md ${errors.fixedDate ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"}`}
-                />
-                {errors.fixedDate && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.fixedDate}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block mb-2 text-sm font-medium">{t("Upload Photo")}</label>
-                {showCamera && (
-                  <div className="mb-4 p-2 border rounded-lg bg-gray-50">
-                    {cameraError ? (
-                      <div className="bg-red-50 text-red-600 p-4 rounded-lg">{cameraError}</div>
-                    ) : (
-                      <>
-                        <div className="relative mx-auto w-[280px] h-[210px]">
-                          <video ref={videoRef} autoPlay playsInline muted className="w-full h-auto bg-black rounded-lg" />
-                          <button onClick={closeCamera} className="absolute top-2 right-2 bg-white/80 text-gray-800 rounded-full p-1 hover:bg-white" type="button">
-                            <X size={18} />
-                          </button>
-                        </div>
-                        <div className="mt-2 flex justify-center">
-                          <button onClick={capturePhoto} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2" type="button">
-                            <Camera size={18} /> {t("Capture Photo")}
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                )}
-                {!showCamera && (
-                  <div className="relative">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      className="hidden"
-                      accept="image/*"
-                      capture="environment"
-                      id="photoInput"
-                    />
-                    <label
-                      htmlFor="photoInput"
-                      className={`inline-flex items-center px-4 py-2 ${errors.photo ? "bg-red-500 hover:bg-red-600" : "bg-blue-950 hover:bg-blue-900"} text-white text-sm font-medium rounded-md cursor-pointer transition duration-200`}
-                    >
-                      <Upload className="mr-2" size={16} />
-                      {t("Choose Photo")}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={openCamera}
-                      className="ml-4 inline-flex items-center px-4 py-2 bg-blue-950 hover:bg-blue-900 text-white text-sm font-medium rounded-md cursor-pointer transition duration-200"
-                    >
-                      <Camera className="mr-2" size={16} />
-                      {t("Take Photo")}
-                    </button>
-                  </div>
-                )}
-                {errors.photo && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.photo}
-                  </p>
-                )}
-                {previewImage && (
-                  <div className="mt-4 flex justify-center">
-                    <img
-                      src={previewImage}
-                      alt="Preview"
-                      className="max-w-full h-40 object-cover rounded-md border border-gray-200"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="p-4 md:p-6 border-t">
+                  <Upload className="mr-2" size={16} />
+                  {t("Choose Photo")}
+                </label>
                 <button
-                  type="submit"
-                  className="w-full bg-blue-950 text-white py-2 md:py-3 rounded-md hover:bg-blue-900 transition-colors"
+                  type="button"
+                  onClick={openCamera}
+                  className="ml-4 inline-flex items-center px-4 py-2 bg-blue-950 hover:bg-blue-900 text-white text-sm font-medium rounded-md cursor-pointer transition duration-200"
                 >
-                  {isEditing ? t("Update Tharav") : t("Add Tharav")}
+                  <Camera className="mr-2" size={16} />
+                  {t("Take Photo")}
                 </button>
               </div>
-            </form>
+            )}
+            {errors.photo && (
+              <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                <AlertCircle className="mr-1" size={12} /> {errors.photo}
+              </p>
+            )}
+            {previewImage && (
+              <div className="mt-4 flex justify-center">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="max-w-full h-40 object-cover rounded-md border border-gray-200"
+                />
+              </div>
+            )}
           </div>
         </div>
-      )}
+
+        <div className="flex justify-end gap-3 mt-4 sm:mt-6">
+          <button
+            onClick={closeModal}
+            className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            {t("cancel")}
+          </button>
+          <button
+            type="submit"
+            className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            {isEditing ? t("Update Tharav") : t("Add Tharav")}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
 
       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">

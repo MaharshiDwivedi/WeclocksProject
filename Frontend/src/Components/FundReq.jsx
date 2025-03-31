@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react";
 import DataTable from "react-data-table-component"
 import Swal from "sweetalert2"
 import axios from "axios"
@@ -18,8 +18,7 @@ export default function FundReq() {
   const [filteredDemands, setFilteredDemands] = useState([])
   const [selectedYear, setSelectedYear] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
-  const [deleteId, setDeleteId] = useState(null)
+  const modalRef = useRef(null);
 
   const { t } = useTranslation()
   const [newDemand, setNewDemand] = useState({
@@ -34,6 +33,21 @@ export default function FundReq() {
     window.addEventListener("resize", handleResize)
     return () => window.removeEventListener("resize", handleResize)
   }, [])
+  
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isModalOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+        closeModal();
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]); // Only depend on isModalOpen
+
 
   useEffect(() => {
     fetchDemands()
@@ -346,7 +360,7 @@ const handleDelete = async (id) => {
 
   return (
     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
-      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+      <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
         <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
           <h2 className="text-xl md:text-2xl font-bold realfont2">{t("Fund Requests")}</h2>
           <button
@@ -354,7 +368,7 @@ const handleDelete = async (id) => {
             className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
           >
             <Plus className="mr-1 sm:mr-2" size={isMobile ? 16 : 20} />
-            <span className="text-sm sm:text-base realfont">{t("Add Fund Request")}</span>
+            <span className="text-sm sm:text-base realfont2">{t("Add Fund Request")}</span>
           </button>
         </div>
         <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
@@ -431,7 +445,7 @@ const handleDelete = async (id) => {
       </div>
       {isModalOpen && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+          <div ref={modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
               <h2 className="text-xl md:text-2xl font-bold text-blue-950">
                 {isEditing ? t("Edit Fund Request") : t("New Fund Request")}
@@ -496,38 +510,7 @@ const handleDelete = async (id) => {
           </div>
         </div>
       )}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
-            <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">{t("Confirm Delete")}</h2>
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            <div className="p-4 md:p-6 space-y-4">
-              <p className="text-gray-700 font-bold">{t("Are you sure you want to delete this fund request?")}</p>
-            </div>
-            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
-              >
-                {t("Cancel")}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteId)}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
-              >
-                {t("Delete")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   )
 }

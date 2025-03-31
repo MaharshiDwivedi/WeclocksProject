@@ -408,12 +408,12 @@ export default function NewMember() {
   return (
     <div className="px-2 sm:px-4 py-3 md:py-6 realfont">
      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
-     <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+     <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
       
         {/* Header */}
         <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
         
-          <h2 className="flex items-center gap-1 sm:gap-2 text-xl md:text-2xl font-bold font2">
+          <h2 className="flex items-center gap-1 sm:gap-2 text-xl md:text-2xl realfont2">
   <Users size={isMobile ? 20 : 24} />
   {t("committeeMembers")}
 </h2>
@@ -421,7 +421,7 @@ export default function NewMember() {
 
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
+            className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200 realfont2"
           >
             <Plus className="mr-1 sm:mr-1 " size={isMobile ? 14 : 16} /> {t("addMember")}
           </button>

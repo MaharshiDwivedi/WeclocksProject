@@ -34,6 +34,7 @@ const Documents = () => {
   const [deleteDocumentId, setDeleteDocumentId] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { t } = useTranslation();
+  const modalRef = useRef(null);
 
   // Add responsive detection
   useEffect(() => {
@@ -59,6 +60,24 @@ const Documents = () => {
   useEffect(() => {
     fetchDocuments();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isModalOpen &&
+        modalRef.current &&
+        !modalRef.current.contains(event.target)
+      ) {
+        setIsModalOpen(false);
+        resetForm();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
 
   // Pre-fill form for editing
   useEffect(() => {
@@ -208,7 +227,9 @@ const Documents = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`http://localhost:5000/api/documents/${documentId}`);
+          await axios.delete(
+            `http://localhost:5000/api/documents/${documentId}`
+          );
           fetchDocuments();
           Swal.fire({
             icon: "success",
@@ -303,7 +324,9 @@ const Documents = () => {
               : setSelectedFile(fileUrl);
           }}
           className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50"
-          title={row.file_url.endsWith(".pdf") ? t("View PDF") : t("View Image")}
+          title={
+            row.file_url.endsWith(".pdf") ? t("View PDF") : t("View Image")
+          }
         >
           {row.file_url.endsWith(".pdf") ? (
             <FileDown size={22} className="text-red-600" />
@@ -326,12 +349,12 @@ const Documents = () => {
             title={t("Edit")}
           >
             <span className="  text-teal-600 px-3 py-1 rounded-md hover:bg-teal-600 hover:text-white transition-colors text-lg min-w-[60px] text-center">
-            {t("EDIT")}
+              {t("EDIT")}
             </span>
           </button>
           <button onClick={() => handleDelete(row.document_id)} title="Delete">
             <span className="flex items-center text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[75px] text-center">
-            {t("DELETE")}
+              {t("DELETE")}
             </span>
           </button>
         </div>
@@ -346,7 +369,9 @@ const Documents = () => {
       <div className="bg-white shadow-md rounded-[4px] overflow-hidden">
         {/* Header - make responsive */}
         <div className="bg-blue-950 text-white px-4 md:px-6 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 realfont2">
-          <h2 className="text-xl md:text-2xl font-bold">{t("Document Management")}</h2>
+          <h2 className="text-xl md:text-2xl font-bold">
+            {t("Document Management")}
+          </h2>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-white text-blue-950 px-4 py-2 rounded-md hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center "
@@ -429,7 +454,7 @@ const Documents = () => {
         {/* Empty State */}
         {filteredDocuments.length === 0 && (
           <div className="text-center p-4 md:p-8 text-gray-500">
-          {t("No documents found")}
+            {t("No documents found")}
           </div>
         )}
       </div>
@@ -437,10 +462,13 @@ const Documents = () => {
       {/* Add/Edit Modal - make responsive */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto">
+          <div
+            ref={modalRef}
+            className="bg-white rounded-lg shadow-xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto"
+          >
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
               <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-                {selectedDocument ? t("Edit Document"): t("Add Document")}
+                {selectedDocument ? t("Edit Document") : t("Add Document")}
               </h2>
               <button
                 onClick={() => {
@@ -456,7 +484,7 @@ const Documents = () => {
             <div className="p-4 md:p-6 space-y-4">
               <div>
                 <label className="block mb-2 text-sm font-medium">
-                {t("Document Title")}
+                  {t("Document Title")}
                 </label>
                 <input
                   type="text"
@@ -478,7 +506,9 @@ const Documents = () => {
               </div>
 
               <div>
-                <label className="block mb-2 text-sm font-medium">{t("Year")}</label>
+                <label className="block mb-2 text-sm font-medium">
+                  {t("Year")}
+                </label>
                 <select
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
@@ -491,7 +521,7 @@ const Documents = () => {
 
               <div>
                 <label className="block mb-2 text-sm font-medium">
-                {t("Upload File (Image or PDF)")}
+                  {t("Upload File (Image or PDF)")}
                 </label>
                 <div className="relative">
                   <input
@@ -521,7 +551,9 @@ const Documents = () => {
                           : fileName}
                       </span>
                     ) : (
-                      <span className="text-gray-400">{t("No file chosen")}</span>
+                      <span className="text-gray-400">
+                        {t("No file chosen")}
+                      </span>
                     )}
                   </div>
                 </div>
@@ -570,7 +602,7 @@ const Documents = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto">
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
               <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-              {t("Confirm Delete")}
+                {t("Confirm Delete")}
               </h2>
               <button
                 onClick={() => setIsDeleteModalOpen(false)}
@@ -582,7 +614,7 @@ const Documents = () => {
 
             <div className="p-4 md:p-6 space-y-4">
               <p className="text-gray-700">
-              {t("Are you sure you want to delete this document?")}
+                {t("Are you sure you want to delete this document?")}
               </p>
             </div>
 
@@ -607,7 +639,7 @@ const Documents = () => {
                 }}
                 className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
               >
-            {t("Delete")}
+                {t("Delete")}
               </button>
             </div>
           </div>

@@ -395,7 +395,7 @@ export default function Remarks() {
 
       {/* Tharav Photo Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg p-4 max-w-4xl max-h-[90vh] overflow-auto">
             <button
               onClick={() => setIsModalOpen(false)}
@@ -423,7 +423,7 @@ export default function Remarks() {
 
       {/* Remark Image Modal */}
       {isViewImageModalOpen && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg p-4 max-w-4xl max-h-[90vh] overflow-auto">
             <button
               onClick={() => {
@@ -454,7 +454,7 @@ export default function Remarks() {
 
       {/* Add Remark Modal */}
       {isAddRemarkModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
             <button
               onClick={() => setIsAddRemarkModalOpen(false)}
@@ -531,7 +531,7 @@ export default function Remarks() {
 
       {/* Edit Remark Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-4px] flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
             <button
               onClick={() => {

@@ -84,7 +84,9 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
     },
     plugins: {
       legend: {
+        position: "top",
         labels: {
+          
           generateLabels: (chart) => {
             return chart.data.datasets.map((dataset, i) => {
               const text = dataset.label;
@@ -104,10 +106,10 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
           },
           font: {
             family: "'Poppins', sans-serif",
-            size: 14,
+            size: 12,
           },
           usePointStyle: true,
-          padding: 20,
+          padding: 10,
         },
       },
     },
@@ -142,7 +144,7 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
 
   return (
     
-    <div style={{ width, height } } >
+    <div style={{ width, height} } >
       <Bar data={data} options={options}  />
     </div>
   );

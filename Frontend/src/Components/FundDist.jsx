@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState,useRef } from "react"
 import axios from "axios"
 import { X, Plus, AlertCircle, Search } from "lucide-react"
 import DataTable from "react-data-table-component"
@@ -26,6 +26,8 @@ const FundDist = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteFundId, setDeleteFundId] = useState(null)
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const modalRef = useRef(null);
+
 
   const { t, i18n } = useTranslation();  
 
@@ -138,6 +140,21 @@ const FundDist = () => {
       }
     }
   }
+
+
+  
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isModalOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+        resetForm(); // Using resetForm instead of closeModal
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isModalOpen]);
 
   // const handleDelete = (id) => {
   //   setDeleteFundId(id)
@@ -273,7 +290,17 @@ const FundDist = () => {
     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 realfont">
       <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
-        <h2 className="text-xl md:text-2xl font-bold">{t("Fund Distribution")}</h2>
+          <h2 className="text-xl md:text-2xl font-bold">{t("Fund Distribution")}</h2>
+          <button
+            onClick={() => {
+              setIsEditMode(false)
+              setIsModalOpen(true)
+            }}
+            className="bg-white text-blue-900 hover:bg-blue-400 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont2 w-[200px] sm:w-auto justify-center sm:justify-start"
+          >
+            <Plus className="mr-2" size={18} /> {t("Add Fund")}
+          </button>
+
         </div>
 
         {/* Make search and add button responsive */}
@@ -288,16 +315,10 @@ const FundDist = () => {
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           </div>
-
-          <button
-            onClick={() => {
-              setIsEditMode(false)
-              setIsModalOpen(true)
-            }}
-            className="bg-blue-950 text-white hover:bg-blue-900 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont w-[200px] sm:w-auto justify-center sm:justify-start"
-          >
-            <Plus className="mr-2" size={18} /> {t("Add Fund")}
-          </button>
+          <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
+            {t("Total Funds")} :<span className="text-blue-950 font-bold px-2">{filteredFundData.length}</span>
+          </div>
+         
         </div>
 
         {/* Make DataTable responsive */}
@@ -351,7 +372,8 @@ const FundDist = () => {
       {/* Make modals responsive */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+          <div ref={modalRef}
+                               className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
               <h2 className="text-xl md:text-2xl font-bold text-blue-950">
                 {isEditMode ? t("Edit Fund") : t("Fund Distribution")}

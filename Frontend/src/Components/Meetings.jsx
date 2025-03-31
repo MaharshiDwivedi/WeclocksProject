@@ -2,7 +2,7 @@
 
 // Meetings.jsx
 import { useState, useEffect, useRef } from "react"
-import { X, Camera, Upload, CalendarPlus, Pencil, Trash2, ChevronRight, Plus } from "lucide-react"
+import { X, Camera, Upload, CalendarPlus, Pencil, Trash2, ChevronRight, Plus, AlertCircle } from "lucide-react"
 import axios from "axios"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
@@ -29,6 +29,13 @@ const Meetings = () => {
   const [committeeMembers, setCommitteeMembers] = useState([])
   const [meetingNumber, setMeetingNumber] = useState(1)
   const [editingMeetingId, setEditingMeetingId] = useState(null)
+  const modalRef = useRef(null);
+  const [errors, setErrors] = useState({
+    date: "",
+    members: "",
+    photo: ""
+  });
+  
 
   // Camera functionality
   const [showCamera, setShowCamera] = useState(false)
@@ -56,6 +63,19 @@ const Meetings = () => {
     }
   }, [date])
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isOpen && modalRef.current && !modalRef.current.contains(event.target)) {
+        toggleModal();
+      }
+    };
+  
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]);
+
   // Handle date change from the DatePicker
   const handleDateChange = (date) => {
     setSelectedDate(date)
@@ -80,6 +100,44 @@ const Meetings = () => {
       console.error("Error fetching committee members:", error)
     }
   }
+
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = {
+      date: "",
+      members: "",
+      photo: ""
+    };
+  
+    if (!date) {
+      newErrors.date = "Date is required";
+      valid = false;
+    }
+  
+    if (selectedMembers.length === 0) {
+      newErrors.members = "At least one member is required";
+      valid = false;
+    }
+  
+    if (!photo || photoName === "default.jpg") {
+      newErrors.photo = "Photo is required";
+      valid = false;
+    }
+  
+    setErrors(newErrors);
+    return valid;
+  };
+
+
+
+
+
+
+
+
+
+
+
 
   const fetchMeetings = async () => {
     try {
@@ -140,13 +198,13 @@ const Meetings = () => {
 
   const toggleModal = () => {
     if (!isOpen) {
-      setIsEditing(false)
-      setEditingMeetingId(null)
-      resetForm()
-      detectLocation()
+      setIsEditing(false);
+      setEditingMeetingId(null);
+      resetForm();
+      detectLocation();
     }
-    setIsOpen(!isOpen)
-  }
+    setIsOpen(!isOpen);
+  };
 
   const handleMemberChange = (member) => {
     if (!selectedMembers.find((m) => m.id === member.id)) {
@@ -159,26 +217,31 @@ const Meetings = () => {
   }
 
   const detectLocation = () => {
+    console.log("detectLocation called"); // Log 3
     if (navigator.geolocation) {
-      setLoading(true)
+      console.log("Geolocation is supported"); // Log 4
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const lat = position.coords.latitude
-          const lon = position.coords.longitude
-          setLatitude(lat)
-          setLongitude(lon)
-          getAddressFromGoogle(lat, lon)
+          console.log("Geolocation success:", position); // Log 5
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          console.log("Coordinates:", lat, lon); // Log 6
+          setLatitude(lat);
+          setLongitude(lon);
+          getAddressFromGoogle(lat, lon);
         },
         (error) => {
-          console.error("Geolocation error:", error)
-          alert(t("geolocationError")) // Translated error message
-          setLoading(false)
-        },
-      )
+          console.error("Geolocation error:", error); // Log 7
+          alert(t("geolocationError"));
+          setLoading(false);
+        }
+      );
     } else {
-      alert(t("geolocationNotSupported")) // Translated error message
+      console.log("Geolocation not supported"); // Log 8
+      alert(t("geolocationNotSupported"));
     }
-  }
+  };
 
   const getAddressFromGoogle = async (lat, lon) => {
     try {
@@ -280,6 +343,10 @@ const Meetings = () => {
   }
 
   const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+  
     if (!date || selectedMembers.length === 0) {
       Swal.fire({
         icon: 'error',
@@ -412,23 +479,25 @@ const Meetings = () => {
 
   return (
 <div className="min-h-screen p-3 md:p-6 space-y-4 md:space-y-6">
-  <div className="bg-neutral-200 rounded-lg mx-auto w-[75%] max-w-6xl overflow-y-auto max-h-[85vh] shadow-md"> 
-    <h2 className="text-2xl md:text-4xl font-bold text-center text-blue-950 realfont2 pt-4">{t("smcMeetings")}</h2> 
+       <div className="bg-white  rounded-[14px] mx-auto w-[75%] max-w-6xl overflow-y-auto max-h-[85vh] shadow-md"> 
+        <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+  <h2 className="text-xl md:text-3xl font-bold realfont2">{t("smcMeetings")}</h2>
+  <button
+              onClick={toggleModal}
 
-    <div className="flex justify-center md:justify-end md:mr-[620px] px-4"> {/* Added px-4 for side padding */}
-      <button
-        onClick={toggleModal}
-        className="realfont flex items-center gap-1 md:gap-2 bg-blue-950 text-white px-2 py-1.5 md:py-2 rounded-md hover:bg-blue-900 transition-colors text-sm md:text-base mb-4" 
-      >
-        <Plus className="w-5 h-5 md:w-9 md:h-9" />
-        <span>{t("addMeeting")}</span>
-      </button>
-    </div>
+    className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
+  >
+    <Plus className="mr-1 sm:mr-2" size={20} />
+    <span className="text-sm sm:text-base realfont2">{t("addMeeting")}</span>
+  </button>
+</div>
+
+       
 
 
     {isOpen && (
-  <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4 realfont">
-    <div className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+  <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4 realfont">
+    <div ref={modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
       <div className="p-4 md:p-6 border-b flex justify-between items-center">
         <h2 className="text-xl md:text-2xl font-bold text-blue-950">
           {isEditing ? t("editMeeting") : t("addMeeting")}
@@ -445,21 +514,30 @@ const Meetings = () => {
       <div className="p-4 md:p-6 space-y-4">
         {/* Date Picker */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-blue-950">{t("date")}</label>
-          <DatePicker
-            selected={selectedDate}
-            onChange={handleDateChange}
-            dateFormat="MMMM d, yyyy"
-            className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholderText={t("selectDate")}
-          />
-        </div>
-
+  <label className="block text-sm font-medium text-blue-950">
+    {t("date")} <span className="text-red-500">*</span>
+  </label>
+  <DatePicker
+    selected={selectedDate}
+    onChange={handleDateChange}
+    dateFormat="MMMM d, yyyy"
+    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 ${errors.date ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:ring-blue-500"}`}
+    placeholderText={t("selectDate")}
+  />
+  {errors.date && (
+    <p className="text-red-500 text-sm mt-1 flex items-center">
+      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+      {errors.date}
+    </p>
+  )}
+</div>
         {/* Selected Members */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-blue-950">{t("selectedMembers")}</label>
-          <div className="flex flex-wrap gap-2">
-            {selectedMembers.map((member, index) => (
+  <label className="block text-sm font-medium text-blue-950">
+    {t("selectedMembers")} <span className="text-red-500">*</span>
+  </label>
+  <div className="flex flex-wrap gap-2">
+    {selectedMembers.map((member, index) => (
               <span
                 key={index}
                 className="flex items-center gap-1 bg-purple-700 text-white px-3 py-1 rounded-full text-sm"
@@ -474,6 +552,14 @@ const Meetings = () => {
               </span>
             ))}
           </div>
+
+
+          {errors.members && (
+    <p className="text-red-500 text-sm mt-1 flex items-center">
+      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+      {errors.members}
+    </p>
+  )}
         </div>
 
         {/* Committee Members */}
@@ -508,7 +594,7 @@ const Meetings = () => {
               {loading ? (
                 <div className="w-5 h-5 border-2 border-blue-950 border-t-transparent rounded-full animate-spin mx-auto" />
               ) : (
-                latitude
+                latitude || "Not detected"
               )}
             </div>
           </div>
@@ -536,10 +622,16 @@ const Meetings = () => {
 
         {/* Photo Upload */}
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-blue-950">
-            {t("uploadOrTakePhoto")}
-          </label>
-          <div className="flex gap-4">
+  <label className="block text-sm font-medium text-blue-950">
+    {t("uploadOrTakePhoto")} <span className="text-red-500">*</span>
+  </label>
+  {errors.photo && (
+    <p className="text-red-500 text-sm flex items-center">
+      <AlertCircle className="mr-2 flex-shrink-0" size={16} />
+      {errors.photo}
+    </p>
+  )}
+  <div className="flex gap-4">
             <button
               onClick={() => document.getElementById("fileInput").click()}
               className="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
@@ -617,7 +709,7 @@ const Meetings = () => {
                 state: { meetingId: meeting.id, meetingNumber: meeting.number },
               })
             }
-            className="group relative overflow-hidden bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer w-full max-w-full md:max-w-[700px] mx-auto"
+            className="group relative overflow-hidden bg-blue-50  rounded-xl   hover:shadow-lg transition-all duration-200 cursor-pointer w-full max-w-full md:max-w-[740px] mx-auto"
           >
             <div className="absolute top-0 left-3 md:left-6 px-2 md:px-4 py-0.5 md:py-1  bg-blue-950 text-white text-xs md:text-sm realfont rounded-lg shadow-sm transform transition-transform group-hover:translate-y-0.5">
               {meeting.date}
