@@ -178,6 +178,8 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
         schoolId,
         userId,
         headId: recordData[11] || "N/A",
+        nirnay_id: row.nirnay_id // Make sure this is included
+
       },
     });
   };

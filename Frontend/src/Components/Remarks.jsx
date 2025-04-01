@@ -2,7 +2,7 @@
 
 import { useLocation } from "react-router-dom"
 import { useState, useEffect, useCallback } from "react"
-import { Image, Plus } from "lucide-react"
+import { CheckCircle, Image, Plus } from "lucide-react"
 import axios from "axios"
 import Swal from "sweetalert2"
 
@@ -20,6 +20,7 @@ export default function Remarks() {
     schoolId,
     userId,
     headId,
+    nirnay_id,
   } = location.state || {}
 
   // State management
@@ -36,6 +37,11 @@ export default function Remarks() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
   const [editingRemark, setEditingRemark] = useState(null)
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
+  const [finalRemark, setFinalRemark] = useState("")
+  const [finalRemarkPhoto, setFinalRemarkPhoto] = useState(null)
+  const [isTharavCompleted, setIsTharavCompleted] = useState(false)
+  const [completedTharavData, setCompletedTharavData] = useState(null)
 
   // Memoized remark parser
   const parseRemarks = useCallback((data) => {
@@ -67,6 +73,40 @@ export default function Remarks() {
       }
     })
   }, [])
+
+
+
+
+  useEffect(() => {
+    const checkTharavCompletion = async () => {
+      try {
+        const response = await axios.get(`http://localhost:5000/api/tharav/status/${nirnay_id}`);
+        console.log("API Response:", response.data); // Add this line
+        setIsTharavCompleted(response.data.isCompleted);
+        if (response.data.isCompleted) {
+          console.log("Completed Tharav Data:", response.data.completedData);
+          setCompletedTharavData(response.data.completedData);
+        }
+      } catch (err) {
+        console.error("Error checking tharav completion:", err);
+      }
+    };
+    
+    if (nirnay_id) checkTharavCompletion();
+  }, [nirnay_id]);
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Fetch remarks with error handling
   const fetchRemarks = useCallback(async () => {
@@ -154,6 +194,10 @@ export default function Remarks() {
       return
     }
 
+
+   
+
+
     // Create FormData for the edit request
     const formData = new FormData()
     formData.append("remarkText", remarkText)
@@ -184,6 +228,71 @@ export default function Remarks() {
       setIsLoading(false)
     }
   }
+
+
+  const handleCompleteTharav = async (e) => {
+    e.preventDefault();
+  
+    if (!finalRemark) {
+      Swal.fire("Error!", "Final remark is required", "error");
+      return;
+    }
+  
+    try {
+      setIsLoading(true);
+  
+      const formData = new FormData();
+      formData.append("nirnay_id", nirnay_id);
+      formData.append("completed_remarks", finalRemark);
+      formData.append("schoolId", schoolId);
+      formData.append("userId", userId);
+      
+      if (finalRemarkPhoto) {
+        formData.append("complete_tharav_img", finalRemarkPhoto);
+      }
+  
+      const response = await axios.post(
+        "http://localhost:5000/api/tharav/complete", 
+        formData, 
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+  
+      if (response.data.success) {
+        // Refresh all data
+        const statusResponse = await axios.get(
+          `http://localhost:5000/api/tharav/status/${nirnay_id}`
+        );
+        setIsTharavCompleted(true);
+        setCompletedTharavData(statusResponse.data.completedData);
+        await fetchRemarks(); // Refresh remarks
+        
+        Swal.fire("Success!", "Tharav marked as completed", "success");
+      }
+    } catch (err) {
+      console.error("Failed to complete tharav:", err);
+      Swal.fire("Error!", err.response?.data?.message || "Failed to complete tharav", "error");
+    } finally {
+      setIsLoading(false);
+      setIsCompleteModalOpen(false);
+    }
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   // Delete remark handler
   const handleDeleteRemark = async (id) => {
@@ -269,6 +378,73 @@ export default function Remarks() {
               <label className="block text-sm font-semibold text-black-1000">Decision Taken</label>
               <p className="mt-1 text-lg text-gray-900">{decisionTaken || "N/A"}</p>
             </div>
+            <div className="flex justify-between items-start">
+            {!isTharavCompleted && (
+  <button
+    onClick={() => setIsCompleteModalOpen(true)}
+    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 transition-colors shadow-md"
+    disabled={isLoading}
+  >
+    <CheckCircle size={18} />
+    Complete Tharav
+  </button>
+)}
+          </div>
+
+
+          
+          
+          {isTharavCompleted && (
+  <div className="col-span-full mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+    <div className="flex items-center gap-2 text-green-700 font-semibold mb-3">
+      <CheckCircle size={20} className="text-green-600" />
+      <span className="text-lg">This Tharav is Completed</span>
+    </div>
+    
+    {/* Final Remark */}
+    <div className="mb-3">
+      <p className="text-sm font-medium text-gray-700">Final Remark:</p>
+      <p className="mt-1 text-sm text-gray-900 bg-white p-2 rounded">
+        {completedTharavData?.completed_remarks || 'No final remark provided'}
+      </p>
+    </div>
+
+    {/* Completion Date */}
+    {completedTharavData?.complete_date && (
+      <div className="mb-3">
+        <p className="text-sm font-medium text-gray-700">Completion Date:</p>
+        <p className="mt-1 text-sm text-gray-900">
+          {new Date(completedTharavData.complete_date).toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </p>
+      </div>
+    )}
+
+    {/* Completion Proof */}
+    {completedTharavData?.complete_tharav_img && (
+      <div>
+        <p className="text-sm font-medium text-gray-700">Completion Proof:</p>
+        <button
+          onClick={() => window.open(`http://localhost:5000/${completedTharavData.complete_tharav_img}`, '_blank')}
+          className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800"
+        >
+          <Image size={16} className="mr-1" />
+          <span>View Completion Photo</span>
+        </button>
+      </div>
+    )}
+  </div>
+)}
+
+
+
+
+
           </div>
 
           {/* Photo View Button */}
@@ -289,15 +465,22 @@ export default function Remarks() {
             <h2 className="text-2xl font-bold text-blue-950">Remarks</h2>
 
             {/* Add Remark Button */}
+            {!isTharavCompleted ? (
+<>
             <button
               onClick={() => setIsAddRemarkModalOpen(true)}
-              className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 flex items-center gap-2 transition-colors shadow-md"
+              className=" realfont2 bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-md"
               disabled={isLoading}
             >
               <Plus size={18} />
               {isLoading ? "Processing..." : "Add Remark"}
             </button>
+            </>
+             ) : (
+              <span className="text-gray-500 text-sm"> </span>
+              )}
           </div>
+          
 
           {isLoading && !remarks.length ? (
             <div className="text-center py-8">
@@ -355,6 +538,8 @@ export default function Remarks() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
+                        {!isTharavCompleted ? (
+                           <>
                           <button
                             onClick={() => handleEditRemark(remark)}
                             className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer"
@@ -369,6 +554,10 @@ export default function Remarks() {
                           >
                             Delete
                           </button>
+                          </>
+                           ) : (
+                            <span className="text-gray-500 text-sm">Actions disabled (Tharav completed)</span>
+                            )}
                         </div>
                       </td>
                     </tr>
@@ -379,15 +568,7 @@ export default function Remarks() {
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
               <div className="text-gray-500">{error ? "Error loading remarks" : "No remarks added yet"}</div>
-              {!error && (
-                <button
-                  onClick={() => setIsAddRemarkModalOpen(true)}
-                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 inline-flex items-center gap-2"
-                >
-                  <Plus size={18} />
-                  Add First Remark
-                </button>
-              )}
+              
             </div>
           )}
         </div>
@@ -421,6 +602,30 @@ export default function Remarks() {
         </div>
       )}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      
+
       {/* Remark Image Modal */}
       {isViewImageModalOpen && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
@@ -451,6 +656,66 @@ export default function Remarks() {
           </div>
         </div>
       )}
+
+
+{isCompleteModalOpen && (
+          <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
+            <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
+              <button
+                onClick={() => setIsCompleteModalOpen(false)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+                disabled={isLoading}
+              >
+                &times;
+              </button>
+              <h2 className="text-2xl font-bold text-blue-950 mb-6">Complete Tharav</h2>
+              <form onSubmit={handleCompleteTharav}>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Final Remark</label>
+                  <textarea
+                    value={finalRemark}
+                    onChange={(e) => setFinalRemark(e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    rows={3}
+                    required
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Completion Proof (optional)</label>
+                  <input
+                    type="file"
+                    onChange={(e) => setFinalRemarkPhoto(e.target.files?.[0] || null)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    accept="image/*"
+                  />
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsCompleteModalOpen(false)}
+                    className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Submitting..." : "Mark as Completed"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      
+    
+  
+
+
+
 
       {/* Add Remark Modal */}
       {isAddRemarkModalOpen && (
