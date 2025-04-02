@@ -1,18 +1,6 @@
-const tharavModel = require("../models/tharavModel");
-const path = require("path");
-const fs = require("fs");
+const connection = require('../Config/Connection'); // Add this line at the top
 
-// Get all Tharav records
-// const getTharav = async (req, res) => {
-//     try {
-//         const results = await tharavModel.getAllTharav();
-//         res.json(results);
-//     } catch (err) {
-//         console.error("Error fetching Tharavs:", err);
-//         res.status(500).json({ error: "Database error" });
-//     }
-// };
-
+// Get all Tharav records for a specific meeting and school
 const getTharav = async (req, res) => {
     try {
         const { meeting_number, school_id } = req.query;
@@ -21,14 +9,47 @@ const getTharav = async (req, res) => {
             return res.status(400).json({ error: "Meeting Number and School ID are required" });
         }
 
-        const results = await tharavModel.getTharav(meeting_number, school_id);
-        res.json(results);
+        const sql = `
+            SELECT * FROM tbl_new_smc_nirnay 
+            WHERE status = 'Active'
+            AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 1), '|', -1) = ?
+            AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?
+            ORDER BY nirnay_id DESC;
+        `;
+        const [rows] = await connection.query(sql, [meeting_number, school_id]);
+        res.json(rows);
     } catch (err) {
         console.error("Error fetching Tharavs:", err);
         res.status(500).json({ error: "Database error" });
     }
 };
 
+// Get Tharav counts by school
+const getTharavCountBySchool = async (req, res) => {
+    try {
+        const { school_id } = req.query;
+
+        if (!school_id) {
+            return res.status(400).json({ error: "School ID is required" });
+        }
+
+        const sql = `
+            SELECT 
+                SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 1), '|', -1) as meeting_number,
+                COUNT(*) as count
+            FROM tbl_new_smc_nirnay 
+            WHERE status = 'Active'
+            AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?
+            GROUP BY meeting_number
+        `;
+        
+        const [results] = await connection.query(sql, [school_id]);
+        res.json(results);
+    } catch (err) {
+        console.error("Error fetching Tharav counts:", err);
+        res.status(500).json({ error: "Database error" });
+    }
+};
 
 // Add a new Tharav record
 const addTharav = async (req, res) => {
@@ -54,12 +75,11 @@ const addTharav = async (req, res) => {
             }
         }
 
-        const result = await tharavModel.insertTharav(recordToSave);
+        const result = await connection.query("INSERT INTO tbl_new_smc_nirnay (nirnay_reord) VALUES (?)", [recordToSave]);
         res.json({
             nirnay_id: result.insertId,
             nirnay_reord: recordToSave,
         });
-
     } catch (err) {
         console.error("Error adding Tharav:", err);
         res.status(500).json({ error: "Server error" });
@@ -92,7 +112,7 @@ const updateTharav = async (req, res) => {
             }
         }
 
-        const result = await tharavModel.updateTharav(id, recordToSave);
+        const result = await connection.query("UPDATE tbl_new_smc_nirnay SET nirnay_reord = ? WHERE nirnay_id = ?", [recordToSave, id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Tharav not found" });
         }
@@ -104,12 +124,12 @@ const updateTharav = async (req, res) => {
     }
 };
 
-// Delete a Tharav record (soft delete)
+// Delete a Tharav record
 const deleteTharav = async (req, res) => {
     const { id } = req.params;
 
     try {
-        const result = await tharavModel.deleteTharav(id);
+        const result = await connection.query("UPDATE tbl_new_smc_nirnay SET status = 'Inactive' WHERE nirnay_id = ?", [id]);
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: "Tharav not found" });
         }
@@ -121,12 +141,10 @@ const deleteTharav = async (req, res) => {
     }
 };
 
-
-// Export controller functions
 module.exports = {
-    // getTharav,
+    getTharav,
     addTharav,
     updateTharav,
     deleteTharav,
-    getTharav,
+    getTharavCountBySchool
 };

@@ -1,6 +1,6 @@
 const connection = require("../Config/Connection");
 
-// Helper function to update demand record when remark is updated
+// Helper function to update demand record
 const updateDemandRecord = async (schoolId, userId, actualExpense, remarkId) => {
   const currentYear = new Date().getFullYear();
   const financialYear = `${currentYear}-${currentYear + 1}`;
@@ -13,14 +13,113 @@ const updateDemandRecord = async (schoolId, userId, actualExpense, remarkId) => 
   `, [demand_master_record, `%${remarkId}%`]);
 };
 
-// Create remark
+// Get remarks for specific tharav
+exports.getRemarksByNirnayId = async (req, res) => {
+  try {
+    const { nirnay_id } = req.query;
+
+    if (!nirnay_id) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Nirnay ID is required' 
+      });
+    }
+
+    // 1. Get the tharav record to extract exact tharavNo
+    const [tharav] = await connection.query(
+      `SELECT nirnay_reord FROM tbl_new_smc_nirnay WHERE nirnay_id = ?`,
+      [nirnay_id]
+    );
+
+    if (!tharav.length) {
+      return res.status(404).json({ 
+        success: false,
+        message: 'Tharav not found' 
+      });
+    }
+
+    // 2. Extract tharavNo (assuming format: "meetingNo|tharavNo|...")
+    const tharavNo = tharav[0].nirnay_reord.split('|')[1].trim();
+
+    // 3. Get remarks that exactly match this tharavNo
+    const [remarks] = await connection.query(
+      `SELECT * FROM tbl_new_smc_nirnay_remarks 
+       WHERE nirnay_remarks_record LIKE ? 
+       AND status = 'Active'`,
+      [`${tharavNo}|%`] // Exact match at start of string
+    );
+
+    // 4. Parse the results
+    const parsedRemarks = remarks.map(remark => {
+      const parts = remark.nirnay_remarks_record.split('|');
+      return {
+        ...remark,
+        parsedData: {
+          tharavNo: parts[0],
+          meetingNumber: parts[1],
+          schoolId: parts[2],
+          userId: parts[3],
+          remarkText: parts[4],
+          remarkPhoto: parts[5],
+          actualExpense: parts[6],
+          headId: parts[7],
+          createdAt: parts[8],
+          updatedAt: parts[9]
+        }
+      };
+    });
+
+    res.status(200).json({ 
+      success: true,
+      data: parsedRemarks 
+    });
+
+  } catch (error) {
+    console.error("Error fetching remarks:", error);
+    res.status(500).json({ 
+      success: false,
+      error: "Internal Server Error" 
+    });
+  }
+};
+
+// Create new remark
 exports.create = async (req, res) => {
   try {
-    const { tharavNo, remarkDate, remarkText, actualExpense, meetingNumber, schoolId, userId, headId } = req.body;
-    const remarkPhoto = req.file ? req.file.path : null;
+    const { nirnay_id, remarkText, actualExpense, schoolId, userId, headId } = req.body;
+    const remarkPhoto = req.file ? `/uploads/${req.file.filename}` : null;
 
-    const nirnay_remarks_record = `${tharavNo}|${meetingNumber}|${schoolId}|${userId}|${remarkText}|${remarkPhoto}|${actualExpense}|${headId}|${new Date().toISOString()}|${new Date().toISOString()}`;
-    
+    if (!nirnay_id) {
+      return res.status(400).json({ 
+        success: false,
+        message: "Nirnay ID is required" 
+      });
+    }
+
+    // 1. Get tharav to extract tharavNo
+    const [tharav] = await connection.query(
+      `SELECT nirnay_reord FROM tbl_new_smc_nirnay WHERE nirnay_id = ?`,
+      [nirnay_id]
+    );
+
+    const tharavNo = tharav[0].nirnay_reord.split('|')[1].trim();
+    const meetingNumber = tharav[0].nirnay_reord.split('|')[0].trim();
+
+    // 2. Create the remark record
+    const nirnay_remarks_record = [
+      tharavNo,
+      meetingNumber,
+      schoolId,
+      userId,
+      remarkText,
+      remarkPhoto,
+      actualExpense,
+      headId,
+      new Date().toISOString(),
+      new Date().toISOString()
+    ].join('|');
+
+    // 3. Create demand record
     const currentYear = new Date().getFullYear();
     const financialYear = `${currentYear}-${currentYear + 1}`;
     const demand_master_record = `${schoolId}|${financialYear}|${actualExpense}|Debit|${userId}`;
@@ -29,17 +128,19 @@ exports.create = async (req, res) => {
     await conn.beginTransaction();
 
     try {
+      // 4. Insert remark
       const [remarkResult] = await conn.query(`
         INSERT INTO tbl_new_smc_nirnay_remarks 
         (nirnay_remarks_record, previous_date, disable_edit_delete, status, sync_date_time) 
         VALUES (?, ?, ?, "Active", ?)
       `, [
         nirnay_remarks_record,
-        remarkDate || new Date(),
+        new Date(),
         0,
         new Date()
       ]);
 
+      // 5. Insert demand record
       await conn.query(`
         INSERT INTO tbl_demand_master 
         (demand_master_record, demand_status, demanded, status, ins_date_time, update_date_time_record) 
@@ -63,7 +164,7 @@ exports.create = async (req, res) => {
       conn.release();
     }
   } catch (error) {
-    console.error("Error in create function:", error);
+    console.error("Error creating remark:", error);
     res.status(500).json({ 
       success: false,
       message: "Internal Server Error",
@@ -71,59 +172,6 @@ exports.create = async (req, res) => {
     });
   }
 };
-
-// Get remarks by tharavNo
-exports.getRemarksByTharavNo = async (req, res) => {
-  try {
-    const { tharavNo } = req.query;
-
-    const [rows] = await connection.query(
-      "SELECT * FROM tbl_new_smc_nirnay_remarks WHERE nirnay_remarks_record LIKE ? AND status='Active'",
-      [`%${tharavNo}%`]
-    );
-
-    const parsedRemarks = rows.map(remark => {
-      const parts = remark.nirnay_remarks_record.split("|");
-      return {
-        ...remark,
-        parsedData: {
-          tharavNo: parts[0]?.trim(),
-          meetingNumber: parts[1]?.trim(),
-          schoolId: parts[2]?.trim(),
-          userId: parts[3]?.trim(),
-          remarkText: parts[4]?.trim(),
-          remarkPhoto: parts[5]?.trim(),
-          actualExpense: parts[6]?.trim(),
-          headId: parts[7]?.trim(),
-          createdAt: parts[8]?.trim(),
-          updatedAt: parts[9]?.trim()
-        }
-      };
-    });
-
-    // Create a mapping of headId to actualExpense
-    const headExpenseMap = {};
-    parsedRemarks.forEach(remark => {
-      const { headId, actualExpense } = remark.parsedData;
-      if (headId && actualExpense) {
-        headExpenseMap[headId] = actualExpense;
-      }
-    });
-
-    res.status(200).json({ 
-      success: true,
-      data: parsedRemarks,
-      headExpenseMap: headExpenseMap
-    });
-  } catch (error) {
-    console.error("Error fetching remarks:", error);
-    res.status(500).json({ 
-      success: false,
-      error: "Internal Server Error" 
-    });
-  }
-};
-
 // Update remark
 exports.updateRemark = async (req, res) => {
   try {

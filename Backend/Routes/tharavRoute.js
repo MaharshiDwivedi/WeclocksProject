@@ -40,5 +40,5 @@ router.get("/filter", tharavController.getTharav);
 router.post("/", upload.single("photo"), tharavController.addTharav);
 router.put("/:id", upload.single("photo"), tharavController.updateTharav);
 router.delete("/:id", tharavController.deleteTharav);
-
+router.get("/count", tharavController.getTharavCountBySchool);
 module.exports = router;

@@ -12,13 +12,13 @@ const getTharav = async (meetingNumber, schoolId) => {
         SELECT * FROM tbl_new_smc_nirnay 
         WHERE status = 'Active'
         AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 1), '|', -1) = ?
-        AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?;
+        AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?
+        ORDER BY nirnay_id DESC;
     `;
 
     const [rows] = await connection.query(sql, [meetingNumber, schoolId]); 
     return rows;
 };
-
 
 // Get a single tharav by ID
 const getTharavById = async (id) => {

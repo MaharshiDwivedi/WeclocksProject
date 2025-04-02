@@ -75,6 +75,7 @@ async function getMeetingsBySchoolId(schoolId) {
 }
 
 
+
 // Get the next meeting number for a specific school
 async function getNextMeetingNumberForSchool(schoolId) {
   try {

@@ -20,63 +20,78 @@ Font.register({
 
 axios.defaults.baseURL = "http://localhost:5000";
 
-// Function to generate AO's report that shows all schools
-export const generateAOFinancialReportPDF = async (financialYear, availableSchools) => {
+export const generateAOFinancialReportPDF = async (financialYear) => {
   try {
-    if (!financialYear) throw new Error("Financial year not provided");
-    if (!availableSchools || !Array.isArray(availableSchools) || availableSchools.length === 0) {
-      throw new Error("No schools data available");
+    if (!financialYear) {
+      throw new Error("Financial year not provided");
     }
 
-    // Get all school details and their expense data
-    const schoolsData = await fetchAllSchoolsData(financialYear, availableSchools);
+    const fundReportsResponse = await axios.post(`/api/fundreports`, {
+      year: financialYear,
+    });
+
+    if (!fundReportsResponse?.data?.data?.length) {
+      throw new Error(`No fund reports available for ${financialYear}`);
+    }
+
+    const schoolsData = await fetchAllSchoolsData(
+      financialYear,
+      fundReportsResponse.data.data
+    );
+
+    const totalExpense = schoolsData.reduce((sum, school) => {
+      const schoolTotal = school.expenses.reduce(
+        (acc, exp) => acc + (exp.actual_cost || 0),
+        0
+      );
+      return sum + schoolTotal;
+    }, 0);
 
     const styles = StyleSheet.create({
       page: {
-        padding: 30,
+        padding: 35,
+        fontFamily: "NotoSansDevanagari",
         fontSize: 10,
-        fontFamily: "Helvetica",
       },
       header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 20,
-        paddingBottom: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: "#000",
+        marginBottom: 25,
+        paddingBottom: 12,
+        borderBottomWidth: 1.5,
+        borderBottomColor: "#333",
       },
       logo: {
-        width: 80,
-        height: 80,
-        marginRight: 15,
-      },
-      headerContent: {
-        flex: 1,
-        alignItems: "center",
+        width: 85,
+        height: 85,
+        marginRight: 20,
       },
       headerText: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: "bold",
-        fontFamily: "Helvetica",
+        fontFamily: "NotoSansDevanagari",
         textAlign: "center",
-        marginBottom: 5,
+        marginBottom: 6,
+        color: "#1a1a1a",
       },
       yearText: {
-        fontSize: 16,
-        fontWeight: "bold",
-        fontFamily: "Helvetica",
+        fontSize: 18,
+        fontFamily: "NotoSansDevanagari",
         textAlign: "center",
-        marginBottom: 5,
+        marginBottom: 6,
+        color: "#333",
       },
       subTitle: {
         fontSize: 14,
         fontFamily: "NotoSansDevanagari",
         textAlign: "center",
-        marginBottom: 15,
-        marginTop: 10,
+        marginBottom: 20,
+        marginTop: 12,
+        color: "#444",
       },
       table: {
+        display: "table",
         width: "100%",
         borderStyle: "solid",
         borderWidth: 1,
@@ -87,6 +102,7 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
         flexDirection: "row",
         borderBottomWidth: 1,
         borderBottomColor: "#000",
+        width: "100%",
       },
       tableHeader: {
         backgroundColor: "#f0f0f0",
@@ -94,24 +110,23 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
       },
       schoolCell: {
         padding: 5,
+        fontFamily: "NotoSansDevanagari",
         borderRightWidth: 1,
         borderRightColor: "#000",
-        fontFamily: "NotoSansDevanagari",
         fontSize: 10,
         width: "20%",
         textAlign: "left",
+        lineHeight: 1.2,
+        fontSize:22
       },
       expenseCell: {
         padding: 5,
         borderRightWidth: 1,
         borderRightColor: "#000",
         textAlign: "center",
-        fontFamily: "Helvetica",
+        fontFamily: "NotoSansDevanagari",
         fontSize: 10,
-        width: "8%",
-      },
-      lastCell: {
-        borderRightWidth: 0,
+        width: "8.88%",
       },
       headerCell: {
         padding: 5,
@@ -119,18 +134,37 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
         borderRightColor: "#000",
         textAlign: "center",
         fontFamily: "NotoSansDevanagari",
-        fontSize: 9,
-        width: "8%",
+        fontSize: 8,
+        width: "8.88%",
         minHeight: 40,
       },
-      headerSchoolCell: {
-        padding: 5,
-        borderRightWidth: 1,
-        borderRightColor: "#000",
-        textAlign: "center",
+      totalRow: {
+        backgroundColor: "#f9f9f9",
+        flexDirection: "row",
+        padding: 8,
+        width: "100%",
+        marginTop: 10,
+      },
+      totalLabel: {
+        fontWeight: "bold",
+        textAlign: "right",
         fontFamily: "NotoSansDevanagari",
-        fontSize: 10,
-        width: "20%",
+        fontSize: 12,
+        flex: 1,
+        color: "#222",
+      },
+      totalAmount: {
+        fontFamily: "NotoSansDevanagari",
+        fontSize: 12,
+        textAlign: "left",
+        color: "#222",
+      },
+      rupeeSymbol: {
+        fontFamily: "NotoSansDevanagari",
+        fontSize: 14,
+        textAlign: "left",
+        marginRight: 5,
+        color: "#222",
       },
       pageNumber: {
         position: "absolute",
@@ -139,25 +173,26 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
         right: 0,
         textAlign: "center",
         fontSize: 8,
+        fontFamily: "NotoSansDevanagari",
         color: "#666",
       },
       noDataText: {
         textAlign: "center",
-        marginTop: 20,
+        marginTop: 25,
         fontSize: 12,
+        fontFamily: "NotoSansDevanagari",
         color: "#666",
       },
     });
 
-    // Define expense categories
     const categories = [
       { id: 1, name: "शैक्षणिक\nबाबी" },
-      { id: 2, name: "पाणी स्वच्छता इ.\nबाबी" },
+      { id: 2, name: "पाणी स्वच्छता\nबाबी" },
       { id: 3, name: "सुरक्षिता" },
-      { id: 4, name: "किचन अन्न व\nपोषण" },
+      { id: 4, name: "किचन अन्न\nव पोषण" },
       { id: 5, name: "आरोग्य\nतपासण्या" },
-      { id: 6, name: "आजारपण व\nअपघात" },
-      { id: 7, name: "क्रीडा व\nकला" },
+      { id: 6, name: "आजारपण\nव अपघात" },
+      { id: 7, name: "क्रीडा\nव कला" },
       { id: 8, name: "शाळेचे\nशुशोभीकरण" },
       { id: 9, name: "अन्य\nखर्च" },
     ];
@@ -167,45 +202,66 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
         <Page size="A4" orientation="landscape" style={styles.page}>
           <View style={styles.header}>
             <Image style={styles.logo} src={logo} />
-            <View style={styles.headerContent}>
+            <View>
               <Text style={styles.headerText}>ITDP - Nandurbar</Text>
               <Text style={styles.yearText}>{financialYear}</Text>
-              <Text style={styles.subTitle}>वर्षभरात खालील बाबींवर झालेला खर्च</Text>
+              <Text style={styles.subTitle}>
+                वर्षभरात खालील बाबींवर झालेला खर्च
+              </Text>
             </View>
           </View>
 
           {schoolsData.length > 0 ? (
-            <View style={styles.table}>
-              <View style={[styles.tableRow, styles.tableHeader]}>
-                <Text style={styles.headerSchoolCell}>
-                  शाळा
-                </Text>
-                {categories.map((category) => (
-                  <Text key={category.id} style={styles.headerCell}>
-                    {category.name}
+            <>
+              <View style={styles.table}>
+                <View style={[styles.tableRow, styles.tableHeader]}>
+                  <Text style={[styles.schoolCell, { textAlign: "center" }]}>
+                    शाळा
                   </Text>
+                  {categories.map((category) => (
+                    <Text key={category.id} style={styles.headerCell}>
+                      {category.name}
+                    </Text>
+                  ))}
+                </View>
+                {schoolsData.map((school, index) => (
+                  <View key={school.school_id} style={styles.tableRow}>
+                    <Text style={styles.schoolCell}>
+                      {index + 1}){" "}
+                      {school.school_name
+                        ? school.school_name.trim()
+                        : "नाव उपलब्ध नाही"}
+                    </Text>
+                    {categories.map((category) => {
+                      const expense = school.expenses.find(
+                        (e) => e.head_id === category.id
+                      );
+                      return (
+                        <Text key={category.id} style={styles.expenseCell}>
+                          {(expense?.actual_cost || 0).toLocaleString("en-IN", {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </Text>
+                      );
+                    })}
+                  </View>
                 ))}
               </View>
 
-              {schoolsData.map((school, index) => (
-                <View key={school.school_id} style={styles.tableRow}>
-                  <Text style={styles.schoolCell}>
-                    {index + 1}) {school.school_name || "N/A"}
-                  </Text>
-                  
-                  {categories.map((category) => {
-                    const expenseItem = school.expenses.find(exp => exp.head_id === category.id);
-                    const amount = expenseItem ? expenseItem.actual_cost : 0;
-                    
-                    return (
-                      <Text key={category.id} style={styles.expenseCell}>
-                        {amount > 0 ? amount.toLocaleString("en-IN") : "0"}
-                      </Text>
-                    );
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>
+                  एकूण खर्च (Total Expense):
+                </Text>
+                <Text style={styles.rupeeSymbol}>₹</Text>
+                <Text style={styles.totalAmount}>
+                  {totalExpense.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
                   })}
-                </View>
-              ))}
-            </View>
+                </Text>
+              </View>
+            </>
           ) : (
             <Text style={styles.noDataText}>
               No financial data available for {financialYear}
@@ -215,7 +271,7 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
           <Text
             style={styles.pageNumber}
             render={({ pageNumber, totalPages }) =>
-              `${pageNumber} / ${totalPages}`
+              `पृष्ठ ${pageNumber} / ${totalPages}`
             }
             fixed
           />
@@ -225,45 +281,65 @@ export const generateAOFinancialReportPDF = async (financialYear, availableSchoo
 
     return await pdf(MyDocument).toBlob();
   } catch (error) {
-    console.error(
-      "AO PDF Generation Error:",
-      error.response?.data || error.message
-    );
     throw error;
   }
 };
 
-// Function to fetch all schools' data and expenses
-async function fetchAllSchoolsData(financialYear, availableSchools) {
+// fetchAllSchoolsData function remains unchanged
+async function fetchAllSchoolsData(financialYear, fundReports) {
   try {
-    // Extract school IDs from available schools
-    const schoolIds = availableSchools.map(record => {
-      const parts = record.fund_report_record.split('|');
-      return parts[1]; // Extract the school ID part
+    const reports = Array.isArray(fundReports) ? fundReports : [fundReports];
+
+    const schoolIds = reports
+      .map((report) => {
+        const parts = report.fund_report_record?.split("|") || [];
+        const isValid = parts.length === 2 && parts[0] === financialYear;
+        return isValid ? parts[1] : null;
+      })
+      .filter(Boolean);
+
+    if (!schoolIds.length) {
+      throw new Error("No valid school records found in fund reports");
+    }
+
+    const schoolsResponse = await axios.get("/api/all-schools", {
+      headers: {
+        Accept: "application/json; charset=utf-8",
+      },
     });
+    const allSchools = schoolsResponse.data?.data || [];
 
-    // Fetch all school details
-    const schoolsResponse = await axios.get("/api/all-schools");
-    let schools = schoolsResponse.data || [];
-    
-    // Filter schools based on available report records
-    schools = schools.filter(school => schoolIds.includes(String(school.school_id)));
+    const filteredSchools = allSchools.filter((school) =>
+      schoolIds.includes(String(school.school_id))
+    );
 
-    // Fetch expense data for each school
+    if (!filteredSchools.length) {
+      throw new Error(
+        "No active schools found matching fund report school IDs"
+      );
+    }
+
     const schoolsWithExpenses = await Promise.all(
-      schools.map(async (school) => {
+      filteredSchools.map(async (school) => {
         try {
-          const expensesResponse = await axios.post("/api/yearlyExpenseData", {
-            financialYear,
-            school_id: school.school_id,
-          });
-          
+          const response = await axios.post(
+            "/api/yearlyExpenseData",
+            {
+              financialYear,
+              school_id: String(school.school_id),
+            },
+            {
+              headers: {
+                Accept: "application/json; charset=utf-8",
+              },
+            }
+          );
+          const expenses = response.data?.data || [];
           return {
             ...school,
-            expenses: expensesResponse.data.data || [],
+            expenses,
           };
         } catch (error) {
-          console.error(`Error fetching expenses for school ${school.school_id}:`, error);
           return { ...school, expenses: [] };
         }
       })
@@ -271,7 +347,6 @@ async function fetchAllSchoolsData(financialYear, availableSchools) {
 
     return schoolsWithExpenses;
   } catch (error) {
-    console.error("Error fetching schools data:", error);
     throw error;
   }
 }

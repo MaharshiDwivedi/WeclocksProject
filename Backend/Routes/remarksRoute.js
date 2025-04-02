@@ -14,11 +14,19 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+// Get remarks - now uses nirnay_id instead of tharavNo
+router.get("/", (req, res, next) => {
+  if (!req.query.nirnay_id) {
+    return res.status(400).json({ 
+      success: false,
+      message: "Nirnay ID is required" 
+    });
+  }
+  next();
+}, remarksController.getRemarksByNirnayId);
+
 // Create remark
 router.post("/", upload.single("remarkPhoto"), remarksController.create);
-
-// Get remarks by tharavNo
-router.get("/", remarksController.getRemarksByTharavNo);
 
 // Update remark
 router.put("/:id", upload.single("remarkPhoto"), remarksController.updateRemark);

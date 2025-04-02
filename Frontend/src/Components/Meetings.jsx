@@ -141,31 +141,45 @@ const Meetings = () => {
 
   const fetchMeetings = async () => {
     try {
-      const SchoolId = localStorage.getItem("school_id")
+      const SchoolId = localStorage.getItem("school_id");
       if (!SchoolId) {
-        console.error("School ID not found in local storage")
-        return
+        console.error("School ID not found in local storage");
+        return;
       }
-
-      const response = await axios.get(`http://localhost:5000/api/meeting?school_id=${SchoolId}`)
-
-      const meetingsData = response.data.map((meeting) => ({
-        id: meeting.meeting_id,
-        date: meeting.meeting_date,
-        number: meeting.meeting_number,
-        members: meeting.member_id ? meeting.member_id.split(",") : [],
-        latitude: meeting.latitude,
-        longitude: meeting.longitude,
-        address: meeting.address,
-        image_url: meeting.image_url,
-        member_id: meeting.member_id,
-      }))
-
-      setMeetings(meetingsData)
+  
+      const [meetingsResponse, countsResponse] = await Promise.all([
+        axios.get(`http://localhost:5000/api/meeting?school_id=${SchoolId}`),
+        axios.get(`http://localhost:5000/api/tharav/count?school_id=${SchoolId}`)
+      ]);
+  
+      // Create a map of meeting numbers to counts
+      const countMap = countsResponse.data.reduce((acc, item) => {
+        acc[item.meeting_number] = item.count;
+        return acc;
+      }, {});
+  
+      const meetingsData = meetingsResponse.data.map((meeting) => {
+        return {
+          id: meeting.meeting_id,
+          date: meeting.meeting_date,
+          number: meeting.meeting_number,
+          members: meeting.member_id ? meeting.member_id.split(",") : [],
+          latitude: meeting.latitude,
+          longitude: meeting.longitude,
+          address: meeting.address,
+          image_url: meeting.image_url,
+          member_id: meeting.member_id,
+          tharavCount: countMap[meeting.meeting_number] || 0
+        };
+      });
+  
+      setMeetings(meetingsData);
     } catch (error) {
-      console.error("Error fetching meetings:", error)
+      console.error("Error fetching meetings:", error);
     }
-  }
+  };
+
+
 
   const handleEditMeeting = (meeting, event) => {
     event.stopPropagation()
@@ -730,7 +744,7 @@ const Meetings = () => {
 
                   <div className="text-center">
                     <div className="text-xs md:text-sm font-medium text-gray-500 mb-1">{t("totalTharav")}</div>
-                    <div className="text-xl md:text-2xl font-bold text-blue-950">-</div>
+                    <div className="text-xl md:text-2xl font-bold text-blue-950">{meeting.tharavCount}</div>
                   </div>
                 </div>
 

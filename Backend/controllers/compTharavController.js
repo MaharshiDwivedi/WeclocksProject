@@ -1,39 +1,35 @@
 const db = require("../Config/Connection");
 
 module.exports = {
-  checkTharavStatus: async (req, res) => {
-    try {
-      const { nirnay_id } = req.params;
+ // In compTharavController.js - modify the checkTharavStatus function
+// In compTharavController.js - update checkTharavStatus
+checkTharavStatus: async (req, res) => {
+  try {
+    const { nirnay_id } = req.params;
 
-      const [tharav] = await db.query(
-        `SELECT completed_remarks, complete_tharav_img, complete_date, work_status 
-         FROM tbl_new_smc_nirnay 
-         WHERE nirnay_id = ?`, 
-        [nirnay_id]
-      );
+    const [tharav] = await db.query(
+      `SELECT completed_remarks, complete_tharav_img, complete_date, 
+       work_status, status FROM tbl_new_smc_nirnay WHERE nirnay_id = ?`, 
+      [nirnay_id]
+    );
 
-      if (!tharav) {
-        return res.status(404).json({ message: 'Tharav not found' });
-      }
-
-      const isCompleted = tharav.work_status === 'Completed' && 
-                         tharav.completed_remarks !== null &&
-                         tharav.completed_remarks !== '';
-
-      res.json({
-        isCompleted,
-        completedData: {
-          completed_remarks: tharav.completed_remarks,
-          complete_tharav_img: tharav.complete_tharav_img,
-          complete_date: tharav.complete_date
-        }
-      });
-    } catch (error) {
-      console.error('Error checking tharav status:', error);
-      res.status(500).json({ message: 'Server error' });
+    if (!tharav) {
+      return res.status(404).json({ message: 'Tharav not found' });
     }
-  },
 
+    // Modified completion check
+    const isCompleted = tharav.work_status === 'Completed' || 
+                       (tharav.completed_remarks && tharav.complete_date);
+
+    res.json({
+      isCompleted,
+      completedData: tharav // Return the entire tharav object
+    });
+  } catch (error) {
+    console.error('Error checking tharav status:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+},
   completeTharav: async (req, res) => {
     try {
       const { nirnay_id, completed_remarks, schoolId, userId } = req.body;

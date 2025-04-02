@@ -74,47 +74,48 @@ export default function Remarks() {
     })
   }, [])
 
+  // Check tharav completion status
+  const checkTharavCompletion = useCallback(async (tharavId) => {
+    if (!tharavId) {
+      console.error("No tharav ID available")
+      return
+    }
 
-
-
-  useEffect(() => {
-    const checkTharavCompletion = async () => {
-      try {
-        const response = await axios.get(`http://localhost:5000/api/tharav/status/${nirnay_id}`);
-        console.log("API Response:", response.data); // Add this line
-        setIsTharavCompleted(response.data.isCompleted);
-        if (response.data.isCompleted) {
-          console.log("Completed Tharav Data:", response.data.completedData);
-          setCompletedTharavData(response.data.completedData);
-        }
-      } catch (err) {
-        console.error("Error checking tharav completion:", err);
+    try {
+      const response = await axios.get(`http://localhost:5000/api/tharav/status/${tharavId}`)
+      
+      if (response.data && typeof response.data.isCompleted !== 'undefined') {
+        setIsTharavCompleted(response.data.isCompleted)
+        setCompletedTharavData(response.data.completedData || null)
+      } else {
+        console.error("Invalid response format:", response.data)
+        setIsTharavCompleted(false)
+        setCompletedTharavData(null)
       }
-    };
-    
-    if (nirnay_id) checkTharavCompletion();
-  }, [nirnay_id]);
-
-
-
-
-
-
-
-
-
-
-
-
-
+    } catch (err) {
+      console.error("Error checking tharav completion:", err)
+      setIsTharavCompleted(false)
+      setCompletedTharavData(null)
+    }
+  }, [])
 
   // Fetch remarks with error handling
-  const fetchRemarks = useCallback(async () => {
+  const fetchRemarks = useCallback(async (tharavId) => {
     try {
       setIsLoading(true)
       setError(null)
-
-      const response = await axios.get(`http://localhost:5000/api/remarks?tharavNo=${tharavNo}`)
+      
+      if (!tharavId) {
+        console.error("No tharav ID available for fetching remarks")
+        setIsLoading(false)
+        return
+      }
+      
+      const response = await axios.get(`http://localhost:5000/api/remarks`, {
+        params: {
+          nirnay_id: tharavId
+        }
+      })
 
       setRemarks(parseRemarks(response.data))
     } catch (err) {
@@ -124,49 +125,59 @@ export default function Remarks() {
     } finally {
       setIsLoading(false)
     }
-  }, [tharavNo, parseRemarks])
+  }, [parseRemarks])
 
-  // Initial fetch and refetch when tharavNo changes
+  // Initial data loading
   useEffect(() => {
-    if (tharavNo) fetchRemarks()
-  }, [tharavNo, fetchRemarks])
+    // If we have nirnay_id from location state, store it in localStorage
+    if (nirnay_id) {
+      localStorage.setItem('currentTharavId', nirnay_id)
+    }
+    
+    // Use either the nirnay_id from location state or from localStorage
+    const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId')
+    
+    if (tharavIdToUse) {
+      checkTharavCompletion(tharavIdToUse)
+      fetchRemarks(tharavIdToUse)
+    }
+  }, [nirnay_id, checkTharavCompletion, fetchRemarks])
 
   // Submit new remark
   const handleAddRemark = async (e) => {
     e.preventDefault()
-
+  
     if (!remarkText || !actualExpense) {
       Swal.fire("Error!", "Remark text and actual expense are required", "error")
       return
     }
-
+  
     try {
       setIsLoading(true)
-
-      // Create FormData and append fields
+  
       const formData = new FormData()
       formData.append("remarkText", remarkText)
       formData.append("actualExpense", actualExpense)
       formData.append("remarkDate", remarkDate || new Date().toISOString())
-      formData.append("tharavNo", tharavNo)
+      formData.append("nirnay_id", nirnay_id)
       formData.append("schoolId", schoolId)
       formData.append("userId", userId)
       formData.append("headId", headId)
       if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto)
-
+  
       await axios.post("http://localhost:5000/api/remarks", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       })
-
-      await fetchRemarks()
+  
+      await fetchRemarks(nirnay_id || localStorage.getItem('currentTharavId'))
       setRemarkDate("")
       setRemarkText("")
       setActualExpense("")
       setRemarkPhoto(null)
       setIsAddRemarkModalOpen(false)
-
+  
       Swal.fire("Success!", "Remark added successfully", "success")
     } catch (err) {
       console.error("Failed to add remark:", err)
@@ -194,10 +205,6 @@ export default function Remarks() {
       return
     }
 
-
-   
-
-
     // Create FormData for the edit request
     const formData = new FormData()
     formData.append("remarkText", remarkText)
@@ -215,7 +222,7 @@ export default function Remarks() {
         },
       })
 
-      await fetchRemarks()
+      await fetchRemarks(nirnay_id || localStorage.getItem('currentTharavId'))
       setIsEditModalOpen(false)
       setEditingRemark(null)
       setRemarkPhoto(null)
@@ -229,26 +236,33 @@ export default function Remarks() {
     }
   }
 
-
   const handleCompleteTharav = async (e) => {
-    e.preventDefault();
-  
+    e.preventDefault()
+    
+    // Use either the nirnay_id from location state or from localStorage
+    const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId')
+    
+    if (!tharavIdToUse) {
+      Swal.fire("Error!", "Tharav ID not found", "error")
+      return
+    }
+    
     if (!finalRemark) {
-      Swal.fire("Error!", "Final remark is required", "error");
-      return;
+      Swal.fire("Error!", "Final remark is required", "error")
+      return
     }
   
     try {
-      setIsLoading(true);
+      setIsLoading(true)
   
-      const formData = new FormData();
-      formData.append("nirnay_id", nirnay_id);
-      formData.append("completed_remarks", finalRemark);
-      formData.append("schoolId", schoolId);
-      formData.append("userId", userId);
+      const formData = new FormData()
+      formData.append("nirnay_id", tharavIdToUse)
+      formData.append("completed_remarks", finalRemark)
+      formData.append("schoolId", schoolId || localStorage.getItem('schoolId'))
+      formData.append("userId", userId || localStorage.getItem('userId'))
       
       if (finalRemarkPhoto) {
-        formData.append("complete_tharav_img", finalRemarkPhoto);
+        formData.append("complete_tharav_img", finalRemarkPhoto)
       }
   
       const response = await axios.post(
@@ -259,40 +273,26 @@ export default function Remarks() {
             "Content-Type": "multipart/form-data",
           },
         }
-      );
+      )
   
       if (response.data.success) {
-        // Refresh all data
-        const statusResponse = await axios.get(
-          `http://localhost:5000/api/tharav/status/${nirnay_id}`
-        );
-        setIsTharavCompleted(true);
-        setCompletedTharavData(statusResponse.data.completedData);
-        await fetchRemarks(); // Refresh remarks
+        // Save the updated completion status
+        localStorage.setItem('tharavCompleted', 'true')
         
-        Swal.fire("Success!", "Tharav marked as completed", "success");
+        // Update state
+        setIsTharavCompleted(true)
+        setCompletedTharavData(response.data.completedData)
+        
+        Swal.fire("Success!", "Tharav marked as completed", "success")
+        setIsCompleteModalOpen(false)
       }
     } catch (err) {
-      console.error("Failed to complete tharav:", err);
-      Swal.fire("Error!", err.response?.data?.message || "Failed to complete tharav", "error");
+      console.error("Failed to complete tharav:", err)
+      Swal.fire("Error!", err.response?.data?.message || "Failed to complete tharav", "error")
     } finally {
-      setIsLoading(false);
-      setIsCompleteModalOpen(false);
+      setIsLoading(false)
     }
-  };
-
-
-
-
-
-
-
-
-
-
-
-
-
+  }
 
   // Delete remark handler
   const handleDeleteRemark = async (id) => {
@@ -310,7 +310,7 @@ export default function Remarks() {
       try {
         setIsLoading(true)
         await axios.delete(`http://localhost:5000/api/remarks/${id}`)
-        await fetchRemarks()
+        await fetchRemarks(nirnay_id || localStorage.getItem('currentTharavId'))
 
         Swal.fire("Deleted!", "Your remark has been deleted.", "success")
       } catch (err) {
@@ -349,7 +349,6 @@ export default function Remarks() {
       minimumFractionDigits: 0,
     }).format(num)
   }
-
   return (
     <div className="container mx-auto px-4 py-8 realfont">
       <div className="bg-white shadow-lg rounded-xl p-8 max-w-6xl mx-auto">
