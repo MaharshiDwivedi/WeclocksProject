@@ -42,6 +42,7 @@ export default function Remarks() {
   const [finalRemarkPhoto, setFinalRemarkPhoto] = useState(null)
   const [isTharavCompleted, setIsTharavCompleted] = useState(false)
   const [completedTharavData, setCompletedTharavData] = useState(null)
+  const [showImageModal, setShowImageModal] = useState(false);
 
   // Memoized remark parser
   const parseRemarks = useCallback((data) => {
@@ -77,28 +78,39 @@ export default function Remarks() {
   // Check tharav completion status
   const checkTharavCompletion = useCallback(async (tharavId) => {
     if (!tharavId) {
-      console.error("No tharav ID available")
-      return
+      console.error("No tharav ID available");
+      return;
     }
-
+  
     try {
-      const response = await axios.get(`http://localhost:5000/api/tharav/status/${tharavId}`)
+      const response = await axios.get(`http://localhost:5000/api/tharav/status/${tharavId}`);
       
-      if (response.data && typeof response.data.isCompleted !== 'undefined') {
-        setIsTharavCompleted(response.data.isCompleted)
-        setCompletedTharavData(response.data.completedData || null)
+      if (response.data) {
+        // Handle both array and object formats
+        let completedData = response.data.completedData;
+        if (Array.isArray(completedData)) {
+          completedData = completedData[0] || null;
+        }
+  
+        const isCompleted = response.data.isCompleted || 
+                           (completedData && completedData.work_status === 'Completed');
+  
+        setIsTharavCompleted(isCompleted);
+        setCompletedTharavData(completedData || null);
+        
+        // Update localStorage
+        localStorage.setItem(`tharavCompleted_${tharavId}`, isCompleted ? 'true' : 'false');
       } else {
-        console.error("Invalid response format:", response.data)
-        setIsTharavCompleted(false)
-        setCompletedTharavData(null)
+        console.error("Invalid response format:", response.data);
+        setIsTharavCompleted(false);
+        setCompletedTharavData(null);
       }
     } catch (err) {
-      console.error("Error checking tharav completion:", err)
-      setIsTharavCompleted(false)
-      setCompletedTharavData(null)
+      console.error("Error checking tharav completion:", err);
+      setIsTharavCompleted(false);
+      setCompletedTharavData(null);
     }
-  }, [])
-
+  }, []);
   // Fetch remarks with error handling
   const fetchRemarks = useCallback(async (tharavId) => {
     try {
@@ -131,17 +143,25 @@ export default function Remarks() {
   useEffect(() => {
     // If we have nirnay_id from location state, store it in localStorage
     if (nirnay_id) {
-      localStorage.setItem('currentTharavId', nirnay_id)
+      localStorage.setItem('currentTharavId', nirnay_id);
+      localStorage.setItem(`tharavCompleted_${nirnay_id}`, isTharavCompleted ? 'true' : 'false');
     }
     
     // Use either the nirnay_id from location state or from localStorage
-    const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId')
+    const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId');
     
     if (tharavIdToUse) {
-      checkTharavCompletion(tharavIdToUse)
-      fetchRemarks(tharavIdToUse)
+      // Check localStorage first for immediate UI feedback
+      const storedStatus = localStorage.getItem(`tharavCompleted_${tharavIdToUse}`);
+      if (storedStatus === 'true') {
+        setIsTharavCompleted(true);
+      }
+      
+      // Then verify with server
+      checkTharavCompletion(tharavIdToUse);
+      fetchRemarks(tharavIdToUse);
     }
-  }, [nirnay_id, checkTharavCompletion, fetchRemarks])
+  }, [nirnay_id, checkTharavCompletion, fetchRemarks]);
 
   // Submit new remark
   const handleAddRemark = async (e) => {
@@ -239,7 +259,6 @@ export default function Remarks() {
   const handleCompleteTharav = async (e) => {
     e.preventDefault()
     
-    // Use either the nirnay_id from location state or from localStorage
     const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId')
     
     if (!tharavIdToUse) {
@@ -276,8 +295,8 @@ export default function Remarks() {
       )
   
       if (response.data.success) {
-        // Save the updated completion status
-        localStorage.setItem('tharavCompleted', 'true')
+        // Save to localStorage
+        localStorage.setItem(`tharavCompleted_${tharavIdToUse}`, 'true')
         
         // Update state
         setIsTharavCompleted(true)
@@ -378,6 +397,8 @@ export default function Remarks() {
               <p className="mt-1 text-lg text-gray-900">{decisionTaken || "N/A"}</p>
             </div>
             <div className="flex justify-between items-start">
+
+
             {!isTharavCompleted && (
   <button
     onClick={() => setIsCompleteModalOpen(true)}
@@ -388,58 +409,71 @@ export default function Remarks() {
     Complete Tharav
   </button>
 )}
-          </div>
-
-
-          
-          
+          </div>          
           {isTharavCompleted && (
-  <div className="col-span-full mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-    <div className="flex items-center gap-2 text-green-700 font-semibold mb-3">
-      <CheckCircle size={20} className="text-green-600" />
-      <span className="text-lg">This Tharav is Completed</span>
-    </div>
-    
-    {/* Final Remark */}
-    <div className="mb-3">
-      <p className="text-sm font-medium text-gray-700">Final Remark:</p>
-      <p className="mt-1 text-sm text-gray-900 bg-white p-2 rounded">
-        {completedTharavData?.completed_remarks || 'No final remark provided'}
-      </p>
+  <div className="w-[500px] rounded-lg border-2 border-green-300 bg-green-100 p-6 relative ml-[55%] -mb-[19%]">
+    {/* Date pill at the top */}
+    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded-lg font-medium">
+      {completedTharavData?.complete_date &&
+        new Date(completedTharavData.complete_date).toLocaleDateString("en-IN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
     </div>
 
-    {/* Completion Date */}
-    {completedTharavData?.complete_date && (
-      <div className="mb-3">
-        <p className="text-sm font-medium text-gray-700">Completion Date:</p>
-        <p className="mt-1 text-sm text-gray-900">
-          {new Date(completedTharavData.complete_date).toLocaleDateString('en-IN', {
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          })}
+    <div className="mt-4 text-center">
+      <h2 className="text-2xl font-bold text-green-800 mt-2">This Tharav is Completed</h2>
+    </div>
+
+    <div className="flex mt-8">
+      <div className="flex-grow">
+        <p className="text-xl font-medium text-green-800">
+          Final Remark :{" "}
+          <span className="text-black">{completedTharavData?.completed_remarks || "No final remark provided"}</span>
         </p>
       </div>
-    )}
 
-    {/* Completion Proof */}
-    {completedTharavData?.complete_tharav_img && (
-      <div>
-        <p className="text-sm font-medium text-gray-700">Completion Proof:</p>
-        <button
-          onClick={() => window.open(`http://localhost:5000/${completedTharavData.complete_tharav_img}`, '_blank')}
-          className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800"
-        >
-          <Image size={16} className="mr-1" />
-          <span>View Completion Photo</span>
-        </button>
+      {/* Photo section - Only show if image exists */}
+      {completedTharavData?.complete_tharav_img && completedTharavData.complete_tharav_img !== "" && (
+        <div className="flex flex-col items-center">
+          <button
+            onClick={() => setShowImageModal(true)}
+            className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center cursor-pointer"
+          >
+            <Image className="w-8 h-8 text-white" />
+          </button>
+          <span className="mt-1 text-lg font-medium">Photo</span>
+        </div>
+      )}
+    </div>
+
+    {/* Image Modal */}
+    {showImageModal && (
+      <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50" onClick={() => setShowImageModal(false)}>
+        <div className="relative max-w-4xl max-h-[90vh]">
+          <button 
+            className="absolute -top-10 right-0 text-white text-3xl hover:text-gray-300"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowImageModal(false);
+            }}
+          >
+            &times;
+          </button>
+          <img 
+            src={`http://localhost:5000${completedTharavData.complete_tharav_img}`} 
+            alt="Completed Tharav" 
+            className="max-w-full max-h-[80vh] object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
       </div>
     )}
   </div>
 )}
-
 
 
 

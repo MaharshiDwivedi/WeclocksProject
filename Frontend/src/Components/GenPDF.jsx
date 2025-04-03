@@ -25,9 +25,6 @@ export const generateFinancialReportPDF = async (financialYear) => {
     const schoolId = localStorage.getItem("school_id");
     if (!schoolId) throw new Error("School ID not found in localStorage");
 
-    // Pass the full financial year format to the API
-    const [yearStart, yearEnd] = financialYear.split("-");
-
     // Fetch school and yearly data
     const [schoolRes, yearlyRes] = await Promise.all([
       axios
@@ -38,7 +35,7 @@ export const generateFinancialReportPDF = async (financialYear) => {
         }),
       axios
         .post("/api/yearlyExpenseData", {
-          financialYear, // Send the full financial year format
+          financialYear,
           school_id: schoolId,
         })
         .catch((err) => {
@@ -54,8 +51,6 @@ export const generateFinancialReportPDF = async (financialYear) => {
         )
       : null;
 
-    const schoolName = schoolData?.school_name || "Unknown School";
-
     if (!schoolData) {
       console.warn("No school data found for ID:", schoolId);
     }
@@ -70,22 +65,22 @@ export const generateFinancialReportPDF = async (financialYear) => {
         fontFamily: "Helvetica",
       },
       header: {
-        flexDirection: "row", // Logo aur text ek row me
-        alignItems: "center", // Vertically center
-        justifyContent: "center", // Horizontally center
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
         marginBottom: 20,
         paddingBottom: 10,
         borderBottomWidth: 1,
         borderBottomColor: "#000",
       },
       headerRow: {
-        flexDirection: "row", // Logo and text in the same row
-        alignItems: "center", // Center vertically
-        justifyContent: "center", // Center horizontally
-        gap: 20, // Add space between logo and text
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 20,
       },
       headerCenter: {
-        alignItems: "center", // Center logo and text horizontally
+        alignItems: "center",
         textAlign: "center",
       },
       logo: {
@@ -102,8 +97,8 @@ export const generateFinancialReportPDF = async (financialYear) => {
         fontWeight: "bold",
         fontFamily: "Helvetica",
         textAlign: "center",
-        marginBottom:1,
-        marginLeft:20
+        marginBottom: 1,
+        marginLeft: 20,
       },
       headerText1: {
         fontSize: 18,
@@ -113,15 +108,24 @@ export const generateFinancialReportPDF = async (financialYear) => {
       },
       yearText: {
         fontSize: 16,
-        marginLeft:55,
+        marginLeft: 55,
         fontWeight: "bold",
         fontFamily: "Helvetica",
-        marginBottom:5
+        marginBottom: 5,
       },
       titleText: {
         fontSize: 16,
         fontWeight: "bold",
         fontFamily: "NotoSansDevanagari",
+      },
+      subTitle: {
+        fontSize: 14,
+        fontFamily: "NotoSansDevanagari",
+        textAlign: "center",
+        color: "#000",
+        padding: 5,
+        borderBottomWidth: 1,
+        borderBottomColor: "#000",
       },
       table: {
         width: "100%",
@@ -133,7 +137,6 @@ export const generateFinancialReportPDF = async (financialYear) => {
       tableRow: {
         flexDirection: "row",
         borderBottomWidth: 1,
-        borderBottomColor: "#000",
       },
       tableHeader: {
         backgroundColor: "#f0f0f0",
@@ -163,7 +166,7 @@ export const generateFinancialReportPDF = async (financialYear) => {
         borderRightColor: "#000",
         textAlign: "center",
         fontFamily: "NotoSansDevanagari",
-        fontSize: 11,
+        fontSize: 12,
         width: "70%",
       },
       amountCell: {
@@ -178,16 +181,13 @@ export const generateFinancialReportPDF = async (financialYear) => {
       lastCell: {
         borderRightWidth: 0,
       },
-      totalRow: {
-        backgroundColor: "#f9f9f9",
-      },
       totalLabel: {
         fontWeight: "bold",
         textAlign: "right",
         fontFamily: "NotoSansDevanagari",
-        fontSize: 11,
-        gap:2,
-        flex:1
+        fontSize: 12,
+        gap: 2,
+        flex: 1,
       },
       pageNumber: {
         position: "absolute",
@@ -206,7 +206,9 @@ export const generateFinancialReportPDF = async (financialYear) => {
       },
       rupeeSymbol: {
         fontFamily: "NotoSansDevanagari",
-        marginLeft:5
+        marginLeft: 5,
+        marginBottom: 2,
+        fontSize: 12,
       },
     });
 
@@ -225,20 +227,15 @@ export const generateFinancialReportPDF = async (financialYear) => {
           {headData.length > 0 ? (
             <>
               <View style={styles.table}>
+                <Text style={styles.subTitle}>वर्षभरात खालील बाबींवर झालेला खर्च</Text>
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={styles.headerCell}>
-                    शीर्षक (Expenditure Head)
-                  </Text>
-                  <Text style={[styles.headerCell1, styles.lastCell]}>
-                    रक्कम (Amount)
-                  </Text>
+                  <Text style={styles.headerCell}>शीर्षक (Expenditure Head)</Text>
+                  <Text style={[styles.headerCell1, styles.lastCell]}>रक्कम (Amount)</Text>
                 </View>
 
                 {headData.map((head) => (
                   <View key={head.head_id} style={styles.tableRow}>
-                    <Text style={styles.dataCell}>
-                      {head.head_name || "N/A"}
-                    </Text>
+                    <Text style={styles.dataCell}>{head.head_name || "N/A"}</Text>
                     <Text style={[styles.amountCell, styles.lastCell]}>
                       <Text style={styles.rupeeSymbol}>₹ </Text>
                       {(head.actual_cost || 0).toLocaleString("en-IN", {
@@ -250,29 +247,21 @@ export const generateFinancialReportPDF = async (financialYear) => {
                 ))}
               </View>
 
-              <View style={[styles.tableRow, styles.totalRow]}>
-                <Text style={styles.totalLabel}>
-                  एकूण खर्च (Total Expense) : 
-                </Text>
-                <Text style={styles.rupeeSymbol}>  ₹ {totalExpense.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })}</Text>
-
-                 
+              <View style={[styles.tableRow]}>
+                <Text style={styles.totalLabel}>एकूण खर्च (Total Expense) : </Text>
+                <Text style={styles.rupeeSymbol}>₹ {totalExpense.toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}</Text>
               </View>
             </>
           ) : (
-            <Text style={styles.noDataText}>
-              No financial data available for {financialYear}
-            </Text>
+            <Text style={styles.noDataText}>No financial data available for {financialYear}</Text>
           )}
 
           <Text
             style={styles.pageNumber}
-            render={({ pageNumber, totalPages }) =>
-              `Page ${pageNumber} of ${totalPages}`
-            }
+            render={({ pageNumber, totalPages }) => `Page ${pageNumber} of ${totalPages}`}
             fixed
           />
         </Page>
@@ -281,10 +270,7 @@ export const generateFinancialReportPDF = async (financialYear) => {
 
     return await pdf(MyDocument).toBlob();
   } catch (error) {
-    console.error(
-      "PDF Generation Error:",
-      error.response?.data || error.message
-    );
+    console.error("PDF Generation Error:", error.response?.data || error.message);
     throw error;
   }
 };

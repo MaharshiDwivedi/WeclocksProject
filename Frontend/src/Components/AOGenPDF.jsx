@@ -21,7 +21,6 @@ Font.register({
 axios.defaults.baseURL = "http://localhost:5000";
 
 export const generateAOFinancialReportPDF = async (financialYear) => {
-  try {
     if (!financialYear) {
       throw new Error("Financial year not provided");
     }
@@ -57,38 +56,42 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 25,
-        paddingBottom: 12,
-        borderBottomWidth: 1.5,
+        marginBottom: 20,
+        paddingBottom: 10,
+        borderBottomWidth: 1,
         borderBottomColor: "#333",
       },
       logo: {
-        width: 85,
-        height: 85,
-        marginRight: 20,
+        width: 80,
+        height: 80,
+        marginRight: 10,
+        objectFit: "contain",
+      },
+      headerContent: {
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
       },
       headerText: {
         fontSize: 20,
         fontWeight: "bold",
-        fontFamily: "NotoSansDevanagari",
+        fontFamily: "Helvetica",
         textAlign: "center",
-        marginBottom: 6,
+        marginBottom: 4,
         color: "#1a1a1a",
       },
       yearText: {
         fontSize: 18,
-        fontFamily: "NotoSansDevanagari",
-        textAlign: "center",
-        marginBottom: 6,
-        color: "#333",
+        fontWeight: "bold",
+        fontFamily: "Helvetica",
+        marginBottom: 9,
       },
       subTitle: {
-        fontSize: 14,
+        fontSize: 15  ,
         fontFamily: "NotoSansDevanagari",
         textAlign: "center",
-        marginBottom: 20,
-        marginTop: 12,
         color: "#444",
+        lineHeight: 1.2,
       },
       table: {
         display: "table",
@@ -113,11 +116,20 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
         fontFamily: "NotoSansDevanagari",
         borderRightWidth: 1,
         borderRightColor: "#000",
-        fontSize: 10,
+        fontSize: 11,
         width: "20%",
-        textAlign: "left",
-        lineHeight: 1.2,
-        fontSize:22
+        textAlign: "center",
+        lineHeight: 1.4,
+      },
+      schoolCell1: {
+        fontFamily: "NotoSansDevanagari",
+        borderRightWidth: 1,
+        borderRightColor: "#000",
+        fontSize: 13,
+        width: "20%",
+        textAlign: "center",
+        fontWeight:500,
+        padding: 10,
       },
       expenseCell: {
         padding: 5,
@@ -127,6 +139,7 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
         fontFamily: "NotoSansDevanagari",
         fontSize: 10,
         width: "8.88%",
+        lineHeight: 1.2,
       },
       headerCell: {
         padding: 5,
@@ -134,37 +147,41 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
         borderRightColor: "#000",
         textAlign: "center",
         fontFamily: "NotoSansDevanagari",
-        fontSize: 8,
+        fontSize: 12,
         width: "8.88%",
         minHeight: 40,
+        lineHeight: 1.2,
+        fontWeight:500,
       },
       totalRow: {
-        backgroundColor: "#f9f9f9",
         flexDirection: "row",
         padding: 8,
         width: "100%",
         marginTop: 10,
+        fontWeight:500,
       },
       totalLabel: {
         fontWeight: "bold",
         textAlign: "right",
         fontFamily: "NotoSansDevanagari",
-        fontSize: 12,
+        fontSize: 10,
         flex: 1,
-        color: "#222",
+        color: "#000",
       },
       totalAmount: {
         fontFamily: "NotoSansDevanagari",
-        fontSize: 12,
+        fontSize: 10,
         textAlign: "left",
-        color: "#222",
+        color: "#000",
+        fontWeight:500,
       },
       rupeeSymbol: {
         fontFamily: "NotoSansDevanagari",
-        fontSize: 14,
+        fontSize: 10,
         textAlign: "left",
-        marginRight: 5,
-        color: "#222",
+        marginLeft: 5,
+        color: "#000",
+        fontWeight:500,
       },
       pageNumber: {
         position: "absolute",
@@ -174,7 +191,7 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
         textAlign: "center",
         fontSize: 8,
         fontFamily: "NotoSansDevanagari",
-        color: "#666",
+        color: "#111",
       },
       noDataText: {
         textAlign: "center",
@@ -202,7 +219,7 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
         <Page size="A4" orientation="landscape" style={styles.page}>
           <View style={styles.header}>
             <Image style={styles.logo} src={logo} />
-            <View>
+            <View style={styles.headerContent}>
               <Text style={styles.headerText}>ITDP - Nandurbar</Text>
               <Text style={styles.yearText}>{financialYear}</Text>
               <Text style={styles.subTitle}>
@@ -215,7 +232,7 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
             <>
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
-                  <Text style={[styles.schoolCell, { textAlign: "center" }]}>
+                  <Text style={[styles.schoolCell1]}>
                     शाळा
                   </Text>
                   {categories.map((category) => (
@@ -251,7 +268,7 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
 
               <View style={styles.totalRow}>
                 <Text style={styles.totalLabel}>
-                  एकूण खर्च (Total Expense):
+                  एकूण खर्च (Total Expense):  
                 </Text>
                 <Text style={styles.rupeeSymbol}>₹</Text>
                 <Text style={styles.totalAmount}>
@@ -271,7 +288,7 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
           <Text
             style={styles.pageNumber}
             render={({ pageNumber, totalPages }) =>
-              `पृष्ठ ${pageNumber} / ${totalPages}`
+              ` ${pageNumber} / ${totalPages}`
             }
             fixed
           />
@@ -280,14 +297,10 @@ export const generateAOFinancialReportPDF = async (financialYear) => {
     );
 
     return await pdf(MyDocument).toBlob();
-  } catch (error) {
-    throw error;
-  }
 };
 
 // fetchAllSchoolsData function remains unchanged
 async function fetchAllSchoolsData(financialYear, fundReports) {
-  try {
     const reports = Array.isArray(fundReports) ? fundReports : [fundReports];
 
     const schoolIds = reports
@@ -339,14 +352,11 @@ async function fetchAllSchoolsData(financialYear, fundReports) {
             ...school,
             expenses,
           };
-        } catch (error) {
+      } catch {
           return { ...school, expenses: [] };
         }
       })
     );
 
     return schoolsWithExpenses;
-  } catch (error) {
-    throw error;
-  }
 }

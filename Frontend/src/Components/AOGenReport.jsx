@@ -1,17 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { useTranslation } from 'react-i18next';
 import { DownloadIcon, X } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { generateAOFinancialReportPDF } from './AOGenPDF';
-import axios from 'axios';
 
 const AOGenReport = ({ onClose }) => {
   const { t } = useTranslation();
   const [financialYear, setFinancialYear] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [reportGenerated, setReportGenerated] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState('');
-  const [error, setError] = useState(null);
-  const [statusMessage, setStatusMessage] = useState('');
+  const [pdfBlob, setPdfBlob] = useState(null);
 
   const financialYearOptions = [
     { value: '', label: t('-- Select Year --'), disabled: true },
@@ -20,69 +18,83 @@ const AOGenReport = ({ onClose }) => {
     { value: '2025-2026', label: '2025-2026' },
   ];
 
-  useEffect(() => {
-    return () => {
-      if (downloadUrl) {
-        URL.revokeObjectURL(downloadUrl);
-      }
-    };
-  }, [downloadUrl]);
-
-  const handleGenerate = useCallback(async () => {
-    if (!financialYear) {
-      setError(t('Please select financial year'));
-      return;
-    }
+  const generateReport = useCallback(async (year) => {
+    if (!year) return;
 
     setIsGenerating(true);
-    setError(null);
-    setStatusMessage(t('Generating report...'));
+
+    Swal.fire({
+      title: t('Generating report...'),
+      text: t('Please wait while we generate your report'),
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+    });
 
     try {
-      const pdfBlob = await generateAOFinancialReportPDF(financialYear);
-      const url = URL.createObjectURL(pdfBlob);
-      setDownloadUrl(url);
-      setReportGenerated(true);
-      setStatusMessage(t('Report generated successfully'));
+      const newPdfBlob = await generateAOFinancialReportPDF(year);
+      setPdfBlob(newPdfBlob);
+      
+      Swal.fire({
+        icon: 'success',
+        title: t('Success'),
+        text: t('Report generated successfully'),
+        timer:1000
+      });
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || t('Failed to generate report');
-      setError(errorMessage);
-      setStatusMessage('');
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: errorMessage,
+        confirmButtonColor: '#d33',
+      });
     } finally {
       setIsGenerating(false);
     }
-  }, [financialYear, t]);
+  }, [t]);
+
+  useEffect(() => {
+    if (financialYear) {
+      generateReport(financialYear);
+    }
+  }, [financialYear, generateReport]);
 
   const handleDownload = useCallback(() => {
-    if (!downloadUrl) return;
+    if (!pdfBlob) return;
 
+    const url = URL.createObjectURL(pdfBlob);
     const link = document.createElement('a');
-    link.href = downloadUrl;
+    link.href = url;
     link.download = `ITDP_AllSchools_Report_${financialYear.replace(/-/g, '_')}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    onClose();
-  }, [downloadUrl, financialYear, onClose]);
+    URL.revokeObjectURL(url);
+  }, [pdfBlob, financialYear]);
 
   return (
-    <div className="fixed inset-0 backdrop-blur-sm bg-opacity-10 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-800">
-            {t('Generate All Schools Financial Report')}
-          </h3>
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/20 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl p-5 sm:p-6 w-full max-w-[90%] sm:max-w-md shadow-2xl border border-gray-100">
+        <div className="flex justify-between items-center mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-1 h-6 bg-blue-600 rounded-full"></div>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-800">
+              {t('Generate All Schools Financial Report')}
+            </h3>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-full hover:bg-gray-100"
             aria-label={t('Close')}
             disabled={isGenerating}
           >
-            <X size={24} />
+            <X size={18} className="sm:w-5 sm:h-5" />
           </button>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-5">
           <label htmlFor="financial-year" className="block text-sm font-medium text-gray-700 mb-2">
             {t('Financial Year')}
           </label>
@@ -90,8 +102,8 @@ const AOGenReport = ({ onClose }) => {
             id="financial-year"
             value={financialYear}
             onChange={(e) => setFinancialYear(e.target.value)}
-            className="w-full p-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50"
-            disabled={isGenerating || reportGenerated}
+            className="w-full p-2.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 bg-white hover:border-gray-300 transition-colors"
+            disabled={isGenerating}
           >
             {financialYearOptions.map((option) => (
               <option
@@ -105,55 +117,31 @@ const AOGenReport = ({ onClose }) => {
           </select>
         </div>
 
-        {error && (
-          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm" role="alert">
-            {error}
-          </div>
-        )}
-
-        {statusMessage && !error && (
-          <div className="mb-4 p-2 bg-blue-100 text-blue-700 rounded-md text-sm" role="status">
-            {statusMessage}
-          </div>
-        )}
-
-        <div className="flex justify-end gap-3">
+        <div className="flex flex-col sm:flex-row justify-end gap-2.5">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="w-full sm:w-auto px-4 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 disabled:bg-gray-50 disabled:cursor-not-allowed transition-colors text-sm border border-gray-200"
             disabled={isGenerating}
           >
             {t('Cancel')}
           </button>
 
-          {reportGenerated ? (
-            <button
-              onClick={handleDownload}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2 transition-colors"
-            >
-              <DownloadIcon size={18} />
-              {t('Download Report')}
-            </button>
-          ) : (
-            <button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-            >
-              {isGenerating ? (
-                <>
-                  <span className="inline-block animate-spin">↻</span>
-                  {t('Generating...')}
-                </>
-              ) : (
-                t('Generate Report')
-              )}
-            </button>
-          )}
+          <button
+            onClick={handleDownload}
+            disabled={!pdfBlob || isGenerating}
+            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors text-sm shadow-sm hover:shadow-md"
+          >
+            <DownloadIcon size={16} className="sm:w-4 sm:h-4" />
+            {t('Download Report')}
+          </button>
         </div>
       </div>
     </div>
   );
+};
+
+AOGenReport.propTypes = {
+  onClose: PropTypes.func.isRequired
 };
 
 export default AOGenReport;

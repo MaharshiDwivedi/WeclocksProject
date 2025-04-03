@@ -86,7 +86,9 @@ const expenceController = {
   async getYearlyData(req, res) {
     try {
       const { financialYear, school_id } = req.body;
-
+  
+      console.log("Input:", { financialYear, school_id });
+  
       // Validate input
       if (!financialYear || !school_id) {
         return res.status(400).json({
@@ -94,65 +96,81 @@ const expenceController = {
           message: "Financial Year and School ID are required",
         });
       }
-
+  
       // Parse the financial year to get start and end year
-      const [yearStart, yearEnd] = financialYear.split("-");
-
-      // Fetch active expense heads
+      const [yearStart, yearEnd] = financialYear.split("-").map(Number);
+      const startYear = parseInt(yearStart);
+      const endYear = parseInt(yearEnd);
+  
+      // Fetch active expense heads and remarks
       const heads = await expenceModel.getActiveHeads();
-
-      // Fetch active niryan remarks
       const niryanRemarks = await expenceModel.getActiveNiryanRemarks();
-
+  
+      console.log("Heads fetched:", heads.length);
+      console.log("Remarks fetched:", niryanRemarks.length);
+  
       // Process data for each expense head
       const yearlyExpenseData = heads.map((head) => {
         // Filter remarks for the financial year range and school
         const filteredRemarks = niryanRemarks.filter((nr) => {
           const parts = nr.nirnay_remarks_record.split("|");
-          if (parts.length >= 8) { // Make sure we have enough parts
-            const date = new Date(nr.previous_date);
-            const month = date.getMonth() + 1;
-            const year = date.getFullYear();
-
-          
-            // Financial year runs from April to March
-            const isInFinancialYear =
-              (year == yearStart && month >= 4) || // April to December of start year
-              (year == yearEnd && month <= 3);     // January to March of end year
-
-            // Check if this record matches our criteria
-            // Based on your data structure, head_id is at index 7 and school_id at index 2
-            const headMatches = parts[7] && parts[7].trim() === head.head_id.toString();
-            const schoolMatches = parts[2] && parts[2].trim() === school_id.toString();
-            
+          if (parts.length < 8) {
+            console.warn(`Invalid remark record format for ID ${nr.nirnay_remarks_id}:`, parts);
             return false;
           }
-          return false;
+  
+          const date = new Date(nr.previous_date);
+          const month = date.getMonth() + 1; // 1-12
+          const year = date.getFullYear();
+  
+          // Financial year runs from April (month 4) to March (month 3) of next year
+          const isInFinancialYear =
+            (year === startYear && month >= 4) || // April to December of start year
+            (year === endYear && month <= 3);     // January to March of end year
+  
+          const headMatches = parts[7]?.trim() === head.head_id.toString();
+          const schoolMatches = parts[2]?.trim() === school_id.toString();
+  
+          const matches = isInFinancialYear && headMatches && schoolMatches;
+  
+          if (matches) {
+            console.log(`Match found for head ${head.head_id}:`, {
+              date: nr.previous_date,
+              headId: parts[7],
+              schoolId: parts[2],
+            });
+          }
+  
+          return matches;
         });
-
+  
         // Calculate total actual cost for the head
         const totalActualCost = filteredRemarks.reduce((sum, nr) => {
           const parts = nr.nirnay_remarks_record.split("|");
-          if (parts.length >= 7) {
-            const amount = Number(parts[6]?.trim()) || 0; // 6th index (7th position) contains the amount
-            return sum + amount;
-          }
-          return sum;
+          const amount = parts[6] ? Number(parts[6].trim()) || 0 : 0;
+          return sum + amount;
         }, 0);
-
+  
+        console.log(`Head ${head.head_id} - ${head.head_name}:`, {
+          filteredCount: filteredRemarks.length,
+          totalActualCost,
+        });
+  
         return {
           head_id: head.head_id,
           head_name: head.head_name,
           actual_cost: totalActualCost,
         };
       });
-
+  
       // Calculate total expense
       const totalExpense = yearlyExpenseData.reduce(
         (sum, head) => sum + head.actual_cost,
         0
       );
-
+  
+      console.log("Total Expense:", totalExpense);
+  
       res.status(200).json({
         success: true,
         data: yearlyExpenseData,

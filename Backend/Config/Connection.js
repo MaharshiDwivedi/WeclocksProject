@@ -6,7 +6,7 @@ const connection = mysql.createPool({
     password: '',
     database: 'itdp_ndb_smc',
     waitForConnections: true,
-    connectionLimit: 20,
+    connectionLimit: 30,
     queueLimit: 0
 });
 
