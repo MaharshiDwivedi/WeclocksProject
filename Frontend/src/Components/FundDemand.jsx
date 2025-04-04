@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Check, X, AlertCircle, Search, IndianRupee} from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { X, AlertCircle, Search, IndianRupee} from "lucide-react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import { useTranslation } from "react-i18next";
@@ -31,7 +31,7 @@ const FundDemand = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const fetchDemands = async () => {
+  const fetchDemands = useCallback(async () => {
     setLoading(true);
     try {
       const response = await axios.get("http://localhost:5000/api/fundreqhm");
@@ -47,7 +47,7 @@ const FundDemand = () => {
       });
       setDemands(formattedDemands);
       setFilteredDemands(formattedDemands);
-    } catch (error) {
+    } catch {
       Swal.fire({
         icon: "error",
         title: t("error"),
@@ -56,11 +56,11 @@ const FundDemand = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchDemands();
-  }, []);
+  }, [fetchDemands]);
 
   // Search functionality
   useEffect(() => {
@@ -97,7 +97,7 @@ const FundDemand = () => {
             timer: 1500,
           });
           fetchDemands();
-        } catch (error) {
+        } catch {
           Swal.fire({
             icon: "error",
             title: t("Error"),
@@ -134,7 +134,7 @@ const FundDemand = () => {
       setIsRejectModalOpen(false);
       setRejectReason("");
       setErrors({});
-    } catch (error) {
+    } catch {
       Swal.fire({
         icon: "error",
         title: t("Error"),
@@ -184,7 +184,7 @@ const FundDemand = () => {
       minWidth: "120px",
       cell: (row) => (
         <span
-          className={`px-2 py-1 rounded-full text-xs`}
+          className={`px-2 py-1 rounded-full text-md`}
         >
           {row.status}
         </span>
@@ -198,14 +198,14 @@ const FundDemand = () => {
             <>
               <button
                 onClick={() => handleAccept(row.id)}
-                className="text-green-600 px-3 py-2 rounded-md hover:bg-green-600 hover:text-white transition-colors font2 sm:text-sm text-center"
+                className="text-green-600 px-3 py-2 cursor-pointer rounded-md hover:bg-green-600 hover:text-white transition-colors font2 sm:text-sm text-center"
                 title={t("Accept")}
               >
                 {t("Accept")}
               </button>
               <button
                 onClick={() => handleReject(row.id)}
-                className="text-red-600 px-3 py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors font2  sm:text-sm text-center"
+                className="text-red-600 px-3 cursor-pointer py-2 rounded-md hover:bg-red-600 hover:text-white transition-colors font2  sm:text-sm text-center"
                 title={t("Reject")}
               >
                 {t("Reject")}
@@ -220,40 +220,34 @@ const FundDemand = () => {
   ];
 
   return (
-    <div className="px-2 sm:px-4 py-3 md:py-6 realfont">
-      <div className="bg-white shadow-md rounded-[4px] overflow-hidden">
+    <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 realfont">
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
         {/* Header */}
-        <div className="bg-blue-950 text-white px-3 sm:px-6 py-3 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 realfont2">
-          <h2 className="flex items-center gap-1 sm:gap-2 sm:text-lg md:text-lg font-bold font2">
-            <IndianRupee size={isMobile ? 16 : 18}  />
+        <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-1 sm:gap-2">
+            <IndianRupee size={isMobile ? 16 : 18} />
             {t("Demand Management")}
           </h2>
         </div>
 
-        <div className="px-2 sm:px-2 py-1 flex flex-col sm:flex-row gap-2 sm:gap-4 items-center justify-between">
-          <div className="relative w-full sm:w-64 md:w-[250px] text-base sm:text-md md:text-md py-1">
+        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="relative w-full sm:w-[300px]">
             <input
               type="text"
               placeholder={t("search")}
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full pl-7 sm:pl-8 pr-3 sm:pr-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-6 sm:h-8 text-base sm:text-lg md:text-md"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
             />
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-              size={isMobile ? 14 : 16}
-            />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
           </div>
           <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
-            {t("Total Demands")} :{" "}
-            <span className="text-blue-950 font-bold px-2">
-              {filteredDemands.length}
-            </span>
+            {t("Total Demands")} : <span className="text-blue-950 font-bold px-2">{filteredDemands.length}</span>
           </div>
         </div>
 
         {/* Table container with horizontal scrolling */}
-        <div className="overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
+        <div className="overflow-x-auto">
           <DataTable
             columns={columns}
             data={filteredDemands}
@@ -267,45 +261,51 @@ const FundDemand = () => {
             customStyles={{
               headCells: {
                 style: {
-                  backgroundColor: "#eceef1",
+                  backgroundColor: "#f3f4f6",
+                  fontSize: "14px",
                   fontWeight: "600",
-                  fontFamily: "Montserrat",
+                  fontFamily: "Poppins",
                   justifyContent: "center",
-                  paddingLeft: "4px",
-                  paddingRight: "4px",
-                  borderRight: "1px solid #f0f0f0",
-                  fontSize: "16px",
-                },  
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                  borderRight: "1px solid rgba(229, 231, 235, 0.5)",
+                  borderBottom: "1px solid rgba(229, 231, 235, 0.5)",
+                },
               },
               cells: {
                 style: {
+                  fontSize: "14px",
                   fontFamily: "Poppins",
                   color: "#333",
                   justifyContent: "center",
-                  paddingLeft: "2px",
-                  paddingRight: "2px",
-                  borderRight: "1px solid #f9f9f9",
-                  fontSize: "14px",
+                  paddingLeft: "6px",
+                  paddingRight: "6px",
+                  borderRight: "1px solid rgba(229, 231, 235, 0.5)",
+                  borderBottom: "1px solid rgba(229, 231, 235, 0.5)",
                 },
               },
               rows: {
-                
+                style: {
+                  fontSize: "14px",
+                  fontFamily: "Poppins",
+                },
                 stripedStyle: {
-                  backgroundColor: "#f8f9fa",
+                  backgroundColor: "rgba(249, 250, 251, 0.5)",
                 },
               },
               pagination: {
                 style: {
-                  fontSize: "13px",
+                  fontSize: "14px",
                   minHeight: "56px",
                   borderTopStyle: "solid",
                   borderTopWidth: "1px",
-                  borderTopColor: "#f3f4f6",
+                  borderTopColor: "rgba(229, 231, 235, 0.5)",
+                  fontWeight:500,
                 },
               },
               table: {
                 style: {
-                  width: "100%",
+                  border: "1px solid rgba(229, 231, 235, 0.5)",
                 },
               },
             }}
@@ -321,10 +321,10 @@ const FundDemand = () => {
 
       {/* Reject Modal */}
       {isRejectModalOpen && (
-        <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-3">
-          <div className="bg-white rounded-sm shadow-2xl w-full max-w-[95vw] md:max-w-[850px] max-h-[90vh] overflow-y-auto animate-fade-in">
-            <div className="p-3 sm:p-4 border-b flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50">
-              <h2 className="text-base sm:text-lg md:text-xl font-bold text-indigo-900 flex items-center">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+            <div className="p-4 md:p-6 border-b flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950 flex items-center">
                 {t("Reject Reason")}
               </h2>
               <button
@@ -333,12 +333,12 @@ const FundDemand = () => {
                   setRejectReason("");
                   setErrors({});
                 }}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100"
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
               >
-                <X size={isMobile ? 16 : 18} />
+                <X size={20} />
               </button>
             </div>
-            <div className="p-3 sm:p-4 md:p-6">
+            <div className="p-4 md:p-6 space-y-4">
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
                   {t("Reason")} <span className="text-red-500">*</span>

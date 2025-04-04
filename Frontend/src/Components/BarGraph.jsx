@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -9,6 +9,7 @@ import {
   Legend,
 } from "chart.js";
 import { useTranslation } from "react-i18next";
+import PropTypes from 'prop-types';
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
@@ -151,3 +152,19 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
 };
 
 export default BarGraph;
+
+// Add PropTypes validation
+BarGraph.propTypes = {
+  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  actualExpense: PropTypes.number,
+  expectedExpense: PropTypes.number
+};
+
+// Add default props
+BarGraph.defaultProps = {
+  width: '100%',
+  height: '300px',
+  actualExpense: 0,
+  expectedExpense: 0
+};

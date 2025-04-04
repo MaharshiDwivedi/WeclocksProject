@@ -33,6 +33,7 @@ export const generateFinancialReportPDF = async (financialYear) => {
           console.error("School API error:", err);
           return { data: [] };
         }),
+
       axios
         .post("/api/yearlyExpenseData", {
           financialYear,
@@ -97,18 +98,19 @@ export const generateFinancialReportPDF = async (financialYear) => {
         fontWeight: "bold",
         fontFamily: "Helvetica",
         textAlign: "center",
-        marginBottom: 1,
-        marginLeft: 20,
+        marginBottom: 2,
+        marginLeft: 5,
       },
       headerText1: {
         fontSize: 18,
         fontWeight: "bold",
-        fontFamily: "Helvetica",
+        fontFamily: "NotoSansDevanagari",
         textAlign: "center",
+        marginLeft:5
       },
       yearText: {
         fontSize: 16,
-        marginLeft: 55,
+        marginLeft: 40,
         fontWeight: "bold",
         fontFamily: "Helvetica",
         marginBottom: 5,
@@ -220,7 +222,7 @@ export const generateFinancialReportPDF = async (financialYear) => {
             <View>
               <Text style={styles.headerText}>ITDP - Nandurbar</Text>
               <Text style={styles.yearText}>{financialYear}</Text>
-              <Text style={styles.headerText1}>Weclocks Technology</Text>
+              <Text style={styles.headerText1}>{schoolData?.school_name || 'School Name Not Available'}</Text>
             </View>
           </View>
 

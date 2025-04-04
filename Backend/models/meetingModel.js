@@ -1,44 +1,37 @@
 const connection = require("../Config/Connection");
 const path = require("path");
 
-// // Fetch all meetings
-// async function getAllMeetings() {
-//   try {
-//     const [rows] = await connection.execute(
-//       "SELECT meeting_id, meeting_record FROM tbl_new_smc WHERE status='Active'"
-//     );
+// Fetch all meetings
+async function getAllMeetings() {
+  try {
+    const [rows] = await connection.execute("SELECT * FROM tbl_new_smc");
 
-//     // Return message if no meetings found
-//     if (rows.length === 0) {
-//       return { message: "No meetings found" };
-//     }
+    return rows.map((row) => {
+      const parts = row.meeting_record ? row.meeting_record.split("|") : [];
 
-//     return rows.map((row) => {
-//       const parts = row.meeting_record.split("|");
-//       return {
-//         meeting_id: row.meeting_id, // Ensure ID consistency
-//         meeting_number: parts[0] || row.meeting_id, // Use meeting_id if missing
-//         school_id: parts[1] || null,
-//         user_id: parts[2] || null,
-//         meeting_date: parts[3] || null,
-//         joined_member_length: parts[4] || "0",
-//         image_url: parts[5] || "default.jpg",
-//         latitude: parts[6] || "0.0000",
-//         longitude: parts[7] || "0.0000",
-//         address: parts[8] || "Unknown",
-//         created_at: parts[9] || null,
-//         updated_at: parts[10] || null,
-//         member_id: parts[11] || null,
-//         raw_meeting_record: row.meeting_record,
-//       };
-//     });
-//   } catch (error) {
-//     console.error("Error in getAllMeetings:", error.message);
-//     return { error: "Unable to fetch meetings. Please try again later." };
-//   }
-// }
+      return {
+        meeting_id: row.meeting_id, // Ensure ID consistency
+        meeting_number: parts[0] || row.meeting_id, // Use meeting_id if missing
+        school_id: parts[1] || null,
+        user_id: parts[2] || null,
+        meeting_date: parts[3] || null,
+        joined_member_length: parts[4] || "0",
+        image_url: parts[5] || "default.jpg",
+        latitude: parts[6] || "0.0000",
+        longitude: parts[7] || "0.0000",
+        address: parts[8] || "Unknown",
+        created_at: parts[9] || null,
+        updated_at: parts[10] || null,
+        member_id: parts[11] || null,
+        raw_meeting_record: row.meeting_record || "",
+      };
+    });
+  } catch (error) {
+    console.error("Error in getAllMeetings:", error.message);
+    return { error: "Unable to fetch meetings. Please try again later." };
+  }
+}
 
-// Fetch meetings for a specific school
 async function getMeetingsBySchoolId(schoolId) {
   try {
     const [rows] = await connection.execute(
@@ -259,4 +252,4 @@ const getMeetingById = async (meeting_id) => {
   return rows.length > 0 ? rows[0] : null;
 };
 
-module.exports = { getMeetingsBySchoolId, addMeeting, updateMeeting, deleteMeeting, getMeetingById };
+module.exports = { getMeetingsBySchoolId, addMeeting, updateMeeting, deleteMeeting, getMeetingById,getAllMeetings };

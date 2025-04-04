@@ -24,8 +24,8 @@ const AOGenReport = ({ onClose }) => {
     setIsGenerating(true);
 
     Swal.fire({
-      title: t('Generating report...'),
-      text: t('Please wait while we generate your report'),
+      title: t('Please wait '),
+      text: t('Please wait for while'),
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -35,13 +35,7 @@ const AOGenReport = ({ onClose }) => {
     try {
       const newPdfBlob = await generateAOFinancialReportPDF(year);
       setPdfBlob(newPdfBlob);
-      
-      Swal.fire({
-        icon: 'success',
-        title: t('Success'),
-        text: t('Report generated successfully'),
-        timer:1000
-      });
+      Swal.close();
     } catch (err) {
       const errorMessage = err.response?.data?.error || err.message || t('Failed to generate report');
       Swal.fire({

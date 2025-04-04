@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import BarGraph from "./BarGraph"
 import axios from "axios"
 import { Card, CardContent } from "@mui/material"
@@ -46,7 +46,7 @@ const Dashboard = () => {
     )
   }
 
-  const fetchExpenseData = async () => {
+  const fetchExpenseData = useCallback(async () => {
     try {
         const response = await axios.post("http://localhost:5000/api/expenceData", {
             month: selectedDate.month.toString(),
@@ -82,11 +82,11 @@ const Dashboard = () => {
     } catch (error) {
         console.error("❌ Error fetching expense data:", error);
     }
-};
+}, [selectedDate]);
 
   useEffect(() => {
     fetchExpenseData()
-  }, [selectedDate])
+  }, [fetchExpenseData])
 
   return (
     <div className="flex flex-col px-2 sm:px-4 md:px-6 lg:px-10 py-4 md:py-6 min-h-screen gap-4 md:gap-8 shadow-sm">

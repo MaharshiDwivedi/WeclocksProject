@@ -30,17 +30,14 @@ const Documents = () => {
   const [fileName, setFileName] = useState("");
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleteDocumentId, setDeleteDocumentId] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { t } = useTranslation();
   const modalRef = useRef(null);
 
   // Add responsive detection
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+      // Removed unused isMobile state
+    }; 
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
@@ -209,11 +206,7 @@ const Documents = () => {
     }
   };
 
-  // // Delete document
-  // const handleDelete = (documentId) => {
-  //   setDeleteDocumentId(documentId);
-  //   setIsDeleteModalOpen(true);
-  // };
+  // Delete document
   const handleDelete = (documentId) => {
     Swal.fire({
       title: t("Confirm Delete"),
@@ -316,22 +309,22 @@ const Documents = () => {
     {
       name: t("File"),
       cell: (row) => (
-        <button
+        <button 
           onClick={() => {
             const fileUrl = `http://localhost:5000/uploads/${row.file_url}`;
             row.file_url.endsWith(".pdf")
               ? window.open(fileUrl, "_blank")
               : setSelectedFile(fileUrl);
           }}
-          className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50"
+          className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 cursor-pointer"
           title={
             row.file_url.endsWith(".pdf") ? t("View PDF") : t("View Image")
           }
         >
           {row.file_url.endsWith(".pdf") ? (
-            <FileDown size={22} className="text-red-600" />
+            <FileDown size={26} className="text-red-600" />
           ) : (
-            <Image size={22} className="text-blue-600" />
+            <Image size={26} className="text-blue-600" />
           )}
         </button>
       ),
@@ -342,17 +335,18 @@ const Documents = () => {
       cell: (row) => (
         <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2 ">
           <button
+            className="cursor-pointer"
             onClick={() => {
               setSelectedDocument(row);
               setIsModalOpen(true);
             }}
             title={t("Edit")}
           >
-            <span className="  text-teal-600 px-3 py-1 rounded-md hover:bg-teal-600 hover:text-white transition-colors text-lg min-w-[60px] text-center">
+            <span className="  text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg min-w-[60px] text-center">
               {t("EDIT")}
             </span>
           </button>
-          <button onClick={() => handleDelete(row.document_id)} title="Delete">
+          <button className="cursor-pointer" onClick={() => handleDelete(row.document_id)} title="Delete">
             <span className="flex items-center text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[75px] text-center">
               {t("DELETE")}
             </span>
@@ -364,31 +358,30 @@ const Documents = () => {
   ];
 
   return (
-    // Make the container responsive
-    <div className="container mx-auto px-3 sm:px-4 md:px-10 py-4 md:py-8 realfont">
-      <div className="bg-white shadow-md rounded-[4px] overflow-hidden">
-        {/* Header - make responsive */}
-        <div className="bg-blue-950 text-white px-4 md:px-6 py-3 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 realfont2">
-          <h2 className="text-xl md:text-2xl font-bold">
+    <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 realfont">
+      <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+          <h2 className="text-xl md:text-2xl font-bold flex items-center gap-1 sm:gap-2">
             {t("Document Management")}
           </h2>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-950 px-4 py-2 rounded-md hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center "
+            className="bg-white text-blue-950 px-4 py-2 rounded-md hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center cursor-pointer"
           >
             <Plus className="mr-2" size={18} /> {t("Add Document")}
           </button>
         </div>
 
         {/* Filters - make responsive */}
-        <div className="p-4 bg-gray-50 flex flex-col sm:flex-row gap-4">
-          <div className="relative flex-grow">
+        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="relative w-full sm:w-[300px]">
             <input
               type="text"
               placeholder={t("Search")}
               value={searchTerm}
               onChange={handleSearch}
-              className="w-25% pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
             />
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -398,7 +391,7 @@ const Documents = () => {
           <select
             value={selectedYear}
             onChange={handleYearFilter}
-            className="px-4 md:px-6 py-2 border bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 md:mr-10 realfont2 w-full sm:w-auto"
+            className="px-3 py-2 border mr-2 bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 realfont2 w-full sm:w-auto"
           >
             <option value="">{t("All Years")}</option>
             <option value="2023-24">2023-24</option>
@@ -421,11 +414,14 @@ const Documents = () => {
               headCells: {
                 style: {
                   backgroundColor: "#f3f4f6",
-                  fontSize: "20px",
-                  fontWeight: "500",
+                  fontSize: "14px",
+                  fontWeight: "600",
+                  fontFamily: "Poppins",
                   justifyContent: "center",
-                  paddingLeft: "4px",
-                  paddingRight: "4px",
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                  borderRight: "1px solid rgba(229, 231, 235, 0.5)",
+                  borderBottom: "1px solid rgba(229, 231, 235, 0.5)",
                 },
               },
               cells: {
@@ -434,13 +430,24 @@ const Documents = () => {
                   fontFamily: "Poppins",
                   color: "#333",
                   justifyContent: "center",
-                  paddingLeft: "4px",
-                  paddingRight: "4px",
+                  paddingLeft: "6px",
+                  paddingRight: "6px",
+                  borderRight: "1px solid rgba(229, 231, 235, 0.5)",
+                  borderBottom: "1px solid rgba(229, 231, 235, 0.5)",
+                },
+              },
+              rows: {
+                style: {
+                  fontSize: "14px",
+                  fontFamily: "Poppins",
+                },
+                stripedStyle: {
+                  backgroundColor: "rgba(249, 250, 251, 0.5)",
                 },
               },
               pagination: {
                 style: {
-                  fontSize: "13px",
+                  fontSize: "14px",
                   minHeight: "56px",
                   borderTopStyle: "solid",
                   borderTopWidth: "1px",
@@ -464,10 +471,10 @@ const Documents = () => {
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
           <div
             ref={modalRef}
-            className="bg-white rounded-lg shadow-xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out"
           >
             <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
+              <h2 className="text-xl md:text-2xl font-bold text-blue-950 flex items-center">
                 {selectedDocument ? t("Edit Document") : t("Add Document")}
               </h2>
               <button
@@ -475,53 +482,50 @@ const Documents = () => {
                   setIsModalOpen(false);
                   resetForm();
                 }}
-                className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
               >
                 <X size={20} />
               </button>
             </div>
 
             <div className="p-4 md:p-6 space-y-4">
-              <div>
-                <label className="block mb-2 text-sm font-medium">
-                  {t("Document Title")}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+                  {t("Document Title")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   value={documentTitle}
                   onChange={(e) => setDocumentTitle(e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-md ${
-                    errors.documentTitle
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-gray-300 focus:border-blue-500"
-                  }`}
+                  className={`w-full p-2 sm:p-2.5 border ${
+                    errors.documentTitle ? "border-red-500" : "border-gray-300"
+                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm sm:text-base`}
                   placeholder={t("Enter document title")}
                 />
                 {errors.documentTitle && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />
-                    {errors.documentTitle}
+                  <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                    <AlertCircle className="mr-1" size={12} /> {errors.documentTitle}
                   </p>
                 )}
               </div>
 
-              <div>
-                <label className="block mb-2 text-sm font-medium">
-                  {t("Year")}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+                  {t("Year")} <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={year}
                   onChange={(e) => setYear(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full p-2 sm:p-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm text-sm sm:text-base"
                 >
                   <option value="2023-24">2023-24</option>
                   <option value="2024-25">2024-25</option>
                 </select>
               </div>
 
-              <div>
-                <label className="block mb-2 text-sm font-medium">
-                  {t("Upload File (Image or PDF)")}
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1 sm:mb-1.5 text-gray-700">
+                  {t("Upload File (Image or PDF)")} <span className="text-red-500">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -558,9 +562,8 @@ const Documents = () => {
                   </div>
                 </div>
                 {errors.file && (
-                  <p className="text-red-500 text-sm mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} />{" "}
-                    {errors.file}
+                  <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">
+                    <AlertCircle className="mr-1" size={12} /> {errors.file}
                   </p>
                 )}
 
@@ -584,62 +587,21 @@ const Documents = () => {
               </div>
             </div>
 
-            <div className="p-4 md:p-6 border-t">
+            <div className="p-4 md:p-6 border-t flex justify-end gap-3">
               <button
-                onClick={handleSubmit}
-                className="w-full bg-blue-950 text-white py-2 md:py-3 rounded-md hover:bg-blue-900 transition-colors"
-              >
-                {selectedDocument ? t("Update Document") : t("Add Document")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Modal - make responsive */}
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-[400px] max-h-[90vh] overflow-y-auto">
-            <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-                {t("Confirm Delete")}
-              </h2>
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-4 md:p-6 space-y-4">
-              <p className="text-gray-700">
-                {t("Are you sure you want to delete this document?")}
-              </p>
-            </div>
-
-            <div className="p-4 md:p-6 border-t flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-4">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors w-full sm:w-auto"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}
+                className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 {t("Cancel")}
               </button>
               <button
-                onClick={async () => {
-                  try {
-                    await axios.delete(
-                      `http://localhost:5000/api/documents/${deleteDocumentId}`
-                    );
-                    fetchDocuments(); // Refresh the documents list
-                    setIsDeleteModalOpen(false);
-                  } catch (error) {
-                    console.error("Error deleting document:", error);
-                  }
-                }}
-                className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors w-full sm:w-auto"
+                onClick={handleSubmit}
+                className="px-4 sm:px-5 py-2 sm:py-2.5 text-sm font-medium text-white bg-blue-950 rounded-lg hover:bg-blue-900 transition-colors"
               >
-                {t("Delete")}
+                {selectedDocument ? t("Update Document") : t("Add Document")}
               </button>
             </div>
           </div>
@@ -649,21 +611,21 @@ const Documents = () => {
       {/* File Preview Modal - make responsive */}
       {selectedFile && (
         <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div className="relative max-w-4xl max-h-[90vh] w-full">
+          <div className="relative max-w-4xl max-h-[90vh] w-full bg-white rounded-lg shadow-2xl transform transition-all duration-300 ease-in-out">
             <button
               onClick={() => setSelectedFile(null)}
-              className="absolute top-2 right-2 bg-white rounded-full p-2 z-10 shadow-md hover:bg-gray-100"
+              className="absolute top-2 right-2 bg-white rounded-full p-2 z-10 shadow-md hover:bg-gray-100 transition-colors"
             >
               <X className="text-black" size={20} />
             </button>
             {selectedFile.endsWith(".pdf") ? (
               <iframe
                 src={selectedFile}
-                className="w-full h-[80vh] md:h-[90vh] rounded-lg shadow-lg"
+                className="w-full h-[80vh] md:h-[90vh] rounded-lg"
                 title={t("PDF Preview")}
               />
             ) : (
-              <div className="bg-white p-2 rounded-lg shadow-lg">
+              <div className="p-2">
                 <img
                   src={selectedFile || "/placeholder.svg"}
                   alt={t("Document")}

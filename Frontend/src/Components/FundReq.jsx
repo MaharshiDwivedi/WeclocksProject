@@ -395,7 +395,7 @@ const handleDelete = async (id) => {
 </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto ">
           <DataTable
             columns={columns}
             data={filteredDemands}
@@ -405,6 +405,7 @@ const handleDelete = async (id) => {
             highlightOnHover
             responsive
             defaultSortFieldId={1}
+            className="realfont"
             customStyles={{
               headCells: {
                 style: {

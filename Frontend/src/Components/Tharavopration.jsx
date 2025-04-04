@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { Plus, X, AlertCircle, Search, Upload, Trash2, Edit, MessageSquare, Camera, Image } from "lucide-react";
+import { Plus, X, AlertCircle, Search, Upload, Camera, Image } from "lucide-react";
 import DataTable from "react-data-table-component";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -239,7 +239,10 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     if (!tharav.deadStockNumber.trim()) {
       newErrors.deadStockNumber = "Dead Stock Number is required";
       isValid = false;
-    } 
+    } else if (!/^[a-zA-Z0-9\s\-_#@$%&*()]+$/.test(tharav.deadStockNumber.trim())) {
+      newErrors.deadStockNumber = "Dead Stock Number can contain letters, numbers, and common symbols";
+      isValid = false;
+    }
 
     if (!tharav.decisionTaken.trim()) {
       newErrors.decisionTaken = "Decision Taken is required";
