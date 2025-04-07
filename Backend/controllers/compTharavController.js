@@ -52,7 +52,7 @@ completeTharav: async (req, res) => {
          complete_tharav_img = ?,
          complete_date = NOW(),
          work_status = 'Completed',
-         status = 1
+         status = 'Active'
        WHERE nirnay_id = ?`,
       [completed_remarks, complete_tharav_img, nirnay_id]
     );

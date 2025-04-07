@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import DataTable from "react-data-table-component"
 import Swal from "sweetalert2"
 import axios from "axios"
-import { Plus, Search, AlertCircle, X } from "lucide-react"
+import { Plus, Search, AlertCircle, X,IndianRupee } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
 export default function FundReq() {
@@ -230,6 +230,8 @@ const handleDelete = async (id) => {
         text: isEditing
           ? t("The fund request details have been updated successfully.")
           : t("A new fund request has been added successfully."),
+          timer: 1000,
+          showConfirmButton: false,
       })
 
       fetchDemands()
@@ -362,7 +364,10 @@ const handleDelete = async (id) => {
     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
       <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
         <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
-          <h2 className="text-xl md:text-2xl font-bold realfont2">{t("Fund Requests")}</h2>
+          <h2 className="text-xl md:text-2xl font-bold realfont2 flex items-center gap-2">
+            <IndianRupee size={isMobile ? 16 : 18} />
+            {t("Fund Requests")}
+          </h2>
           <button
             onClick={() => setIsModalOpen(true)}
             className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"

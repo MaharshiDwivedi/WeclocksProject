@@ -1,8 +1,6 @@
-"use client"
-
 // Meetings.jsx
 import { useState, useEffect, useRef } from "react"
-import { X, Camera, Upload, CalendarPlus, Pencil, Trash2, ChevronRight, Plus, AlertCircle } from "lucide-react"
+import { X, Camera, Upload, Plus, AlertCircle } from "lucide-react"
 import axios from "axios"
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
@@ -35,6 +33,7 @@ const Meetings = () => {
     members: "",
     photo: ""
   });
+  const [isCheckingMeeting, setIsCheckingMeeting] = useState(false);
   
 
   // Camera functionality
@@ -128,17 +127,6 @@ const Meetings = () => {
     return valid;
   };
 
-
-
-
-
-
-
-
-
-
-
-
   const fetchMeetings = async () => {
     try {
       const SchoolId = localStorage.getItem("school_id");
@@ -179,8 +167,6 @@ const Meetings = () => {
     }
   };
 
-
-
   const handleEditMeeting = (meeting, event) => {
     event.stopPropagation()
     setIsEditing(true)
@@ -210,14 +196,135 @@ const Meetings = () => {
     setIsOpen(true)
   }
 
-  const toggleModal = () => {
+  const toggleModal = async () => {
     if (!isOpen) {
+      // If we're opening the modal for a new meeting (not editing)
+      if (!isEditing) {
+        // Check if we can create a new meeting
+        const canCreateNewMeeting = await checkCanCreateNewMeeting();
+        if (!canCreateNewMeeting) {
+          return; // Don't open the modal if we can't create a new meeting
+        }
+      }
+      
       setIsEditing(false);
       setEditingMeetingId(null);
       resetForm();
       detectLocation();
     }
     setIsOpen(!isOpen);
+  };
+
+  // New function to check if a new meeting can be created
+  const checkCanCreateNewMeeting = async () => {
+    setIsCheckingMeeting(true);
+    try {
+      // If there are no meetings, we can always create the first one
+      if (meetings.length === 0) {
+        setIsCheckingMeeting(false);
+        return true;
+      }
+  
+      const schoolId = localStorage.getItem("school_id");
+      if (!schoolId) {
+        Swal.fire({
+          icon: 'error',
+          title: t('Error'),
+          text: t('School ID not found')
+        });
+        setIsCheckingMeeting(false);
+        return false;
+      }
+  
+      // Check each meeting for tharav records and remarks
+      for (const meeting of meetings) {
+        // Get tharav records for this meeting
+        const tharavResponse = await axios.get(
+          `http://localhost:5000/api/tharav/filter?meeting_number=${meeting.number}&school_id=${schoolId}`
+        );
+        const tharavRecords = tharavResponse.data;
+  
+        // If there are no tharav records for this meeting
+        if (!tharavRecords || tharavRecords.length === 0) {
+          Swal.fire({
+            icon: 'warning',
+            title: t('Cannot Create New Meeting'),
+            html: `<div class="text-left">
+              <p class="mb-2">${t('Meeting')} #${meeting.number} ${t('has no tharav records')}</p>
+              <p class="text-sm text-gray-600">${t('Please add at least one tharav record to this meeting before creating a new one')}</p>
+            </div>`,
+            confirmButtonText: t('OK')
+          });
+          setIsCheckingMeeting(false);
+          return false;
+        }
+  
+        // Check all tharavs in this meeting
+        let allTharavsValid = true;
+        let invalidTharavs = [];
+        
+        for (const tharav of tharavRecords) {
+          let isTharavValid = false;
+          
+          // Check if tharav is active
+          if (tharav.status === "Active") {
+            console.log("Found active tharav:", tharav);
+            isTharavValid = true;
+          } else {
+            // Check for remarks specific to this tharav
+            const remarksResponse = await axios.get(
+              `http://localhost:5000/api/remarks?nirnay_id=${tharav.nirnay_id}`
+            );
+            
+            // Check if this specific tharav has remarks
+            if (remarksResponse.data.success && remarksResponse.data.data.length > 0) {
+              // Verify the remarks belong to this tharav
+              const tharavRemarks = remarksResponse.data.data.filter(
+                remark => remark.nirnay_id === tharav.nirnay_id
+              );
+              
+              if (tharavRemarks.length > 0) {
+                console.log("Found remarks for tharav:", tharav);
+                isTharavValid = true;
+              }
+            }
+          }
+          
+          if (!isTharavValid) {
+            allTharavsValid = false;
+            invalidTharavs.push(tharav);
+          }
+        }
+  
+        if (!allTharavsValid) {
+          Swal.fire({
+            icon: 'warning',
+            title: t('Cannot Create New Meeting'),
+            html: `<div class="text-left">
+              <p class="mb-2">${t('Meeting')} #${meeting.number} ${t('has incomplete tharavs')}</p>
+              <p class="text-sm text-gray-600">${t('Each tharav must be either completed (Active) or have its own remarks')}</p>
+              <p class="text-sm text-gray-600 mt-2">${t('Number of incomplete tharavs')}: ${invalidTharavs.length}</p>
+            </div>`,
+            confirmButtonText: t('OK')
+          });
+          setIsCheckingMeeting(false);
+          return false;
+        }
+      }
+  
+      // All meetings have all tharavs valid
+      setIsCheckingMeeting(false);
+      return true;
+    } catch (error) {
+      console.error("Error checking if new meeting can be created:", error);
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('An error occurred while checking if a new meeting can be created.')
+      });
+      setIsCheckingMeeting(false);
+      return false;
+    }
   };
 
   const handleMemberChange = (member) => {
@@ -260,7 +367,7 @@ const Meetings = () => {
   const getAddressFromGoogle = async (lat, lon) => {
     try {
       const response = await fetch(
-        `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${lat},${lon}&key=AlzaSytrcKULEwn4WVVQDuh6EIZfjdXfq7GCHtH`,
+        `https://maps.gomaps.pro/maps/api/geocode/json?latlng=${lat},${lon}&key=AlzaSyHvevS18i8KquC0cX9_YhJOBwCdK4G8JSd`,
       )
       const data = await response.json()
       if (data.status === "OK" && data.results.length > 0) {
@@ -498,14 +605,22 @@ const Meetings = () => {
   <h2 className="text-xl md:text-3xl font-bold realfont2">{t("smcMeetings")}</h2>
   <button
               onClick={toggleModal}
-
-    className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
+              disabled={isCheckingMeeting}
+              className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
   >
+    {isCheckingMeeting ? (
+      <>
+        <div className="w-5 h-5 border-2 border-blue-950 border-t-transparent rounded-full animate-spin mr-2"></div>
+        <span className="text-sm sm:text-base realfont2">{t("Checking...")}</span>
+      </>
+    ) : (
+      <>
     <Plus className="mr-1 sm:mr-2" size={20} />
     <span className="text-sm sm:text-base realfont2">{t("addMeeting")}</span>
+      </>
+    )}
   </button>
 </div>
-
        
 
 
@@ -629,7 +744,7 @@ const Meetings = () => {
           <label className="block text-sm font-medium text-blue-950">{t("address")}</label>
           <input
             value={address}
-            readOnly
+            onChange={(e) => setAddress(e.target.value)}
             className="w-full px-3 py-2 border rounded-md bg-gray-50"
           />
         </div>

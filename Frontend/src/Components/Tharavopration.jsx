@@ -3,6 +3,7 @@ import { Plus, X, AlertCircle, Search, Upload, Camera, Image } from "lucide-reac
 import DataTable from "react-data-table-component";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import Swal from 'sweetalert2';
 
 export default function TharavOperation({ meetingNumber, meetingId }) {
   const navigate = useNavigate();
@@ -159,8 +160,21 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
   };
 
   const handleDelete = (id) => {
-    setDeleteNirnayId(id);
-    setIsDeleteModalOpen(true);
+    Swal.fire({
+      title: t('Are you sure?'),
+      text: t("You won't be able to revert this!"),
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t('Yes, delete it!'),
+      cancelButtonText: t('Cancel')
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setDeleteNirnayId(id);
+        confirmDelete();
+      }
+    });
   };
 
   const handleRemarks = (row) => {
@@ -207,24 +221,15 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     if (!tharav.problemFounded.trim()) {
       newErrors.problemFounded = "Problem Founded is required";
       isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(tharav.problemFounded.trim())) {
-      newErrors.problemFounded = "Problem Founded must contain only letters and spaces";
-      isValid = false;
     }
 
     if (!tharav.where.trim()) {
       newErrors.where = "Where is required";
       isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(tharav.where.trim())) {
-      newErrors.where = "Where must contain only letters and spaces";
-      isValid = false;
     }
 
     if (!tharav.what.trim()) {
       newErrors.what = "What is required";
-      isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(tharav.what.trim())) {
-      newErrors.what = "What must contain only letters and spaces";
       isValid = false;
     }
 
@@ -239,16 +244,10 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     if (!tharav.deadStockNumber.trim()) {
       newErrors.deadStockNumber = "Dead Stock Number is required";
       isValid = false;
-    } else if (!/^[a-zA-Z0-9\s\-_#@$%&*()]+$/.test(tharav.deadStockNumber.trim())) {
-      newErrors.deadStockNumber = "Dead Stock Number can contain letters, numbers, and common symbols";
-      isValid = false;
     }
 
     if (!tharav.decisionTaken.trim()) {
       newErrors.decisionTaken = "Decision Taken is required";
-      isValid = false;
-    } else if (!/^[a-zA-Z\s]+$/.test(tharav.decisionTaken.trim())) {
-      newErrors.decisionTaken = "Decision Taken must contain only letters and spaces";
       isValid = false;
     }
 
@@ -298,11 +297,25 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     try {
       const res = await fetch(url, { method, body: formData });
       if (!res.ok) throw new Error("Failed to save nirnay");
+      
+      // Show success message
+      Swal.fire({
+        title: isEditing ? t('Success!') : t('Success!'),
+        text: isEditing ? t('Tharav updated successfully') : t('Tharav added successfully'),
+        icon: 'success',
+        timer: 1000
+      });
+      
       closeModal();
       fetchTharavs();
     } catch (error) {
       console.error("Fetch error:", error);
-      setFormError("Failed to save Tharav. Please try again.");
+      Swal.fire({
+        title: t('Error!'),
+        text: t('Failed to save Tharav. Please try again.'),
+        icon: 'error',
+        timer: 1000
+      });
     }
   };
 
@@ -366,12 +379,26 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     try {
       const res = await fetch(`${API_URL}/${deleteNirnayId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete tharav");
+      
       setNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId));
       setFilteredNirnay((prev) => prev.filter((item) => item.nirnay_id !== deleteNirnayId));
       setIsDeleteModalOpen(false);
+      
+      // Show success message
+      Swal.fire({
+        title: t('Deleted!'),
+        text: t('Tharav has been deleted successfully.'),
+        icon: 'success',
+        timer: 1000
+      });
     } catch (error) {
       console.error("Error deleting Tharav:", error);
-      setFormError("Failed to delete Tharav");
+      Swal.fire({
+        title: t('Error!'),
+        text: t('Failed to delete Tharav. Please try again.'),
+        icon: 'error',
+        timer: 1000
+      });
     }
   };
 
@@ -546,38 +573,45 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
     },
     {
       name: t("Actions"),
-    
-      cell: (row) => (
-        <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
-          <button
-            onClick={() => handleEdit(row)}
-            title={t("edit")}
-            className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
-            >
-            
-            <span>{t("edit")}</span>
-          </button>
-          <button
-            onClick={() => handleDelete(row.nirnay_id)}
-            title={t("Delete")}
-            className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
-            >
+      cell: (row) => {
+          const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
+          const isCompleted = row.work_status === 'Completed';
           
-            {t("Delete")}
-          </button>
-          <button
-            onClick={() => handleRemarks(row)}
-            title={t("Remarks")}
-            className=" text-green-600 px-3 py-1 rounded-md hover:bg-green-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
-            >
-          
-            {t("Remarks")}
-          </button>
-        </div>
-      ),
+          return (
+              <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-2 py-2">
+                  {!isCompleted ? (
+                      <>
+                          <button
+                              onClick={() => handleEdit(row)}
+                              title={t("edit")}
+                              className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
+                          >
+                              <span>{t("edit")}</span>
+                          </button>
+                          <button
+                              onClick={() => handleDelete(row.nirnay_id)}
+                              title={t("Delete")}
+                              className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
+                          >
+                              {t("Delete")}
+                          </button>
+                      </>
+                  ) : (
+                      <span className="text-gray-500 text-sm">Completed</span>
+                  )}
+                  <button
+                      onClick={() => handleRemarks(row)}
+                      title={t("Remarks")}
+                      className="text-green-600 px-3 py-1 rounded-md hover:bg-green-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer whitespace-nowrap"
+                  >
+                      {t("Remarks")}
+                  </button>
+              </div>
+          );
+      },
       width: "270px",
-    },
-  ];
+  },
+];
 
   return (
 <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-8 realfont max-w-[1200px]">
@@ -627,7 +661,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
         table: {
           style: {
             width: "100%",
-            minWidth: "100%",
+            minWidth: "109%",
           },
         },
         tableWrapper: {

@@ -68,7 +68,7 @@ async function createMeeting(req, res) {
     }
 
     try {
-      console.log("Uploaded File:", req.file);
+      
       const imageUrl = req.file ? req.file.filename : "default.jpg"; // Store only the image filename
       const meetingData = {
         ...req.body,
@@ -139,23 +139,25 @@ async function deleteMeeting(req, res) {
       console.error("Meeting not found");
       return res.status(404).json({ error: "Meeting not found" });
     }
-
-    // Extract the image filename from the meeting record
-    const parts = meetingRecord.meeting_record.split("|");
-    const imageFilename = parts[5]; // Image is at index 5
     
-    console.log("Deleting Meeting Data:", meetingRecord);
-    // Delete the image file
-    deleteImage(imageFilename);
-    
-    // Delete the meeting record
+    // Delete the meeting record and related records
     const result = await Meeting.deleteMeeting(req.params.id);
 
-    res.json({ message: "Meeting deleted successfully", result });
+    if (result.error) {
+      return res.status(400).json(result);
+    }
+
+    res.json({ message: "Meeting and related records deleted successfully", result });
   } catch (error) {
     console.error("Error deleting meeting:", error);
     res.status(500).json({ error: "Failed to delete meeting" });
   }
 }
 
-module.exports = { getMeetings, createMeeting, updateMeeting, deleteMeeting, getMeetingsAll };
+module.exports = {
+  getMeetings,
+  createMeeting,
+  updateMeeting,
+  deleteMeeting,
+  getMeetingsAll,
+};

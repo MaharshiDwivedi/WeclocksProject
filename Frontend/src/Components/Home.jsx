@@ -14,6 +14,7 @@ import {
   BadgeIndianRupee,
   Menu,
   X,
+  ClipboardList,
   DownloadIcon,
 } from "lucide-react";
 import Meetings from "./Meetings";
@@ -22,8 +23,9 @@ import NewMember from "./NewMember";
 import Tharav from "./Tharav";
 import FundReq from "./FundReq";
 import GenerateReport from "./GenerateReport";
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import Absentmember from "./Absentmember";
 
 const Home = () => {
   const location = useLocation();
@@ -198,6 +200,12 @@ const Home = () => {
             icon={<BadgeIndianRupee size={18} />}
           />
 
+          <NavLink
+            to="/home/absentmember"
+            label={t("Absentmember")}
+            path={location.pathname}
+            icon={<ClipboardList size={18} />}
+          />
           <button
             onClick={() => setReportModalOpen(true)}
             className={`flex items-center px-3 py-2 transition-all duration-300 ease-in-out font-medium relative overflow-hidden text-sm ${
@@ -306,11 +314,12 @@ const Home = () => {
             <Route path="newmember" element={<NewMember />} />
             <Route path="fundreq" element={<FundReq />} />
             <Route path="*" element={<Navigate to="dashboard" replace />} />
+            <Route path="absentmember" element={<Absentmember />} />
           </Routes>
         </main>
         <footer className="bg-blue-100 text-center text-black font-bold flex items-center justify-center p-3 mt-auto realfont h-16">
-  Developed by WeClocks Technology Pvt. Ltd. @ 2025
-</footer> 
+          Developed by WeClocks Technology Pvt. Ltd. @ 2025
+        </footer>
 
         {reportModalOpen && (
           <GenerateReport onClose={() => setReportModalOpen(false)} />

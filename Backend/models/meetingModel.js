@@ -67,8 +67,6 @@ async function getMeetingsBySchoolId(schoolId) {
   }
 }
 
-
-
 // Get the next meeting number for a specific school
 async function getNextMeetingNumberForSchool(schoolId) {
   try {
@@ -219,37 +217,84 @@ async function updateMeeting(meeting_id, updatedData) {
 }
 
 // Delete a meeting
+// Soft Delete a meeting by setting its status to 'Inactive'
 const deleteMeeting = async (meeting_id) => {
+  const conn = await connection.getConnection();
+  await conn.beginTransaction();
+
   try {
-    const sql = "DELETE FROM tbl_new_smc WHERE meeting_id = ?";
-    const [result] = await connection.execute(sql, [meeting_id]);
+    // Get the meeting record to extract meeting_number and school_id
+    const [meeting] = await conn.execute(
+      "SELECT meeting_record FROM tbl_new_smc WHERE meeting_id = ? AND status = 'Active'",
+      [meeting_id]
+    );
 
-    if (result.affectedRows > 0) {
-      // Find the highest existing meeting_id
-      const [maxResult] = await connection.execute(
-        "SELECT MAX(meeting_id) as max_id FROM tbl_new_smc"
-      );
-
-      const maxId = maxResult[0].max_id || 0;
-
-      // Reset AUTO_INCREMENT to the last valid meeting_id + 1
-      await connection.execute(
-        `ALTER TABLE tbl_new_smc AUTO_INCREMENT = ${maxId + 1}`
-      );
-
-      return { success: true, message: "Meeting deleted and auto-increment reset" };
-    } else {
-      return { error: "Meeting not found" };
+    if (meeting.length === 0) {
+      await conn.rollback();
+      return { error: "Meeting not found or already inactive" };
     }
+
+    const meetingRecord = meeting[0].meeting_record.split('|');
+    const meetingNumber = meetingRecord[0];
+    const schoolId = meetingRecord[1];
+
+    // Soft delete: Update status to 'Inactive'
+    const [updateResult] = await conn.execute(
+      "UPDATE tbl_new_smc SET status = 'Inactive' WHERE meeting_id = ?",
+      [meeting_id]
+    );
+
+    if (updateResult.affectedRows === 0) {
+      await conn.rollback();
+      return { error: "Failed to mark meeting as inactive" };
+    }
+
+    // Set related tharav records to inactive
+    await conn.execute(
+      `UPDATE tbl_new_smc_nirnay 
+       SET status = 'Inactive' 
+       WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 1), '|', -1) = ?
+       AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?`,
+      [meetingNumber, schoolId]
+    );
+
+    // Set related remarks to inactive
+    await conn.execute(
+      `UPDATE tbl_new_smc_nirnay_remarks r
+       JOIN tbl_new_smc_nirnay t ON r.nirnay_remarks_record LIKE CONCAT('%', SUBSTRING_INDEX(SUBSTRING_INDEX(t.nirnay_reord, '|', 2), '|', -1), '%')
+       SET r.status = 'Inactive'
+       WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(t.nirnay_reord, '|', 1), '|', -1) = ?
+       AND SUBSTRING_INDEX(SUBSTRING_INDEX(t.nirnay_reord, '|', 6), '|', -1) = ?`,
+      [meetingNumber, schoolId]
+    );
+
+    // Set related demands to inactive
+    await conn.execute(
+      `UPDATE tbl_demand_master d
+       JOIN tbl_new_smc_nirnay_remarks r ON d.demand_master_record LIKE CONCAT('%', r.nirnay_remarks_id, '%')
+       JOIN tbl_new_smc_nirnay t ON r.nirnay_remarks_record LIKE CONCAT('%', SUBSTRING_INDEX(SUBSTRING_INDEX(t.nirnay_reord, '|', 2), '|', -1), '%')
+       SET d.status = 'Inactive'
+       WHERE SUBSTRING_INDEX(SUBSTRING_INDEX(t.nirnay_reord, '|', 1), '|', -1) = ?
+       AND SUBSTRING_INDEX(SUBSTRING_INDEX(t.nirnay_reord, '|', 6), '|', -1) = ?`,
+      [meetingNumber, schoolId]
+    );
+
+    await conn.commit();
+    return { success: true, message: "Meeting and related records marked as inactive" };
   } catch (error) {
+    await conn.rollback();
     console.error("Error in deleteMeeting:", error.message);
-    return { error: "Failed to delete meeting" };
+    return { error: "Failed to mark meeting as inactive" };
+  } finally {
+    conn.release();
   }
 };
+
 
 const getMeetingById = async (meeting_id) => { 
   const [rows] = await connection.query("SELECT * FROM tbl_new_smc WHERE meeting_id = ?", [meeting_id]);
   return rows.length > 0 ? rows[0] : null;
 };
+
 
 module.exports = { getMeetingsBySchoolId, addMeeting, updateMeeting, deleteMeeting, getMeetingById,getAllMeetings };

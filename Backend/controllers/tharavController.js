@@ -1,4 +1,4 @@
-const connection = require('../Config/Connection'); // Add this line at the top
+const connection = require('../Config/Connection'); 
 
 // Get all Tharav records for a specific meeting and school
 const getTharav = async (req, res) => {
@@ -11,7 +11,7 @@ const getTharav = async (req, res) => {
 
         const sql = `
             SELECT * FROM tbl_new_smc_nirnay 
-            WHERE status = 'Active'
+            WHERE (status = 'Active' OR work_status = 'Completed')
             AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 1), '|', -1) = ?
             AND SUBSTRING_INDEX(SUBSTRING_INDEX(nirnay_reord, '|', 6), '|', -1) = ?
             ORDER BY nirnay_id DESC;
@@ -24,7 +24,7 @@ const getTharav = async (req, res) => {
     }
 };
 
-// Get Tharav counts by school
+// Get   counts by school
 const getTharavCountBySchool = async (req, res) => {
     try {
         const { school_id } = req.query;
@@ -75,7 +75,7 @@ const addTharav = async (req, res) => {
             }
         }
 
-        const result = await connection.query("INSERT INTO tbl_new_smc_nirnay (nirnay_reord) VALUES (?)", [recordToSave]);
+        const result = await connection.query("INSERT INTO tbl_new_smc_nirnay (nirnay_reord , status) VALUES (?,?)", [recordToSave, "Active"]);
         res.json({
             nirnay_id: result.insertId,
             nirnay_reord: recordToSave,

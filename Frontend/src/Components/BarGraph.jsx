@@ -116,9 +116,6 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
     },
   };
 
-
-
-
   const data = {
     labels: [t("totalExpense")],
     datasets: [
@@ -134,14 +131,6 @@ const BarGraph = ({ width, height, actualExpense, expectedExpense  }) => {
         },
     ],
 };
-
-
-
-
-
-
-
-
 
   return (
     
