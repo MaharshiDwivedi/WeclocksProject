@@ -468,6 +468,24 @@ const Meetings = () => {
       return;
     }
   
+    // Add confirmation dialog
+    const confirmResult = await Swal.fire({
+      title: isEditing ? t("Update Meeting?") : t("Add Meeting?"),
+      text: isEditing 
+        ? t("Do you really want to update this meeting?") 
+        : t("Do you really want to add this meeting?"),
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: isEditing ? t("Yes, update it!") : t("Yes, add it!"),
+      cancelButtonText: t("Cancel"),
+    });
+  
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+  
     if (!date || selectedMembers.length === 0) {
       Swal.fire({
         icon: 'error',
@@ -476,15 +494,15 @@ const Meetings = () => {
       })
       return
     }
-
+  
     const formData = new FormData()
     formData.append("meeting_date", date)
     formData.append("latitude", latitude || "0.0000")
     formData.append("longitude", longitude || "0.0000")
-    formData.append("address", address || t("unknown")) // Translated default value
+    formData.append("address", address || t("unknown"))
     formData.append("member_id", selectedMembers.map((m) => m.id).join(","))
     formData.append("selected_member_length", selectedMembers.length)
-
+  
     if (document.getElementById("fileInput")?.files[0]) {
       formData.append("image", document.getElementById("fileInput").files[0])
     } else if (photo && photo.startsWith("data:image")) {
@@ -493,7 +511,7 @@ const Meetings = () => {
     } else if (photoName) {
       formData.append("image_url", photoName)
     }
-
+  
     if (!isEditing) {
       formData.append("meeting_number", meetingNumber)
       formData.append("school_id", localStorage.getItem("school_id") || "")
@@ -501,10 +519,10 @@ const Meetings = () => {
       formData.append("created_at", new Date().toISOString().replace("T", " ").split(".")[0])
       formData.append("updated_at", "0000-00-00 00:00:00")
     }
-
+  
     try {
       let response
-
+  
       if (isEditing) {
         response = await axios.put(`http://localhost:5000/api/meeting/${editingMeetingId}`, formData, {
           headers: { "Content-Type": "multipart/form-data" },
@@ -520,7 +538,7 @@ const Meetings = () => {
         response = await axios.post("http://localhost:5000/api/meeting", formData, {
           headers: { "Content-Type": "multipart/form-data" },
         })
-
+  
         setMeetingNumber(meetingNumber + 1)
         Swal.fire({
           icon: 'success',
@@ -530,7 +548,7 @@ const Meetings = () => {
           showConfirmButton: false
         })
       }
-
+  
       console.log("Meeting saved successfully:", response.data)
       await fetchMeetings()
       resetForm()
@@ -542,8 +560,10 @@ const Meetings = () => {
         icon: 'error',
         title: t('Error'),
         text: error.response?.data?.message || t('submitError')
-      })    }
+      })
+    }
   }
+
 
   const resetForm = () => {
     setIsOpen(false)
@@ -559,44 +579,7 @@ const Meetings = () => {
     stopCamera()
   }
 
-  const handleDeleteMeeting = async (meetingId, event) => {
-    event.stopPropagation()
-
-    const result = await Swal.fire({
-      title: t('Are you sure?'),
-      text: t('confirmDeleteMeeting'),
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: t('Yes, delete it!'),
-      cancelButtonText: t('Cancel')
-    })
-
-    if (result.isConfirmed) {
-      try {
-        const response = await axios.delete(`http://localhost:5000/api/meeting/${meetingId}`)
-        console.log("Backend response:", response.data)
-
-        setMeetings((prevMeetings) => prevMeetings.filter((meeting) => meeting.id !== meetingId))
-        Swal.fire({
-          icon: 'success',
-          title: t('Deleted!'),
-          text: t('Meeting has been deleted.'),
-          timer: 2000,
-          showConfirmButton: false
-        })
-      } catch (error) {
-        console.error("Error deleting meeting:", error)
-        Swal.fire({
-          icon: 'error',
-          title: t('Error'),
-          text: t('deleteError')
-        })
-      }
-    }
-  }
-
+  
 
   return (
 <div className="min-h-screen p-3 md:p-6 space-y-4 md:space-y-6">

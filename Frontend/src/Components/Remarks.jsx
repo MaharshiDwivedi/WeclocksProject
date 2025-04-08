@@ -171,6 +171,21 @@ export default function Remarks() {
       Swal.fire("Error!", "Remark text and actual expense are required", "error")
       return
     }
+
+    // Add confirmation dialog
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to add this remark?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, add it!",
+    })
+
+    if (!confirmResult.isConfirmed) {
+      return
+    }
   
     try {
       setIsLoading(true)
@@ -225,6 +240,21 @@ export default function Remarks() {
       return
     }
 
+    // Add confirmation dialog
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to update this remark?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, update it!",
+    })
+
+    if (!confirmResult.isConfirmed) {
+      return
+    }
+
     // Create FormData for the edit request
     const formData = new FormData()
     formData.append("remarkText", remarkText)
@@ -268,6 +298,21 @@ export default function Remarks() {
     
     if (!finalRemark) {
       Swal.fire("Error!", "Final remark is required", "error")
+      return
+    }
+
+    // Add confirmation dialog
+    const confirmResult = await Swal.fire({
+      title: "Are you sure?",
+      text: "Do you really want to complete this tharav? This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, complete it!",
+    })
+
+    if (!confirmResult.isConfirmed) {
       return
     }
   
@@ -589,7 +634,7 @@ export default function Remarks() {
                           </button>
                           </>
                            ) : (
-                            <span className="text-gray-500 text-sm">Actions disabled (Tharav completed)</span>
+                            <span className="text-gray-500 text-sm">Tharav is completed</span>
                             )}
                         </div>
                       </td>
@@ -923,4 +968,3 @@ export default function Remarks() {
     </div>
   )
 }
-

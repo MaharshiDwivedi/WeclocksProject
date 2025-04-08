@@ -239,5 +239,12 @@
   "Failed to generate report": "अहवाल तयार करण्यात अयशस्वी",
   "Download Report": "अहवाल डाउनलोड करा",
   "Generating...": "तयार होत आहे...",
-  "Total Members" : "एकूण सदस्य"
+  "Total Members" : "एकूण सदस्य",
+
+
+
+
+  "Absentmember": "गैरहजर सदस्य",
+  "totalAbsentMembers": "एकूण गैरहजर सदस्यांची संख्या",
+  "noAbsentMembersFound": "कोणतेही गैरहजर सदस्य आढळले नाहीत"
 }

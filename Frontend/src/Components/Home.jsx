@@ -136,7 +136,11 @@ const Home = () => {
         name: t("committeeMembers"),
         path: "/home/newmember",
       });
-    }
+    } else if (pathnames.includes("absentmember"))
+      breadcrumbs.push({
+        name: t("Absentmember"),
+        path: "/home/absentmember",
+      });
 
     return breadcrumbs;
   }, [location.pathname, t]);

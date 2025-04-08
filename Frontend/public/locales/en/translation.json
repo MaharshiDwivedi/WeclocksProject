@@ -244,5 +244,9 @@
   "Checking...": "Checking...",
   "Report Generated Successfully": "Report Generated Successfully",
   "Report Generation Failed": "Report Generation Failed",
-  "Report Generation Error": "Report Generation Error"
+  "Report Generation Error": "Report Generation Error",
+
+  "totalAbsentMembers": "Total Absent Members",
+  "noAbsentMembersFound": "No absent members found",
+  "Absentmember": "Absent Members"
 }

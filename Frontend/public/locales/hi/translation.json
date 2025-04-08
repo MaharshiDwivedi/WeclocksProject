@@ -241,5 +241,9 @@
   "Failed to generate report": "रिपोर्ट उत्पन्न करने में विफल",
   "Download Report": "रिपोर्ट डाउनलोड करें",
   "Generating...": "उत्पन्न हो रहा है...",
-  "Total Members" : "कुल सदस्य"
+  "Total Members" : "कुल सदस्य",
+
+  "Absentmember": "अनुपस्थित सदस्य",
+  "totalAbsentMembers": "कुल अनुपस्थित सदस्यों की संख्या",
+  "noAbsentMembersFound": "कोई अनुपस्थित सदस्य नहीं मिले"
 }

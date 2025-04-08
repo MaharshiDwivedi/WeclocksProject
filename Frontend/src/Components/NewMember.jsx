@@ -147,7 +147,6 @@ export default function NewMember() {
   //   }
   // }
 
-
   const confirmDelete = async (id) => {
     const result = await Swal.fire({
       title: t("Confirm Delete"),
@@ -156,22 +155,22 @@ export default function NewMember() {
       showCancelButton: true,
       confirmButtonText: t("yes"),
       cancelButtonText: t("no"),
-    });
-  
+    })
+
     if (result.isConfirmed) {
-      handleDelete(id); // Proceed with deletion if confirmed
+      handleDelete(id) // Proceed with deletion if confirmed
     }
-  };
-  
+  }
+
   const handleDelete = async (id) => {
     try {
-      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
-  
+      const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" })
+
       // Check if the response is successful
       if (!response.ok) {
-        throw new Error("Failed to delete member");
+        throw new Error("Failed to delete member")
       }
-  
+
       // Show success message using SweetAlert
       Swal.fire({
         title: t("delete"),
@@ -179,21 +178,20 @@ export default function NewMember() {
         icon: "success",
         timer: 2000,
         showConfirmButton: false,
-      });
-  
-      fetchMembers(); // Refresh the members list
+      })
+
+      fetchMembers() // Refresh the members list
     } catch (error) {
       // Show error message using SweetAlert
       Swal.fire({
         title: t("error"),
         text: t("Delete Member Error"),
         icon: "error",
-      });
-  
-      console.error("Error deleting member:", error);
+      })
+
+      console.error("Error deleting member:", error)
     }
-  };
-  
+  }
 
   const validateForm = () => {
     const newErrors = {}
@@ -214,64 +212,68 @@ export default function NewMember() {
   }
 
   const handleSubmit = async () => {
-    if (!validateForm()) return
-    const result = await Swal.fire({
-      title: isEditing ? t("update") : t("submit"),
-      text: isEditing ? t("Confirm Update Member") : t("Confirm Add Member"),
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: isEditing ? t("update") : t("submit"),
-      cancelButtonText: t("cancel"),
-    })
-    if (!result.isConfirmed) return
-    const schoolId = localStorage.getItem("school_id")
-    const userId = localStorage.getItem("user_id")
-    const date = new Date()
-    const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
-      2,
-      "0",
-    )}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(
-      2,
-      "0",
-    )}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(
-      2,
-      "0",
-    )} ${date.getHours() < 12 ? "AM" : "PM"}`
-    const memberData = `${newMember.name}|${newMember.mobile}|${newMember.representative}|${newMember.cast}|${schoolId}|${userId}|${formattedDate}|0000-00-00|${newMember.designation}|${newMember.gender}|${newMember.year}`
-    const method = isEditing ? "PUT" : "POST"
-    const url = isEditing ? `${API_URL}/${currentMemberId}` : API_URL
-    try {
-      Swal.fire({
-        title: isEditing ? t("updating") : t("adding"),
-        text: t("pleaseWait"),
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading(),
-      })
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ member_record: memberData }),
-      })
-      if (!res.ok) throw new Error(t("saveMemberError"))
-      await Swal.fire({
-        icon: "success",
-        title: isEditing ? t("Update Success") : t("Add Success"),
-        text: isEditing ? t("Update Member Success") : t("Add Member Success"),
-      })
-      fetchMembers()
-      closeModal()
-    } catch (error) {
-      console.error("Error saving member:", error)
-      Swal.fire({
-        icon: "error",
-        title: t("error"),
-        text: error.message || t("saveMemberError"),
-      })
-    }
-  }
+  if (!validateForm()) return;
 
+  // Add confirmation dialog
+  const confirmResult = await Swal.fire({
+    title: t('Are you sure?'),
+    text: isEditing ? t('Do you really want to update this member?') : t('Do you really want to add this member?'),
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: t('Yes'),
+    cancelButtonText: t('No')
+  });
+
+  if (!confirmResult.isConfirmed) return;
+
+  const schoolId = localStorage.getItem("school_id");
+  const userId = localStorage.getItem("user_id");
+  const date = new Date();
+  const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+    2,
+    "0",
+  )}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(
+    2,
+    "0",
+  )}:${String(date.getMinutes()).padStart(2, "0")}:${String(date.getSeconds()).padStart(
+    2,
+    "0",
+  )} ${date.getHours() < 12 ? "AM" : "PM"}`;
+  const memberData = `${newMember.name}|${newMember.mobile}|${newMember.representative}|${newMember.cast}|${schoolId}|${userId}|${formattedDate}|0000-00-00|${newMember.designation}|${newMember.gender}|${newMember.year}`;
+  const method = isEditing ? "PUT" : "POST";
+  const url = isEditing ? `${API_URL}/${currentMemberId}` : API_URL;
+
+  try {
+    Swal.fire({
+      title: isEditing ? t("updating") : t("adding"),
+      text: t("pleaseWait"),
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ member_record: memberData }),
+    });
+    if (!res.ok) throw new Error(t("saveMemberError"));
+    await Swal.fire({
+      icon: "success",
+      title: isEditing ? t("Update Success") : t("Add Success"),
+      text: isEditing ? t("Update Member Success") : t("Add Member Success"),
+    });
+    fetchMembers();
+    closeModal();
+  } catch (error) {
+    console.error("Error saving member:", error);
+    Swal.fire({
+      icon: "error",
+      title: t("error"),
+      text: error.message || t("saveMemberError"),
+    });
+  }
+};
   useEffect(() => {
     const filtered = searchTerm
       ? members.filter((member) =>
@@ -398,123 +400,119 @@ export default function NewMember() {
           >
             {t("DELETE")}
           </button>
-          </div>
+        </div>
       ),
       minWidth: "150px",
       allowOverflow: true,
-      },
+    },
   ]
 
   return (
     <div className="px-2 sm:px-4 py-3 md:py-6 realfont">
-     <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
-     <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
-      
-        {/* Header */}
-        <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
-        
-          <h2 className="flex items-center gap-1 sm:gap-2 text-xl md:text-2xl realfont2">
-  <Users size={isMobile ? 20 : 24} />
-  {t("committeeMembers")}
-</h2>
+      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
+        <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
+          {/* Header */}
+          <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+            <h2 className="flex items-center gap-1 sm:gap-2 text-xl md:text-2xl realfont2">
+              <Users size={isMobile ? 20 : 24} />
+              {t("committeeMembers")}
+            </h2>
 
-
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200 realfont2"
-          >
-            <Plus className="mr-1 sm:mr-1 " size={isMobile ? 14 : 16} /> {t("addMember")}
-          </button>
-        </div>
-
-        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-        
-           <div className="relative flex-grow max-w-full sm:max-w-[300px]">
-                      <input
-                        type="text"
-                        placeholder={t("Search")}
-                        value={searchTerm}
-                        onChange={handleSearchChange}
-                        className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
-                      />
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-                 </div>
-          <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
-            {t("totalMembers")} :<span className="text-blue-950 font-bold px-2">{filteredMembers.length}</span>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200 realfont2"
+            >
+              <Plus className="mr-1 sm:mr-1 " size={isMobile ? 14 : 16} /> {t("addMember")}
+            </button>
           </div>
-        </div>
 
-        {/* Table container with horizontal scrolling */}
-        <div className="overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
-          <DataTable
-            columns={columns}
-            data={filteredMembers}
-            pagination
-            paginationPerPage={10}
-            paginationRowsPerPageOptions={[10, 20, 30, 50]}
-            highlightOnHover
-            responsive
-            defaultSortFieldId={1}
-            progressPending={loading}
-            customStyles={{
-              headCells: {
-                style: {
-                  backgroundColor: "#eceef1",
-                  fontWeight: "600",
-                  justifyContent: "center",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                  borderRight: "1px solid #f0f0f0",
-                  fontSize: "16",
+          <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="relative flex-grow max-w-full sm:max-w-[300px]">
+              <input
+                type="text"
+                placeholder={t("Search")}
+                value={searchTerm}
+                onChange={handleSearchChange}
+                className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
+              />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+            </div>
+            <div className="text-base sm:text-md md:text-md text-gray-600 font-medium">
+              {t("totalMembers")} :<span className="text-blue-950 font-bold px-2">{filteredMembers.length}</span>
+            </div>
+          </div>
+
+          {/* Table container with horizontal scrolling */}
+          <div className="overflow-x-auto" style={{ scrollbarWidth: "thin" }}>
+            <DataTable
+              columns={columns}
+              data={filteredMembers}
+              pagination
+              paginationPerPage={10}
+              paginationRowsPerPageOptions={[10, 20, 30, 50]}
+              highlightOnHover
+              responsive
+              defaultSortFieldId={1}
+              progressPending={loading}
+              customStyles={{
+                headCells: {
+                  style: {
+                    backgroundColor: "#eceef1",
+                    fontWeight: "600",
+                    justifyContent: "center",
+                    paddingLeft: "8px",
+                    paddingRight: "8px",
+                    borderRight: "1px solid #f0f0f0",
+                    fontSize: "16",
+                  },
                 },
-              },
-              cells: {
-                style: {
-                  fontFamily: "Poppins",
-                  color: "#333",
-                  justifyContent: "center",
-                  paddingLeft: "2px",
-                  paddingRight: "2px",
-                  borderRight: "1px solid #f9f9f9",
-                  fontSize: "14",
+                cells: {
+                  style: {
+                    fontFamily: "Poppins",
+                    color: "#333",
+                    justifyContent: "center",
+                    paddingLeft: "2px",
+                    paddingRight: "2px",
+                    borderRight: "1px solid #f9f9f9",
+                    fontSize: "14",
+                  },
                 },
-              },
-              rows: {
-                style: {
-                  "&:nth-child(odd)": {
+                rows: {
+                  style: {
+                    "&:nth-child(odd)": {
+                      backgroundColor: "#f8f9fa",
+                    },
+                  },
+                  stripedStyle: {
                     backgroundColor: "#f8f9fa",
                   },
                 },
-                stripedStyle: {
-                  backgroundColor: "#f8f9fa",
+                pagination: {
+                  style: {
+                    fontSize: "13px",
+                    minHeight: "56px",
+                    borderTopStyle: "solid",
+                    borderTopWidth: "1px",
+                    borderTopColor: "#f3f4f6",
+                  },
                 },
-              },
-              pagination: {
-                style: {
-                  fontSize: "13px",
-                  minHeight: "56px",
-                  borderTopStyle: "solid",
-                  borderTopWidth: "1px",
-                  borderTopColor: "#f3f4f6",
+                table: {
+                  style: {
+                    width: "100%",
+                  },
                 },
-              },
-              table: {
-                style: {
-                  width: "100%",
-                },
-              },
-            }}
-          />
-        </div>
+              }}
+            />
+          </div>
 
-        {filteredMembers.length === 0 && !loading && (
-          <div className="text-center p-4 md:p-8 text-gray-500">{t("noMembersFound")}</div>
-        )}
-      </div>
+          {filteredMembers.length === 0 && !loading && (
+            <div className="text-center p-4 md:p-8 text-gray-500">{t("noMembersFound")}</div>
+          )}
+        </div>
       </div>
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0  backdrop-blur-xs flex items-center justify-center z-50 p-3">
+        <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-3">
           <div
             ref={modalRef}
             className="bg-white rounded-sm shadow-2xl w-full max-w-[95vw] md:max-w-[850px] max-h-[90vh] overflow-y-auto animate-fade-in"
