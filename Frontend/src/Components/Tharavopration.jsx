@@ -6,6 +6,7 @@ import DataTable from "react-data-table-component"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import Swal from "sweetalert2"
+import SkeletonLoader from "./SkeletonLoader"
 
 export default function TharavOperation({ meetingNumber, meetingId }) {
   const navigate = useNavigate()
@@ -35,6 +36,8 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [deleteNirnayId, setDeleteNirnayId] = useState(null)
   const [selectedImage, setSelectedImage] = useState(null)
+  const [loading, setLoading] = useState(true);
+
 
   const schoolId = localStorage.getItem("school_id")
   const userId = localStorage.getItem("user_id")
@@ -106,6 +109,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
 
   const fetchTharavs = async () => {
     try {
+      setLoading(true); // Ensure loading is set to true at start
       const res = await fetch(`${API_URL}/filter?meeting_number=${meetingNumber}&school_id=${schoolId}`)
       if (!res.ok) throw new Error("Failed to fetch data")
       const data = await res.json()
@@ -115,6 +119,8 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
       console.error("Error fetching Tharavs:", error)
       setNirnay([])
       setFilteredNirnay([])
+    } finally {
+      setLoading(false); // Ensure loading is set to false when done
     }
   }
 
@@ -626,6 +632,11 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
       width: "270px",
     },
   ]
+
+  if (loading) {
+    return <SkeletonLoader />;
+  }
+
 
   return (
     <div className="container mx-auto px-3 sm:px-4 md:px-6 py-4 md:py-8 realfont max-w-[1200px]">

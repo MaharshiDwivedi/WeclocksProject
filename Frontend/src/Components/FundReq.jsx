@@ -6,6 +6,7 @@ import Swal from "sweetalert2"
 import axios from "axios"
 import { Plus, Search, AlertCircle, X,IndianRupee } from "lucide-react"
 import { useTranslation } from "react-i18next"
+import SkeletonLoader from './SkeletonLoader'; 
 
 export default function FundReq() {
   const API_URL = "http://localhost:5000/api/fundreqhm"
@@ -113,70 +114,6 @@ export default function FundReq() {
   //     console.error("Error deleting fund request:", error)
   //   }
   // }
-
-
-
-
-
-
-
-  const SkeletonLoader = () => (
-    <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10 animate-pulse">
-      <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
-        {/* Header Skeleton */}
-        <div className="bg-blue-950 p-3 md:p-4 flex justify-between items-center">
-          <div className="h-8 w-48 bg-gray-300 rounded"></div>
-          <div className="h-10 w-32 bg-gray-300 rounded-md"></div>
-        </div>
-
-        {/* Search and Filter Skeleton */}
-        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="h-10 w-full sm:w-72 bg-gray-200 rounded-md"></div>
-          <div className="h-10 w-full sm:w-36 bg-gray-200 rounded-md"></div>
-        </div>
-
-        {/* Table Skeleton */}
-        <div className="p-3 md:p-4">
-          <div className="space-y-2">
-            {/* Table Header */}
-            <div className="flex gap-2">
-              <div className="h-8 w-20 bg-gray-200 rounded"></div>
-              <div className="h-8 w-28 bg-gray-200 rounded"></div>
-              <div className="h-8 w-28 bg-gray-200 rounded"></div>
-              <div className="h-8 w-28 bg-gray-200 rounded"></div>
-              <div className="h-8 w-36 bg-gray-200 rounded"></div>
-            </div>
-            {/* Table Rows */}
-            {[...Array(5)].map((_, index) => (
-              <div key={index} className="flex gap-2">
-                <div className="h-12 w-20 bg-gray-100 rounded"></div>
-                <div className="h-12 w-28 bg-gray-100 rounded"></div>
-                <div className="h-12 w-28 bg-gray-100 rounded"></div>
-                <div className="h-12 w-28 bg-gray-100 rounded"></div>
-                <div className="h-12 w-36 bg-gray-100 rounded"></div>
-              </div>
-            ))}
-          </div>
-          {/* Pagination Skeleton */}
-          <div className="mt-4 flex justify-between items-center">
-            <div className="h-8 w-40 bg-gray-200 rounded"></div>
-            <div className="h-8 w-64 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -345,6 +282,7 @@ const handleDelete = async (id) => {
     setSearchTerm(e.target.value)
   }
 
+  
 
   
   const handleYearChange = (e) => {
@@ -435,164 +373,168 @@ const handleDelete = async (id) => {
   
 
   return (
-
-    
-    <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
-      <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
-        <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
-          <h2 className="text-xl md:text-2xl font-bold realfont2 flex items-center gap-2">
-            <IndianRupee size={isMobile ? 16 : 18} />
-            {t("Fund Requests")}
-          </h2>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
-          >
-            <Plus className="mr-1 sm:mr-2" size={isMobile ? 16 : 20} />
-            <span className="text-sm sm:text-base realfont2">{t("Add Fund Request")}</span>
-          </button>
-        </div>
-        <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-          <div className="relative flex-grow max-w-full sm:max-w-[300px]">
-            <input
-              type="text"
-              placeholder={t("Search fund requests...")}
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
-            />
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-       </div>
-       <div className="relative">
-  <select
-    value={selectedYear}
-    onChange={handleYearChange}
-    className="w-full sm:w-[150px] px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-  >
-    <option value="">{t("All Years")}</option>
-    <option value="2023-2024">2023-24</option>
-    <option value="2024-2025">2024-25</option>
-  </select>
-</div>
-        </div>
-
-        <div className="overflow-x-auto ">
-          <DataTable
-            columns={columns}
-            data={filteredDemands}
-            pagination
-            paginationPerPage={10}
-            paginationRowsPerPageOptions={[10, 20, 30, 50]}
-            highlightOnHover
-            responsive
-            defaultSortFieldId={1}
-            className="realfont"
-            customStyles={{
-              headCells: {
-                style: {
-                  backgroundColor: "#f3f4f6",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  justifyContent: "center",
-                  paddingLeft: "8px",
-                  paddingRight: "8px",
-                },
-              },
-              cells: {
-                style: {
-                  fontSize: "14px",
-                  color: "#333",
-                  justifyContent: "center",
-                  paddingLeft: "4px",
-                  paddingRight: "4px",
-                  fontFamily:"poppins",
-                  fontWeight:"400"
-                },
-              },
-              pagination: {
-                style: {
-                  fontSize: "13px",
-                  minHeight: "56px",
-                  borderTopStyle: "solid",
-                  borderTopWidth: "1px",
-                  borderTopColor: "#f3f4f6",
-                },
-              },
-            }}
-          />
-        </div>
-        {filteredDemands.length === 0 && (
-          <div className="text-center p-4 md:p-8 text-gray-500">{t("No fund requests found")}</div>
-        )}
-      </div>
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
-          <div ref={modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
-            <div className="p-4 md:p-6 border-b flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold text-blue-950">
-                {isEditing ? t("Edit Fund Request") : t("New Fund Request")}
+    <>
+      {isLoading ? (
+        <SkeletonLoader />
+      ) : (
+            <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
+           <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
+            <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold realfont2 flex items-center gap-2">
+                <IndianRupee size={isMobile ? 16 : 18} />
+                {t("Fund Requests")}
               </h2>
               <button
-                onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+                onClick={() => setIsModalOpen(true)}
+                className="bg-white text-blue-950 px-3 py-1.5 sm:px-4 sm:py-2 rounded-md hover:bg-blue-100 flex items-center shadow-md hover:shadow-lg transition-all duration-200"
               >
-                <X size={20} />
+                <Plus className="mr-1 sm:mr-2" size={isMobile ? 16 : 20} />
+                <span className="text-sm sm:text-base realfont2">{t("Add Fund Request")}</span>
               </button>
             </div>
-            <div className="p-4 md:p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  {t("Year")} <span className="text-red-500">*</span>
-                </label>
+            <div className="p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+              <div className="relative flex-grow max-w-full sm:max-w-[300px]">
+                <input
+                  type="text"
+                  placeholder={t("Search fund requests...")}
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  className="w-full pl-10 pr-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-left transition-all duration-200"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              </div>
+              <div className="relative">
                 <select
-                  value={newDemand.year}
-                  onChange={(e) => setNewDemand({ ...newDemand, year: e.target.value })}
-                  className={`w-full p-3 border ${
-                    errors.year ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                  } rounded focus:outline-none focus:ring`}
+                  value={selectedYear}
+                  onChange={handleYearChange}
+                  className="w-full sm:w-[150px] px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
                 >
-                  <option value="">{t("Select Year")}</option>
+                  <option value="">{t("All Years")}</option>
                   <option value="2023-2024">2023-24</option>
                   <option value="2024-2025">2024-25</option>
                 </select>
-                {errors.year && (
-                  <p className="text-red-500 text-xs mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.year}
-                  </p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700">
-                  {t("Amount")}<span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={newDemand.amount}
-                  onChange={(e) => setNewDemand({ ...newDemand, amount: e.target.value })}
-                  className={`w-full p-3 border ${
-                    errors.amount ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
-                  } rounded focus:outline-none focus:ring`}
-                  placeholder="Enter amount"
-                />
-                {errors.amount && (
-                  <p className="text-red-500 text-xs mt-1 flex items-center">
-                    <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.amount}
-                  </p>
-                )}
               </div>
             </div>
-            <div className="p-3 border-t flex item-center justify-center">
-              <button
-                onClick={handleSubmit}
-                className="w-full sm:w-[60%] md:w-[40%] bg-blue-950 text-white py-2 md:py-3 rounded-md hover:bg-blue-900 transition-colors font-semibold text-lg md:text-xl"
-              >
-                {isEditing ? t("UPDATE") : t("SUBMIT")}
-              </button>
+  
+            <div className="overflow-x-auto">
+              <DataTable
+                columns={columns}
+                data={filteredDemands}
+                pagination
+                paginationPerPage={10}
+                paginationRowsPerPageOptions={[10, 20, 30, 50]}
+                highlightOnHover
+                responsive
+                defaultSortFieldId={1}
+                className="realfont"
+                customStyles={{
+                  headCells: {
+                    style: {
+                      backgroundColor: "#f3f4f6",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      justifyContent: "center",
+                      paddingLeft: "8px",
+                      paddingRight: "8px",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      fontSize: "14px",
+                      color: "#333",
+                      justifyContent: "center",
+                      paddingLeft: "4px",
+                      paddingRight: "4px",
+                      fontFamily: "poppins",
+                      fontWeight: "400"
+                    },
+                  },
+                  pagination: {
+                    style: {
+                      fontSize: "13px",
+                      minHeight: "56px",
+                      borderTopStyle: "solid",
+                      borderTopWidth: "1px",
+                      borderTopColor: "#f3f4f6",
+                    },
+                  },
+                }}
+              />
             </div>
-          </div>
-        </div>
-      )}
-      
-    </div>
-  )
+            {filteredDemands.length === 0 && (
+              <div className="text-center p-4 md:p-8 text-gray-500">{t("No fund requests found")}</div>
+            )}
+           </div>
+           {isModalOpen && (
+            <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
+              <div ref={modalRef} className="bg-white rounded-lg shadow-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto transform transition-all duration-300 ease-in-out">
+                <div className="p-4 md:p-6 border-b flex justify-between items-center">
+                  <h2 className="text-xl md:text-2xl font-bold text-blue-950">
+                    {isEditing ? t("Edit Fund Request") : t("New Fund Request")}
+                  </h2>
+                  <button
+                    onClick={closeModal}
+                    className="text-gray-500 hover:text-gray-700 transition-colors p-1 rounded-full hover:bg-gray-100"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+                <div className="p-4 md:p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-700">
+                      {t("Year")} <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={newDemand.year}
+                      onChange={(e) => setNewDemand({ ...newDemand, year: e.target.value })}
+                      className={`w-full p-3 border ${
+                        errors.year ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
+                      } rounded focus:outline-none focus:ring`}
+                    >
+                      <option value="">{t("Select Year")}</option>
+                      <option value="2023-2024">2023-24</option>
+                      <option value="2024-2025">2024-25</option>
+                    </select>
+                    {errors.year && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.year}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-700">
+                      {t("Amount")}<span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      value={newDemand.amount}
+                      onChange={(e) => setNewDemand({ ...newDemand, amount: e.target.value })}
+                      className={`w-full p-3 border ${
+                        errors.amount ? "border-red-500 focus:ring-red-500" : "border-gray-300 focus:border-blue-500"
+                      } rounded focus:outline-none focus:ring`}
+                      placeholder="Enter amount"
+                    />
+                    {errors.amount && (
+                      <p className="text-red-500 text-xs mt-1 flex items-center">
+                        <AlertCircle className="mr-2 flex-shrink-0" size={16} /> {errors.amount}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="p-3 border-t flex item-center justify-center">
+                  <button
+                    onClick={handleSubmit}
+                    className="w-full sm:w-[60%] md:w-[40%] bg-blue-950 text-white py-2 md:py-3 rounded-md hover:bg-blue-900 transition-colors font-semibold text-lg md:text-xl"
+                  >
+                    {isEditing ? t("UPDATE") : t("SUBMIT")}
+                  </button>
+                </div>
+              </div>
+            </div>
+            )}
+           </div>
+          )}
+    </>
+
+  );
 }

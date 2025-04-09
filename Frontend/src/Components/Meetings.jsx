@@ -7,6 +7,7 @@ import "react-datepicker/dist/react-datepicker.css"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import Swal from 'sweetalert2'
+import SkeletonLoader from "./SkeletonLoader"
 
 
 const Meetings = () => {
@@ -579,9 +580,12 @@ const Meetings = () => {
     stopCamera()
   }
 
-  
-
+ 
   return (
+    <>
+    {loading ? (
+      <SkeletonLoader />
+    ) : (
 <div className="min-h-screen p-3 md:p-6 space-y-4 md:space-y-6">
        <div className="bg-white  rounded-[14px] mx-auto w-[75%] max-w-6xl overflow-y-auto max-h-[85vh] shadow-md"> 
         <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
@@ -871,6 +875,8 @@ const Meetings = () => {
        </div>
       </div>
     </div>
+     )}
+     </>
   )
 }
 

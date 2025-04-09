@@ -33,6 +33,9 @@ const LoginForm = () => {
         console.log("Logged in as:", data.user.username);
         console.log("Category ID:", data.category_id);
 
+        await new Promise((resolve) => setTimeout(resolve, 4000));
+
+
         if (data.category_id === 37) {
           navigate("/aohome");
         } else {

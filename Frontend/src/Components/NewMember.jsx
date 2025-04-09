@@ -5,6 +5,7 @@ import DataTable from "react-data-table-component"
 import { Plus, Search, X, AlertCircle, Users } from "lucide-react"
 import Swal from "sweetalert2"
 import { useTranslation } from "react-i18next"
+import SkeletonLoader from './SkeletonLoader'; 
 
 export default function NewMember() {
   const { t } = useTranslation()
@@ -120,33 +121,7 @@ export default function NewMember() {
     setIsModalOpen(true)
   }
 
-  // const confirmDelete = (id) => {
-  //   setDeleteId(id)
-  //   setIsDeleteModalOpen(true)
-  // }
-
-  // const handleDelete = async (id) => {
-  //   try {
-  //     await fetch(`${API_URL}/${id}`, { method: "DELETE" })
-  //     Swal.fire({
-  //       title: t("delete"),
-  //       text: t("deleteMemberSuccess"),
-  //       icon: "success",
-  //       timer: 2000,
-  //       showConfirmButton: false,
-  //     })
-  //     fetchMembers()
-  //     setIsDeleteModalOpen(false)
-  //   } catch (error) {
-  //     Swal.fire({
-  //       title: t("error"),
-  //       text: t("deleteMemberError"),
-  //       icon: "error",
-  //     })
-  //     console.error("Error deleting member:", error)
-  //   }
-  // }
-
+ 
   const confirmDelete = async (id) => {
     const result = await Swal.fire({
       title: t("Confirm Delete"),
@@ -273,7 +248,7 @@ export default function NewMember() {
       text: error.message || t("saveMemberError"),
     });
   }
-};
+ };
   useEffect(() => {
     const filtered = searchTerm
       ? members.filter((member) =>
@@ -407,9 +382,15 @@ export default function NewMember() {
     },
   ]
 
-  return (
-    <div className="px-2 sm:px-4 py-3 md:py-6 realfont">
-      <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
+
+        return (
+       <>
+       {loading ? (
+        <SkeletonLoader />
+       ) : (
+    
+       <div className="px-2 sm:px-4 py-3 md:py-6 realfont">
+        <div className="container mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-6 md:py-10">
         <div className="bg-white shadow-lg rounded-[14px] overflow-hidden">
           {/* Header */}
           <div className="bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
@@ -509,9 +490,9 @@ export default function NewMember() {
             <div className="text-center p-4 md:p-8 text-gray-500">{t("noMembersFound")}</div>
           )}
         </div>
-      </div>
-      {/* Modal */}
-      {isModalOpen && (
+       </div>
+       {/* Modal */}
+       {isModalOpen && (
         <div className="fixed inset-0 backdrop-blur-xs flex items-center justify-center z-50 p-3">
           <div
             ref={modalRef}
@@ -721,10 +702,10 @@ export default function NewMember() {
             </div>
           </div>
         </div>
-      )}
+       )}
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && (
+       {/* Delete Confirmation Modal */}
+       {isDeleteModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-[2px] flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-[350px] sm:max-w-[400px] max-h-[90vh] overflow-y-auto">
             <div className="p-3 sm:p-4 md:p-6 border-b flex justify-between items-center">
@@ -755,7 +736,9 @@ export default function NewMember() {
             </div>
           </div>
         </div>
-      )}
-    </div>
+       )}
+       </div>
+     )}
+   </>
   )
 }

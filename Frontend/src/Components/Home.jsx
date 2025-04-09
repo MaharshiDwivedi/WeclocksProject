@@ -26,6 +26,7 @@ import GenerateReport from "./GenerateReport";
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import Absentmember from "./Absentmember";
+import Swal from "sweetalert2";
 
 const Home = () => {
   const location = useLocation();
@@ -68,12 +69,20 @@ const Home = () => {
   );
 
   const handleLogout = useCallback(() => {
-    if (
-      window.confirm(t("confirmLogout") || "Are you sure you want to logout?")
-    ) {
-      localStorage.clear(); // Clear all localStorage items
-      navigate("/login", { replace: true }); // Replace history to prevent back navigation
-    }
+    Swal.fire({
+      title: "Are you sure you want to logout?",
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t("yes") || 'Yes',
+      cancelButtonText: t("no") || 'No'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.clear();
+        navigate("/login", { replace: true });
+      }
+    });
   }, [navigate, t]);
 
   const increaseTextSize = useCallback(() => {
