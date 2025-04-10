@@ -82,64 +82,80 @@ const FundDist = () => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async () => {
-    if (!validateForm()) return
+// Modify the handleSubmit function in FundDist.jsx
+const handleSubmit = async () => {
+  if (!validateForm()) return;
 
-    setFormError("")
+  setFormError("");
 
-    try {
-      if (isEditMode) {
-        const payload = { additional_amount: additionalAmount }
-        await axios.put(`http://localhost:5000/api/fund-distribution/${editFundId}`, payload)
-        const updatedData = await axios.get("http://localhost:5000/api/fund-distribution")
-        setFundData(updatedData.data)
-        setFilteredFundData(updatedData.data)
-        Swal.fire({
-          icon: 'success',
-          title: t('Success'),
-          text: t('Fund updated successfully'),
-          timer: 2000,
-          showConfirmButton: false
-        })
-        resetForm()
-      } else {
-        const payload = {
-          school_id: selectedSchool,
-          year: selectedYear,
-          amount,
-        }
-        await axios.post("http://localhost:5000/api/fund-distribution", payload)
-        const updatedData = await axios.get("http://localhost:5000/api/fund-distribution")
-        setFundData(updatedData.data)
-        setFilteredFundData(updatedData.data)
-        Swal.fire({
-          icon: 'success',
-          title: t('Success'),
-          text: t('Fund added successfully'),
-          timer: 2000,
-          showConfirmButton: false
-        })
-        resetForm()
+  const result = await Swal.fire({
+    title: isEditMode ? t('Update Fund?') : t('Add Fund?'),
+    text: isEditMode 
+      ? t('Are you sure you want to update this fund?') 
+      : t('Are you sure you want to add this fund?'),
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: t('Yes, proceed'),
+    cancelButtonText: t('Cancel')
+  });
+
+  if (!result.isConfirmed) return;
+
+  try {
+    if (isEditMode) {
+      const payload = { additional_amount: additionalAmount }
+      await axios.put(`http://localhost:5000/api/fund-distribution/${editFundId}`, payload)
+      const updatedData = await axios.get("http://localhost:5000/api/fund-distribution")
+      setFundData(updatedData.data)
+      setFilteredFundData(updatedData.data)
+      Swal.fire({
+        icon: 'success',
+        title: t('Success'),
+        text: t('Fund updated successfully'),
+        timer: 2000,
+        showConfirmButton: false
+      })
+      resetForm()
+    } else {
+      const payload = {
+        school_id: selectedSchool,
+        year: selectedYear,
+        amount,
       }
-    } catch (err) {
-      if (err.response && err.response.status === 409) {
-        setFormError(err.response.data.message)
-        Swal.fire({
-          icon: 'error',
-          title: t('Error'),
-          text: err.response.data.message
-        })
-      } else {
-        console.error("Error saving fund:", err)
-        setError("Failed to save fund")
-        Swal.fire({
-          icon: 'error',
-          title: t('Error'),
-          text: t('Failed to save fund')
-        })
-      }
+      await axios.post("http://localhost:5000/api/fund-distribution", payload)
+      const updatedData = await axios.get("http://localhost:5000/api/fund-distribution")
+      setFundData(updatedData.data)
+      setFilteredFundData(updatedData.data)
+      Swal.fire({
+        icon: 'success',
+        title: t('Success'),
+        text: t('Fund added successfully'),
+        timer: 2000,
+        showConfirmButton: false
+      })
+      resetForm()
+    }
+  } catch (err) {
+    if (err.response && err.response.status === 409) {
+      setFormError(err.response.data.message)
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: err.response.data.message
+      })
+    } else {
+      console.error("Error saving fund:", err)
+      setError("Failed to save fund")
+      Swal.fire({
+        icon: 'error',
+        title: t('Error'),
+        text: t('Failed to save fund')
+      })
     }
   }
+}
 
   useEffect(() => {
     const handleClickOutside = (event) => {

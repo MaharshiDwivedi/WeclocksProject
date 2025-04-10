@@ -248,5 +248,66 @@
 
   "totalAbsentMembers": "Total Absent Members",
   "noAbsentMembersFound": "No absent members found",
-  "Absentmember": "Absent Members"
+  "Absentmember": "Absent Members",
+
+  "noRemark": "No remark",
+  "noTharavId": "No Tharav ID provided",
+  "invalidResponseFormat": "Invalid response format",
+  "errorCheckingCompletion": "Error checking tharav completion status",
+  "noTharavIdForRemarks": "No Tharav ID provided for fetching remarks",
+  "failedToFetchRemarks": "Failed to fetch remarks",
+  "failedToLoadRemarks": "Failed to load remarks",
+  "requiredFields": "Please fill all required fields",
+  "confirmAddRemark": "Are you sure you want to add this remark?",
+  "yesAddIt": "Yes, add it",
+  "remarkAddedSuccess": "Remark added successfully",
+  "failedToAddRemark": "Failed to add remark",
+  "confirmUpdateRemark": "Are you sure you want to update this remark?",
+  "yesUpdateIt": "Yes, update it",
+  "remarkUpdatedSuccess": "Remark updated successfully",
+  "failedToUpdateRemark": "Failed to update remark",
+  "confirmDeleteRemark": "Are you sure you want to delete this remark?",
+  "yesDeleteIt": "Yes, delete it",
+  "remarkDeletedSuccess": "Remark deleted successfully",
+  "failedToDeleteRemark": "Failed to delete remark",
+  "invalidDate": "Invalid date",
+  "loadingRemarks": "Loading remarks...",
+  "errorLoadingRemarks": "Error loading remarks",
+  "noRemarksAdded": "No remarks added yet",
+  "noPhoto": "No photo",
+  "view": "View",
+ 
+  "tharavIsCompleted": "Tharav is completed",
+  "completeTharav": "Complete Tharav",
+  "viewPhoto": "View Photo",
+  "tharavCompleted": "Tharav Completed",
+  "finalRemark": "Final Remark",
+  "noFinalRemark": "No final remark provided",
+  "markAsCompleted": "Mark as Completed",
+  "addRemark": "Add Remark",
+  "processing": "Processing...",
+  "submitting": "Submitting...",
+  "updating": "Updating...",
+  "editRemark": "Edit Remark",
+  "uploadNewPhotoOptional": "Upload New Photo (Optional)",
+  "currentPhoto": "Current Photo",
+  "currentRemarkProof": "Current remark proof",
+  "tharavPhoto": "Tharav Photo",
+  "fullTharavPhoto": "Full Tharav Photo",
+  "remarkPhoto": "Remark Photo",
+  "tharavIdNotFound": "Tharav ID not found",
+  "finalRemarkRequired": "Final remark is required",
+  "confirmCompleteTharav": "Are you sure you want to mark this tharav as completed?",
+  "yesCompleteIt": "Yes, complete it",
+  "tharavCompletedSuccess": "Tharav marked as completed successfully",
+  "failedToCompleteTharav": "Failed to complete tharav"
+
+
+
+
+
+
+
+
+
 }

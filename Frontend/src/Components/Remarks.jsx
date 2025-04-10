@@ -1,13 +1,16 @@
-"use client"
+"use client";
 
-import { useLocation } from "react-router-dom"
-import { useState, useEffect, useCallback } from "react"
-import { CheckCircle, Image, Plus } from "lucide-react"
-import axios from "axios"
-import Swal from "sweetalert2"
+import { useLocation } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { CheckCircle, Image, Plus, SquareCheckBig } from "lucide-react";
+import axios from "axios";
+import Swal from "sweetalert2";
+import DataTable from "react-data-table-component";
+import { useTranslation } from "react-i18next";
 
 export default function Remarks() {
-  const location = useLocation()
+  const { t } = useTranslation();
+  const location = useLocation();
   const {
     tharavNo,
     date,
@@ -21,143 +24,149 @@ export default function Remarks() {
     userId,
     headId,
     nirnay_id,
-  } = location.state || {}
+  } = location.state || {};
 
   // State management
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isAddRemarkModalOpen, setIsAddRemarkModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isViewImageModalOpen, setIsViewImageModalOpen] = useState(false)
-  const [selectedImage, setSelectedImage] = useState(null)
-  const [remarkDate, setRemarkDate] = useState("")
-  const [remarkText, setRemarkText] = useState("")
-  const [actualExpense, setActualExpense] = useState("")
-  const [remarkPhoto, setRemarkPhoto] = useState(null)
-  const [remarks, setRemarks] = useState([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState(null)
-  const [editingRemark, setEditingRemark] = useState(null)
-  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false)
-  const [finalRemark, setFinalRemark] = useState("")
-  const [finalRemarkPhoto, setFinalRemarkPhoto] = useState(null)
-  const [isTharavCompleted, setIsTharavCompleted] = useState(false)
-  const [completedTharavData, setCompletedTharavData] = useState(null)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddRemarkModalOpen, setIsAddRemarkModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewImageModalOpen, setIsViewImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [remarkDate, setRemarkDate] = useState("");
+  const [remarkText, setRemarkText] = useState("");
+  const [actualExpense, setActualExpense] = useState("");
+  const [remarkPhoto, setRemarkPhoto] = useState(null);
+  const [remarks, setRemarks] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [editingRemark, setEditingRemark] = useState(null);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [finalRemark, setFinalRemark] = useState("");
+  const [finalRemarkPhoto, setFinalRemarkPhoto] = useState(null);
+  const [isTharavCompleted, setIsTharavCompleted] = useState(false);
+  const [completedTharavData, setCompletedTharavData] = useState(null);
   const [showImageModal, setShowImageModal] = useState(false);
 
   // Memoized remark parser
   const parseRemarks = useCallback((data) => {
-    if (!data) return []
+    if (!data) return [];
 
-    // Normalize data to always be an array
-    const dataArray = Array.isArray(data) ? data : data.data || []
+    const dataArray = Array.isArray(data) ? data : data.data || [];
 
     return dataArray.map((remark) => {
-      // Use parsedData if available from backend
       if (remark.parsedData) {
         return {
           id: remark.nirnay_remarks_id,
           date: remark.previous_date || new Date().toISOString(),
-          text: remark.parsedData.remarkText || "No remark",
+          text: remark.parsedData.remarkText || t("noRemark"),
           amount: remark.parsedData.actualExpense || "0",
           photo: remark.parsedData.remarkPhoto || null,
-        }
+        };
       }
 
-      // Fallback to parsing the raw record
-      const parts = remark.nirnay_remarks_record?.split("|") || []
+      const parts = remark.nirnay_remarks_record?.split("|") || [];
       return {
         id: remark.nirnay_remarks_id,
         date: remark.previous_date || new Date().toISOString(),
-        text: parts[4]?.trim() || "No remark",
+        text: parts[4]?.trim() || t("noRemark"),
         amount: parts[6]?.trim() || "0",
         photo: parts[5]?.trim() || null,
-      }
-    })
-  }, [])
+      };
+    });
+  }, [t]);
 
   // Check tharav completion status
   const checkTharavCompletion = useCallback(async (tharavId) => {
     if (!tharavId) {
-      console.error("No tharav ID available");
+      console.error(t("noTharavId"));
       return;
     }
-  
+
     try {
-      const response = await axios.get(`http://localhost:5000/api/tharav/status/${tharavId}`);
-      
+      const response = await axios.get(
+        `http://localhost:5000/api/tharav/status/${tharavId}`
+      );
+
       if (response.data) {
-        // Handle both array and object formats
         let completedData = response.data.completedData;
         if (Array.isArray(completedData)) {
           completedData = completedData[0] || null;
         }
-  
-        const isCompleted = response.data.isCompleted || 
-                           (completedData && completedData.work_status === 'Completed');
-  
+
+        const isCompleted =
+          response.data.isCompleted ||
+          (completedData && completedData.work_status === "Completed");
+
         setIsTharavCompleted(isCompleted);
         setCompletedTharavData(completedData || null);
-        
-        // Update localStorage
-        localStorage.setItem(`tharavCompleted_${tharavId}`, isCompleted ? 'true' : 'false');
+
+        localStorage.setItem(
+          `tharavCompleted_${tharavId}`,
+          isCompleted ? "true" : "false"
+        );
       } else {
-        console.error("Invalid response format:", response.data);
+        console.error(t("invalidResponseFormat"), response.data);
         setIsTharavCompleted(false);
         setCompletedTharavData(null);
       }
     } catch (err) {
-      console.error("Error checking tharav completion:", err);
+      console.error(t("errorCheckingCompletion"), err);
       setIsTharavCompleted(false);
       setCompletedTharavData(null);
     }
-  }, []);
-  // Fetch remarks with error handling
-  const fetchRemarks = useCallback(async (tharavId) => {
-    try {
-      setIsLoading(true)
-      setError(null)
-      
-      if (!tharavId) {
-        console.error("No tharav ID available for fetching remarks")
-        setIsLoading(false)
-        return
-      }
-      
-      const response = await axios.get(`http://localhost:5000/api/remarks`, {
-        params: {
-          nirnay_id: tharavId
-        }
-      })
+  }, [t]);
 
-      setRemarks(parseRemarks(response.data))
-    } catch (err) {
-      console.error("Failed to fetch remarks:", err)
-      setError("Failed to load remarks. Please try again later.")
-      setRemarks([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [parseRemarks])
+  // Fetch remarks with error handling
+  const fetchRemarks = useCallback(
+    async (tharavId) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        if (!tharavId) {
+          console.error(t("noTharavIdForRemarks"));
+          setIsLoading(false);
+          return;
+        }
+
+        const response = await axios.get(`http://localhost:5000/api/remarks`, {
+          params: {
+            nirnay_id: tharavId,
+          },
+        });
+
+        setRemarks(parseRemarks(response.data));
+      } catch (err) {
+        console.error(t("failedToFetchRemarks"), err);
+        setError(t("failedToLoadRemarks"));
+        setRemarks([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [parseRemarks, t]
+  );
 
   // Initial data loading
   useEffect(() => {
-    // If we have nirnay_id from location state, store it in localStorage
     if (nirnay_id) {
-      localStorage.setItem('currentTharavId', nirnay_id);
-      localStorage.setItem(`tharavCompleted_${nirnay_id}`, isTharavCompleted ? 'true' : 'false');
+      localStorage.setItem("currentTharavId", nirnay_id);
+      localStorage.setItem(
+        `tharavCompleted_${nirnay_id}`,
+        isTharavCompleted ? "true" : "false"
+      );
     }
-    
-    // Use either the nirnay_id from location state or from localStorage
-    const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId');
-    
+
+    const tharavIdToUse = nirnay_id || localStorage.getItem("currentTharavId");
+
     if (tharavIdToUse) {
-      // Check localStorage first for immediate UI feedback
-      const storedStatus = localStorage.getItem(`tharavCompleted_${tharavIdToUse}`);
-      if (storedStatus === 'true') {
+      const storedStatus = localStorage.getItem(
+        `tharavCompleted_${tharavIdToUse}`
+      );
+      if (storedStatus === "true") {
         setIsTharavCompleted(true);
       }
-      
-      // Then verify with server
+
       checkTharavCompletion(tharavIdToUse);
       fetchRemarks(tharavIdToUse);
     }
@@ -165,232 +174,248 @@ export default function Remarks() {
 
   // Submit new remark
   const handleAddRemark = async (e) => {
-    e.preventDefault()
-  
+    e.preventDefault();
+
     if (!remarkText || !actualExpense) {
-      Swal.fire("Error!", "Remark text and actual expense are required", "error")
-      return
+      Swal.fire(t("error"), t("requiredFields"), "error");
+      return;
     }
 
-    // Add confirmation dialog
     const confirmResult = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to add this remark?",
+      title: t("areYouSure"),
+      text: t("confirmAddRemark"),
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, add it!",
-    })
+      confirmButtonText: t("yesAddIt"),
+    });
 
     if (!confirmResult.isConfirmed) {
-      return
+      return;
     }
-  
+
     try {
-      setIsLoading(true)
-  
-      const formData = new FormData()
-      formData.append("remarkText", remarkText)
-      formData.append("actualExpense", actualExpense)
-      formData.append("remarkDate", remarkDate || new Date().toISOString())
-      formData.append("nirnay_id", nirnay_id)
-      formData.append("schoolId", schoolId)
-      formData.append("userId", userId)
-      formData.append("headId", headId)
-      if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto)
-  
+      setIsLoading(true);
+
+      const formData = new FormData();
+      formData.append("remarkText", remarkText);
+      formData.append("actualExpense", actualExpense);
+      formData.append("remarkDate", remarkDate || new Date().toISOString());
+      formData.append("nirnay_id", nirnay_id);
+      formData.append("schoolId", schoolId);
+      formData.append("userId", userId);
+      formData.append("headId", headId);
+      if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto);
+
       await axios.post("http://localhost:5000/api/remarks", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
-      })
-  
-      await fetchRemarks(nirnay_id || localStorage.getItem('currentTharavId'))
-      setRemarkDate("")
-      setRemarkText("")
-      setActualExpense("")
-      setRemarkPhoto(null)
-      setIsAddRemarkModalOpen(false)
-  
-      Swal.fire("Success!", "Remark added successfully", "success")
+      });
+
+      await fetchRemarks(nirnay_id || localStorage.getItem("currentTharavId"));
+      setRemarkDate("");
+      setRemarkText("");
+      setActualExpense("");
+      setRemarkPhoto(null);
+      setIsAddRemarkModalOpen(false);
+
+      Swal.fire(t("success"), t("remarkAddedSuccess"), "success");
     } catch (err) {
-      console.error("Failed to add remark:", err)
-      Swal.fire("Error!", err.response?.data?.message || "Failed to add remark", "error")
+      console.error(t("failedToAddRemark"), err);
+      Swal.fire(
+        t("error"),
+        err.response?.data?.message || t("failedToAddRemark"),
+        "error"
+      );
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Edit remark handler
   const handleEditRemark = (remark) => {
-    setEditingRemark(remark)
-    setRemarkText(remark.text)
-    setActualExpense(remark.amount)
-    setRemarkDate(remark.date)
-    setIsEditModalOpen(true)
-  }
+    setEditingRemark(remark);
+    setRemarkText(remark.text);
+    setActualExpense(remark.amount);
+    setRemarkDate(remark.date);
+    setIsEditModalOpen(true);
+  };
 
   // Submit edited remark
   const handleEditSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!remarkText || !actualExpense) {
-      Swal.fire("Error!", "Remark text and actual expense are required", "error")
-      return
+      Swal.fire(t("error"), t("requiredFields"), "error");
+      return;
     }
 
-    // Add confirmation dialog
     const confirmResult = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to update this remark?",
+      title: t("areYouSure"),
+      text: t("confirmUpdateRemark"),
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, update it!",
-    })
+      confirmButtonText: t("yesUpdateIt"),
+    });
 
     if (!confirmResult.isConfirmed) {
-      return
+      return;
     }
 
-    // Create FormData for the edit request
-    const formData = new FormData()
-    formData.append("remarkText", remarkText)
-    formData.append("actualExpense", actualExpense)
-    formData.append("remarkDate", remarkDate)
-    formData.append("schoolId", schoolId)
-    formData.append("userId", userId)
-    if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto)
+    const formData = new FormData();
+    formData.append("remarkText", remarkText);
+    formData.append("actualExpense", actualExpense);
+    formData.append("remarkDate", remarkDate);
+    formData.append("schoolId", schoolId);
+    formData.append("userId", userId);
+    if (remarkPhoto) formData.append("remarkPhoto", remarkPhoto);
 
     try {
-      setIsLoading(true)
-      await axios.put(`http://localhost:5000/api/remarks/${editingRemark.id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-
-      await fetchRemarks(nirnay_id || localStorage.getItem('currentTharavId'))
-      setIsEditModalOpen(false)
-      setEditingRemark(null)
-      setRemarkPhoto(null)
-
-      Swal.fire("Success!", "Remark updated successfully", "success")
-    } catch (err) {
-      console.error("Failed to update remark:", err)
-      Swal.fire("Error!", err.response?.data?.message || "Failed to update remark", "error")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleCompleteTharav = async (e) => {
-    e.preventDefault()
-    
-    const tharavIdToUse = nirnay_id || localStorage.getItem('currentTharavId')
-    
-    if (!tharavIdToUse) {
-      Swal.fire("Error!", "Tharav ID not found", "error")
-      return
-    }
-    
-    if (!finalRemark) {
-      Swal.fire("Error!", "Final remark is required", "error")
-      return
-    }
-
-    // Add confirmation dialog
-    const confirmResult = await Swal.fire({
-      title: "Are you sure?",
-      text: "Do you really want to complete this tharav? This action cannot be undone.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, complete it!",
-    })
-
-    if (!confirmResult.isConfirmed) {
-      return
-    }
-  
-    try {
-      setIsLoading(true)
-  
-      const formData = new FormData()
-      formData.append("nirnay_id", tharavIdToUse)
-      formData.append("completed_remarks", finalRemark)
-      formData.append("schoolId", schoolId || localStorage.getItem('schoolId'))
-      formData.append("userId", userId || localStorage.getItem('userId'))
-      
-      if (finalRemarkPhoto) {
-        formData.append("complete_tharav_img", finalRemarkPhoto)
-      }
-  
-      const response = await axios.post(
-        "http://localhost:5000/api/tharav/complete", 
-        formData, 
+      setIsLoading(true);
+      await axios.put(
+        `http://localhost:5000/api/remarks/${editingRemark.id}`,
+        formData,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         }
-      )
-  
-      if (response.data.success) {
-        // Save to localStorage
-        localStorage.setItem(`tharavCompleted_${tharavIdToUse}`, 'true')
-        
-        // Update state
-        setIsTharavCompleted(true)
-        setCompletedTharavData(response.data.completedData)
-        
-        Swal.fire("Success!", "Tharav marked as completed", "success")
-        setIsCompleteModalOpen(false)
-      }
-    } catch (err) {
-      console.error("Failed to complete tharav:", err)
-      Swal.fire("Error!", err.response?.data?.message || "Failed to complete tharav", "error")
-    } finally {
-      setIsLoading(false)
-    }
-  }
+      );
 
-  // Delete remark handler
-  const handleDeleteRemark = async (id) => {
-    const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      await fetchRemarks(nirnay_id || localStorage.getItem("currentTharavId"));
+      setIsEditModalOpen(false);
+      setEditingRemark(null);
+      setRemarkPhoto(null);
+
+      Swal.fire(t("success"), t("remarkUpdatedSuccess"), "success");
+    } catch (err) {
+      console.error(t("failedToUpdateRemark"), err);
+      Swal.fire(
+        t("error"),
+        err.response?.data?.message || t("failedToUpdateRemark"),
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCompleteTharav = async (e) => {
+    e.preventDefault();
+
+    const tharavIdToUse = nirnay_id || localStorage.getItem("currentTharavId");
+
+    if (!tharavIdToUse) {
+      Swal.fire(t("error"), t("tharavIdNotFound"), "error");
+      return;
+    }
+
+    if (!finalRemark) {
+      Swal.fire(t("error"), t("finalRemarkRequired"), "error");
+      return;
+    }
+
+    const confirmResult = await Swal.fire({
+      title: t("areYouSure"),
+      text: t("confirmCompleteTharav"),
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    })
+      confirmButtonText: t("yesCompleteIt"),
+    });
+
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const formData = new FormData();
+      formData.append("nirnay_id", tharavIdToUse);
+      formData.append("completed_remarks", finalRemark);
+      formData.append("schoolId", schoolId || localStorage.getItem("schoolId"));
+      formData.append("userId", userId || localStorage.getItem("userId"));
+
+      if (finalRemarkPhoto) {
+        formData.append("complete_tharav_img", finalRemarkPhoto);
+      }
+
+      const response = await axios.post(
+        "http://localhost:5000/api/tharav/complete",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.data.success) {
+        localStorage.setItem(`tharavCompleted_${tharavIdToUse}`, "true");
+
+        setIsTharavCompleted(true);
+        setCompletedTharavData(response.data.completedData);
+
+        Swal.fire(t("success"), t("tharavCompletedSuccess"), "success");
+        setIsCompleteModalOpen(false);
+      }
+    } catch (err) {
+      console.error(t("failedToCompleteTharav"), err);
+      Swal.fire(
+        t("error"),
+        err.response?.data?.message || t("failedToCompleteTharav"),
+        "error"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Delete remark handler
+  const handleDeleteRemark = async (id) => {
+    const result = await Swal.fire({
+      title: t("areYouSure"),
+      text: t("confirmDeleteRemark"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: t("yesDeleteIt"),
+    });
 
     if (result.isConfirmed) {
       try {
-        setIsLoading(true)
-        await axios.delete(`http://localhost:5000/api/remarks/${id}`)
-        await fetchRemarks(nirnay_id || localStorage.getItem('currentTharavId'))
+        setIsLoading(true);
+        await axios.delete(`http://localhost:5000/api/remarks/${id}`);
+        await fetchRemarks(
+          nirnay_id || localStorage.getItem("currentTharavId")
+        );
 
-        Swal.fire("Deleted!", "Your remark has been deleted.", "success")
+        Swal.fire(t("deleted"), t("remarkDeletedSuccess"), "success");
       } catch (err) {
-        console.error("Failed to delete remark:", err)
-        Swal.fire("Error!", err.response?.data?.message || "Failed to delete remark", "error")
+        console.error(t("failedToDeleteRemark"), err);
+        Swal.fire(
+          t("error"),
+          err.response?.data?.message || t("failedToDeleteRemark"),
+          "error"
+        );
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
     }
-  }
+  };
 
   // View image handler
   const handleViewImage = (imagePath) => {
-    setSelectedImage(`http://localhost:5000/${imagePath}`)
-    setIsViewImageModalOpen(true)
-  }
+    setSelectedImage(`http://localhost:5000/${imagePath}`);
+    setIsViewImageModalOpen(true);
+  };
 
   // Helper functions
   const formatDate = (dateString) => {
@@ -399,258 +424,335 @@ export default function Remarks() {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
-      })
+      });
     } catch {
-      return "Invalid Date"
+      return t("invalidDate");
     }
-  }
+  };
 
   const formatCurrency = (amount) => {
-    const num = Number(amount) || 0
+    const num = Number(amount) || 0;
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
       minimumFractionDigits: 0,
-    }).format(num)
-  }
+    }).format(num);
+  };
+
   return (
-    <div className="container mx-auto px-4 py-8 realfont">
-      <div className="bg-white shadow-lg rounded-xl p-8 max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold text-blue-950 mb-8 text-center">Tharav No. {tharavNo}</h1>
-
+    <div className="container mx-auto px-4 py-8 realfont w-[1200px]">
         {/* Error Message */}
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">{error}</div>}
-
-        {/* Tharav Details Card */}
-        <div className="bg-blue-50 rounded-xl p-6 mb-8 shadow-md">
-          <h2 className="text-xl font-bold text-blue-950 mb-4">Tharav Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-black-1000">Date</label>
-              <p className="mt-1 text-lg text-gray-900">{formatDate(date)}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-Black-1000">Expected Amount</label>
-              <p className="mt-1 text-lg text-gray-900">{formatCurrency(expectedAmount)}</p>
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-black-1000">Purpose</label>
-              <p className="mt-1 text-lg text-gray-900 truncate">{purpose || "N/A"}</p>
-            </div>
-            <div className="md:col-span-2 lg:col-span-3">
-              <label className="block text-sm font-semibold text-black-1000">Decision Taken</label>
-              <p className="mt-1 text-lg text-gray-900">{decisionTaken || "N/A"}</p>
-            </div>
-            <div className="flex justify-between items-start">
-
-
-            {!isTharavCompleted && (
-  <button
-    onClick={() => setIsCompleteModalOpen(true)}
-    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 transition-colors shadow-md"
-    disabled={isLoading}
-  >
-    <CheckCircle size={18} />
-    Complete Tharav
-  </button>
-)}
-          </div>          
-          {isTharavCompleted && (
-  <div className="w-[500px] rounded-lg border-2 border-green-300 bg-green-100 p-6 relative ml-[55%] -mb-[19%]">
-    {/* Date pill at the top */}
-    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-2 rounded-lg font-medium">
-      {completedTharavData?.complete_date &&
-        new Date(completedTharavData.complete_date).toLocaleDateString("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-    </div>
-
-    <div className="mt-4 text-center">
-      <h2 className="text-2xl font-bold text-green-800 mt-2">This Tharav is Completed</h2>
-    </div>
-
-    <div className="flex mt-8">
-      <div className="flex-grow">
-        <p className="text-xl font-medium text-green-800">
-          Final Remark :{" "}
-          <span className="text-black">{completedTharavData?.completed_remarks || "No final remark provided"}</span>
-        </p>
-      </div>
-
-      {/* Photo section - Only show if image exists */}
-      {completedTharavData?.complete_tharav_img && completedTharavData.complete_tharav_img !== "" && (
-        <div className="flex flex-col items-center">
-          <button
-            onClick={() => setShowImageModal(true)}
-            className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center cursor-pointer"
-          >
-            <Image className="w-8 h-8 text-white" />
-          </button>
-          <span className="mt-1 text-lg font-medium">Photo</span>
-        </div>
-      )}
-    </div>
-
-    {/* Image Modal */}
-    {showImageModal && (
-      <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50" onClick={() => setShowImageModal(false)}>
-        <div className="relative max-w-4xl max-h-[90vh]">
-          <button 
-            className="absolute -top-10 right-0 text-white text-3xl hover:text-gray-300"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowImageModal(false);
-            }}
-          >
-            &times;
-          </button>
-          <img 
-            src={`http://localhost:5000${completedTharavData.complete_tharav_img}`} 
-            alt="Completed Tharav" 
-            className="max-w-full max-h-[80vh] object-contain"
-            onClick={(e) => e.stopPropagation()}
-          />
-        </div>
-      </div>
-    )}
-  </div>
-)}
-
-
-
-
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+            {error}
           </div>
-
-          {/* Photo View Button */}
-          {photo && (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center gap-2 transition-colors"
-            >
-              <Image size={18} />
-              View Tharav Photo
-            </button>
-          )}
-        </div>
+        )}
 
         {/* Remarks Section */}
-        <div className="mt-8">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-blue-950">Remarks</h2>
+        <div className="shadow-lg rounded-[14px] overflow-hidden">
+          <div className="bg-blue-950 text-white p-3 md:p-4 flex flex-col gap-4">
+            <div className="bg-blue-950 rounded-xl p-4 mb-6">
+              <h1 className="text-3xl font-bold text-white mb-3">
+                {t("tharavNo")} {tharavNo}
+              </h1>
 
-            {/* Add Remark Button */}
-            {!isTharavCompleted ? (
-<>
-            <button
-              onClick={() => setIsAddRemarkModalOpen(true)}
-              className=" realfont2 bg-blue-950 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-md"
-              disabled={isLoading}
-            >
-              <Plus size={18} />
-              {isLoading ? "Processing..." : "Add Remark"}
-            </button>
-            </>
-             ) : (
-              <span className="text-gray-500 text-sm"> </span>
+              <div className="flex  gap-[200px] ">
+                {/* Date */}
+                <div className="col-span-1">
+                  <label className="block text-s font-semibold text-neutral-400">
+                    {t("date")}
+                  </label>
+                  <p className="text-m text-white font-medium">
+                    {formatDate(date)}
+                  </p>
+                </div>
+
+                <div className="col-span-1">
+                  <label className="block text-s font-semibold text-neutral-400">
+                    {t("expectedAmount")}
+                  </label>
+                  <p className="text-m text-white font-medium">
+                    {formatCurrency(expectedAmount)}
+                  </p>
+                </div>
+
+                <div className="col-span-2 md:col-span-4">
+                  <label className="block text-s font-semibold text-neutral-400">
+                    {t("purpose")}
+                  </label>
+                  <p className="text-m text-white font-medium">
+                    {purpose || t("na")}
+                  </p>
+                </div>
+
+                <div className="col-span-2 md:col-span-4">
+                  <label className="block text-s font-semibold text-neutral-400">
+                    {t("decisionTaken")}
+                  </label>
+                  <p className="text-m text-white font-medium">
+                    {decisionTaken || t("na")}
+                  </p>
+                </div>
+              </div>
+
+              {/* Buttons - now in a compact row */}
+              <div className="mt-[30px] flex flex-wrap gap-2 ml-[400px] -mb-[39px]">
+                {!isTharavCompleted && (
+                  <button
+                    onClick={() => setIsCompleteModalOpen(true)}
+                    className="bg-green-600 font-bold h-[50px] text-white px-3 py-1 text-lg cursor-pointer rounded-lg hover:bg-green-700 transition-all flex items-center gap-1"
+                    disabled={isLoading}
+                  >
+                    <CheckCircle size={14} />
+                    {t("completeTharav")}
+                  </button>
+                )}
+                {photo && (
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="bg-blue-500 text-white w-[150px] px-3 py-1 text-lg cursor-pointer rounded-lg hover:bg-blue-600 flex items-center gap-1"
+                  >
+                    <Image size={22} />
+                    {t("viewPhoto")}
+                  </button>
+                )}
+              </div>
+
+              {/* Completion Card */}
+              {isTharavCompleted && (
+                <div className="mt-[65px] rounded-md border border-green-300 bg-green-100 p-3 relative">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-1.5 rounded font-medium text-s">
+                    {completedTharavData?.complete_date &&
+                      new Date(
+                        completedTharavData.complete_date
+                      ).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                  </div>
+
+                  <div className="text-center mt-4">
+                    <h2 className="text-lg font-bold text-green-800">
+                      {t("tharavCompleted")}
+                    </h2>
+                  </div>
+
+                  <div className="flex mt-4 items-start justify-between flex-wrap gap-3">
+                    <p className="text-sm text-green-800 font-medium">
+                      {t("finalRemark")}:{" "}
+                      <span className="text-black">
+                        {completedTharavData?.completed_remarks ||
+                          t("noFinalRemark")}
+                      </span>
+                    </p>
+                    {completedTharavData?.complete_tharav_img && (
+                      <div className="flex flex-col items-center">
+                        <button
+                          onClick={() => setShowImageModal(true)}
+                          className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center"
+                        >
+                          <Image className="w-6 h-6 text-white" />
+                        </button>
+                        <span className="mt-1 text-sm font-medium">{t("photo")}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Image Modal */}
+                  {showImageModal && (
+                    <div
+                      className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center z-50"
+                      onClick={() => setShowImageModal(false)}
+                    >
+                      <div className="relative max-w-3xl max-h-[90vh]">
+                        <button
+                          className="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowImageModal(false);
+                          }}
+                        >
+                          &times;
+                        </button>
+                        <img
+                          src={`http://localhost:5000${completedTharavData.complete_tharav_img}`}
+                          alt={t("completedTharav")}
+                          className="max-w-full max-h-[80vh] object-contain"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
+            </div>
+
+            {/* Remarks Header */}
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl md:text-2xl font-bold realfont2 flex items-center gap-2">
+                <SquareCheckBig size={18} />
+                {t("remarks")}
+              </h2>
+              {!isTharavCompleted ? (
+                <button
+                  onClick={() => setIsAddRemarkModalOpen(true)}
+                  className="realfont2 bg-white text-blue-950 px-4 py-2 rounded-lg hover:bg-blue-100 flex items-center gap-2 transition-colors shadow-md"
+                  disabled={isLoading}
+                >
+                  <Plus size={18} />
+                  {isLoading ? t("processing") : t("addRemark")}
+                </button>
+              ) : (
+                <span className="text-gray-500 text-sm"> </span>
+              )}
+            </div>
           </div>
-          
 
           {isLoading && !remarks.length ? (
             <div className="text-center py-8">
               <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-2"></div>
-              <p>Loading remarks...</p>
+              <p>{t("loadingRemarks")}</p>
             </div>
           ) : remarks.length > 0 ? (
-            <div className="overflow-x-auto rounded-lg shadow">
-              <table className="min-w-full divide-y divide-gray-200 bg-white">
-                <thead className="bg-gray-100">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Remark
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actual Expense
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Photo
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {remarks.map((remark) => (
-                    <tr key={remark.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatDate(remark.date)}</td>
-                      <td className="px-6 py-4 text-sm text-gray-500 max-w-md">
-                        <div className="line-clamp-2">{remark.text}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(remark.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
-                          {remark.photo ? (
-                            <button
-                              onClick={() => handleViewImage(remark.photo)}
-                              className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer flex items-center gap-1"
-                              title="View Image"
-                            >
-                              View
-                            </button>
-                          ) : (
-                            <span className="text-gray-400 px-3 py-1 rounded-md bg-gray-100 text-lg font-medium min-w-[60px] text-center">
-                              No Photo
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 py-2">
+            <div className="overflow-x-auto">
+              <DataTable
+                columns={[
+                  {
+                    name: t("date"),
+                    selector: (row) => row.date,
+                    sortable: true,
+                    minWidth: "120px",
+                    cell: (row) => (
+                      <div className="py-2">{formatDate(row.date)}</div>
+                    ),
+                  },
+                  {
+                    name: t("remarks"),
+                    selector: (row) => row.text,
+                    sortable: true,
+                    minWidth: "200px",
+                    wrap: true,
+                    cell: (row) => (
+                      <div
+                        className="py-2 truncate max-w-[150px] sm:max-w-[200px] md:max-w-[300px]"
+                        title={row.text}
+                      >
+                        {row.text}
+                      </div>
+                    ),
+                  },
+                  {
+                    name: t("actualExpense"),
+                    selector: (row) => row.amount,
+                    sortable: true,
+                    minWidth: "120px",
+                    cell: (row) => (
+                      <div className="py-2">{formatCurrency(row.amount)}</div>
+                    ),
+                  },
+                  {
+                    name: t("photo"),
+                    selector: (row) => row.photo,
+                    sortable: false,
+                    minWidth: "100px",
+                    cell: (row) => (
+                      <div className="py-2">
+                        {row.photo ? (
+                          <button
+                            onClick={() => handleViewImage(row.photo)}
+                            className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
+                          >
+                            {t("view")}
+                          </button>
+                        ) : (
+                          <span className="text-gray-400">{t("noPhoto")}</span>
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
+                    name: t("actions"),
+                    sortable: false,
+                    minWidth: "140px",
+                    cell: (row) => (
+                      <div className="py-2 flex gap-2">
                         {!isTharavCompleted ? (
-                           <>
-                          <button
-                            onClick={() => handleEditRemark(remark)}
-                            className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer"
-                            title="Edit"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteRemark(remark.id)}
-                            className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors text-lg font-medium min-w-[60px] text-center cursor-pointer"
-                            title="Delete"
-                          >
-                            Delete
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleEditRemark(row)}
+                              className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
+                            >
+                              {t("edit")}
+                            </button>
+                            <button
+                              onClick={() => handleDeleteRemark(row.id)}
+                              className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors"
+                            >
+                              {t("delete")}
+                            </button>
                           </>
-                           ) : (
-                            <span className="text-gray-500 text-sm">Tharav is completed</span>
-                            )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        ) : (
+                          <span className="text-gray-500 text-sm">
+                            {t("tharavIsCompleted")}
+                          </span>
+                        )}
+                      </div>
+                    ),
+                  },
+                ]}
+                data={remarks}
+                pagination
+                paginationPerPage={10}
+                paginationRowsPerPageOptions={[10, 20, 30]}
+                highlightOnHover
+                responsive
+                defaultSortFieldId={0}
+                progressPending={isLoading}
+                customStyles={{
+                  headCells: {
+                    style: {
+                      backgroundColor: "#f3f4f6",
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      justifyContent: "center",
+                      paddingLeft: "8px",
+                      paddingRight: "8px",
+                    },
+                  },
+                  cells: {
+                    style: {
+                      fontSize: "14px",
+                      color: "#333",
+                      justifyContent: "center",
+                      paddingLeft: "4px",
+                      paddingRight: "4px",
+                      fontFamily: "Poppins",
+                      fontWeight: "400",
+                    },
+                  },
+                  pagination: {
+                    style: {
+                      fontSize: "13px",
+                      minHeight: "56px",
+                      borderTopStyle: "solid",
+                      borderTopWidth: "1px",
+                      borderTopColor: "#f3f4f6",
+                    },
+                  },
+                }}
+              />
             </div>
           ) : (
             <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="text-gray-500">{error ? "Error loading remarks" : "No remarks added yet"}</div>
-              
+              <div className="text-gray-500">
+                {error ? t("errorLoadingRemarks") : t("noRemarksAdded")}
+              </div>
             </div>
           )}
         </div>
-      </div>
 
       {/* Tharav Photo Modal */}
       {isModalOpen && (
@@ -667,42 +769,23 @@ export default function Remarks() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
-            <h3 className="text-lg font-semibold mb-4">Tharav Photo</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("tharavPhoto")}</h3>
             <img
               src={photo || "/placeholder.svg"}
-              alt="Full Tharav Photo"
+              alt={t("fullTharavPhoto")}
               className="w-full object-contain rounded-lg"
             />
           </div>
         </div>
       )}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      
 
       {/* Remark Image Modal */}
       {isViewImageModalOpen && (
@@ -710,8 +793,8 @@ export default function Remarks() {
           <div className="relative bg-white rounded-lg p-4 max-w-4xl max-h-[90vh] overflow-auto">
             <button
               onClick={() => {
-                setIsViewImageModalOpen(false)
-                setSelectedImage(null)
+                setIsViewImageModalOpen(false);
+                setSelectedImage(null);
               }}
               className="absolute top-2 right-2 bg-white rounded-full p-1 text-gray-500 hover:text-gray-800 hover:bg-gray-100"
             >
@@ -722,78 +805,82 @@ export default function Remarks() {
                 viewBox="0 0 24 24"
                 stroke="currentColor"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
-            <h3 className="text-lg font-semibold mb-4">Remark Photo</h3>
+            <h3 className="text-lg font-semibold mb-4">{t("remarkPhoto")}</h3>
             <img
               src={selectedImage || "/placeholder.svg"}
-              alt="Remark Photo"
+              alt={t("remark")}
               className="w-full object-contain rounded-lg"
             />
           </div>
         </div>
       )}
 
-
-{isCompleteModalOpen && (
-          <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
-            <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
-              <button
-                onClick={() => setIsCompleteModalOpen(false)}
-                className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
-                disabled={isLoading}
-              >
-                &times;
-              </button>
-              <h2 className="text-2xl font-bold text-blue-950 mb-6">Complete Tharav</h2>
-              <form onSubmit={handleCompleteTharav}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Final Remark</label>
-                  <textarea
-                    value={finalRemark}
-                    onChange={(e) => setFinalRemark(e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    rows={3}
-                    required
-                  />
-                </div>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Completion Proof (optional)</label>
-                  <input
-                    type="file"
-                    onChange={(e) => setFinalRemarkPhoto(e.target.files?.[0] || null)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    accept="image/*"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsCompleteModalOpen(false)}
-                    className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
-                    disabled={isLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Submitting..." : "Mark as Completed"}
-                  </button>
-                </div>
-              </form>
-            </div>
+      {isCompleteModalOpen && (
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4 ">
+          <div className="relative bg-white rounded-lg p-6 max-w-md w-full shadow-md">
+            <button
+              onClick={() => setIsCompleteModalOpen(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+              disabled={isLoading}
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl text-blue-950 mb-6">{t("completeTharav")}</h2>
+            <form onSubmit={handleCompleteTharav}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("finalRemark")}
+                </label>
+                <textarea
+                  value={finalRemark}
+                  onChange={(e) => setFinalRemark(e.target.value)}
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("uploadPhoto")}
+                </label>
+                <input
+                  type="file"
+                  onChange={(e) =>
+                    setFinalRemarkPhoto(e.target.files?.[0] || null)
+                  }
+                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  accept="image/*"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsCompleteModalOpen(false)}
+                  className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
+                  disabled={isLoading}
+                >
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
+                  disabled={isLoading}
+                >
+                  {isLoading ? t("submitting") : t("markAsCompleted")}
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      
-    
-  
-
-
-
+        </div>
+      )}
 
       {/* Add Remark Modal */}
       {isAddRemarkModalOpen && (
@@ -806,10 +893,14 @@ export default function Remarks() {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold text-blue-950 mb-6">Add Remark</h2>
+            <h2 className="text-2xl font-bold text-blue-950 mb-6">
+              {t("addRemark")}
+            </h2>
             <form onSubmit={handleAddRemark}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("date")}
+                </label>
                 <input
                   type="date"
                   value={remarkDate}
@@ -819,7 +910,9 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("remarks")}
+                </label>
                 <textarea
                   value={remarkText}
                   onChange={(e) => setRemarkText(e.target.value)}
@@ -829,7 +922,9 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Actual Expense (₹)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("actualExpense")} (₹)
+                </label>
                 <input
                   type="number"
                   value={actualExpense}
@@ -841,7 +936,9 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Upload Photo</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("uploadPhoto")}
+                </label>
                 <input
                   type="file"
                   onChange={(e) => setRemarkPhoto(e.target.files?.[0] || null)}
@@ -849,7 +946,11 @@ export default function Remarks() {
                   accept="image/*"
                 />
               </div>
-              {error && <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">{error}</div>}
+              {error && (
+                <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button
                   type="button"
@@ -857,14 +958,14 @@ export default function Remarks() {
                   className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
                   disabled={isLoading}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Submitting..." : "Submit"}
+                  {isLoading ? t("submitting") : t("submit")}
                 </button>
               </div>
             </form>
@@ -878,19 +979,23 @@ export default function Remarks() {
           <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
             <button
               onClick={() => {
-                setIsEditModalOpen(false)
-                setEditingRemark(null)
-                setRemarkPhoto(null)
+                setIsEditModalOpen(false);
+                setEditingRemark(null);
+                setRemarkPhoto(null);
               }}
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
               disabled={isLoading}
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold text-blue-950 mb-6">Edit Remark</h2>
+            <h2 className="text-2xl font-bold text-blue-950 mb-6">
+              {t("editRemark")}
+            </h2>
             <form onSubmit={handleEditSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("date")}
+                </label>
                 <input
                   type="date"
                   value={remarkDate}
@@ -900,7 +1005,9 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Remark</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("remarks")}
+                </label>
                 <textarea
                   value={remarkText}
                   onChange={(e) => setRemarkText(e.target.value)}
@@ -910,7 +1017,9 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Actual Expense (₹)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("actualExpense")} (₹)
+                </label>
                 <input
                   type="number"
                   value={actualExpense}
@@ -922,7 +1031,9 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Upload New Photo (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t("uploadNewPhotoOptional")}
+                </label>
                 <input
                   type="file"
                   onChange={(e) => setRemarkPhoto(e.target.files?.[0] || null)}
@@ -931,34 +1042,38 @@ export default function Remarks() {
                 />
                 {editingRemark?.photo && !remarkPhoto && (
                   <div className="mt-2">
-                    <p className="text-sm text-gray-500">Current Photo:</p>
+                    <p className="text-sm text-gray-500">{t("currentPhoto")}:</p>
                     <img
                       src={`http://localhost:5000/${editingRemark.photo}`}
-                      alt="Current remark proof"
+                      alt={t("currentRemarkProof")}
                       className="mt-1 max-h-32 rounded-lg border border-gray-300"
                     />
                   </div>
                 )}
               </div>
-              {error && <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">{error}</div>}
+              {error && (
+                <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">
+                  {error}
+                </div>
+              )}
               <div className="flex gap-3">
                 <button
                   type="button"
                   onClick={() => {
-                    setIsEditModalOpen(false)
-                    setEditingRemark(null)
+                    setIsEditModalOpen(false);
+                    setEditingRemark(null);
                   }}
                   className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
                   disabled={isLoading}
                 >
-                  Cancel
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Updating..." : "Update"}
+                  {isLoading ? t("updating") : t("update")}
                 </button>
               </div>
             </form>
@@ -966,5 +1081,5 @@ export default function Remarks() {
         </div>
       )}
     </div>
-  )
+  );
 }

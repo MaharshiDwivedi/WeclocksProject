@@ -156,8 +156,22 @@ const Documents = () => {
   };
 
   // Submit form
-  const handleSubmit = async () => {
-    if (validateForm()) {
+const handleSubmit = async () => {
+  if (validateForm()) {
+    const result = await Swal.fire({
+      title: selectedDocument ? t('Update Document?') : t('Add Document?'),
+      text: selectedDocument 
+        ? t('Are you sure you want to update this document?') 
+        : t('Are you sure you want to add this document?'),
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: t('Yes, proceed'),
+      cancelButtonText: t('Cancel')
+    });
+
+    if (result.isConfirmed) {
       const formData = new FormData();
       formData.append("document_title", documentTitle);
       formData.append("year", year);
@@ -204,8 +218,8 @@ const Documents = () => {
         });
       }
     }
-  };
-
+  }
+};
   // Delete document
   const handleDelete = (documentId) => {
     Swal.fire({
@@ -367,7 +381,7 @@ const Documents = () => {
           </h2>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="bg-white text-blue-950 px-4 py-2 rounded-md hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center cursor-pointer"
+            className="bg-white text-blue-950 px-4 py-2 rounded-md realfont2 hover:bg-blue-100 flex items-center w-full sm:w-auto justify-center cursor-pointer"
           >
             <Plus className="mr-2" size={18} /> {t("Add Document")}
           </button>

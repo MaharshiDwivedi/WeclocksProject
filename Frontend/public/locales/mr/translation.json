@@ -246,5 +246,77 @@
 
   "Absentmember": "गैरहजर सदस्य",
   "totalAbsentMembers": "एकूण गैरहजर सदस्यांची संख्या",
-  "noAbsentMembersFound": "कोणतेही गैरहजर सदस्य आढळले नाहीत"
+  "noAbsentMembersFound": "कोणतेही गैरहजर सदस्य आढळले नाहीत",
+
+
+
+
+
+  
+    "noRemark": "टिप्पणी नाही",
+    "noTharavId": "ठराव आयडी प्रदान केलेली नाही",
+    "invalidResponseFormat": "अवैध प्रतिसाद स्वरूप",
+    "errorCheckingCompletion": "ठराव पूर्णता स्थिती तपासताना त्रुटी",
+    "noTharavIdForRemarks": "टिप्पण्या मिळविण्यासाठी ठराव आयडी प्रदान केलेली नाही",
+    "failedToFetchRemarks": "टिप्पण्या मिळविण्यात अयशस्वी",
+    "failedToLoadRemarks": "टिप्पण्या लोड करण्यात अयशस्वी",
+    "requiredFields": "कृपया सर्व आवश्यक फील्ड भरा",
+    "confirmAddRemark": "तुम्हाला ही टिप्पणी जोडण्याची खात्री आहे का?",
+    "yesAddIt": "होय, जोडा",
+    "remarkAddedSuccess": "टिप्पणी यशस्वीरित्या जोडली गेली",
+    "failedToAddRemark": "टिप्पणी जोडण्यात अयशस्वी",
+    "confirmUpdateRemark": "तुम्हाला ही टिप्पणी अद्यतनित करण्याची खात्री आहे का?",
+    "yesUpdateIt": "होय, अद्यतनित करा",
+    "remarkUpdatedSuccess": "टिप्पणी यशस्वीरित्या अद्यतनित केली गेली",
+    "failedToUpdateRemark": "टिप्पणी अद्यतनित करण्यात अयशस्वी",
+    "confirmDeleteRemark": "तुम्हाला ही टिप्पणी हटवण्याची खात्री आहे का?",
+    "yesDeleteIt": "होय, हटवा",
+    "remarkDeletedSuccess": "टिप्पणी यशस्वीरित्या हटवली गेली",
+    "failedToDeleteRemark": "टिप्पणी हटवण्यात अयशस्वी",
+    "invalidDate": "अवैध तारीख",
+    "loadingRemarks": "टिप्पण्या लोड होत आहेत...",
+    "errorLoadingRemarks": "टिप्पण्या लोड करताना त्रुटी",
+    "noRemarksAdded": "अद्याप कोणतीही टिप्पणी जोडलेली नाही",
+    "noPhoto": "फोटो नाही",
+    "view": "पहा",
+   
+    "tharavIsCompleted": "ठराव पूर्ण झाला आहे",
+    "completeTharav": "ठराव पूर्ण करा",
+    "viewPhoto": "फोटो पहा",
+    "tharavCompleted": "ठराव पूर्ण झाला",
+    "finalRemark": "अंतिम टिप्पणी",
+    "noFinalRemark": "अंतिम टिप्पणी प्रदान केलेली नाही",
+    "markAsCompleted": "पूर्ण म्हणून चिन्हांकित करा",
+    "addRemark": "टिप्पणी जोडा",
+    "processing": "प्रक्रिया करत आहे...",
+    "submitting": "सबमिट केले जात आहे...",
+    "updating": "अद्यतनित केले जात आहे...",
+    "editRemark": "टिप्पणी संपादित करा",
+    "uploadNewPhotoOptional": "नवीन फोटो अपलोड करा (पर्यायी)",
+    "currentPhoto": "सध्याचा फोटो",
+    "currentRemarkProof": "सध्याचे टिप्पणी पुरावे",
+    "tharavPhoto": "ठराव फोटो",
+    "fullTharavPhoto": "पूर्ण ठराव फोटो",
+    "remarkPhoto": "टिप्पणी फोटो",
+    "tharavIdNotFound": "ठराव आयडी सापडली नाही",
+    "finalRemarkRequired": "अंतिम टिप्पणी आवश्यक आहे",
+    "confirmCompleteTharav": "तुम्हाला हा ठराव पूर्ण म्हणून चिन्हांकित करण्याची खात्री आहे का?",
+    "yesCompleteIt": "होय, पूर्ण करा",
+    "tharavCompletedSuccess": "ठराव यशस्वीरित्या पूर्ण म्हणून चिन्हांकित केला गेला",
+    "failedToCompleteTharav": "ठराव पूर्ण करण्यात अयशस्वी"
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
