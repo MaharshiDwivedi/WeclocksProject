@@ -69,7 +69,7 @@ const LoginPage = () => {
         />
 
         {/* Login Form */}
-        <div className="w-full max-w-xs sm:max-w-sm flex justify-center bg-white rounded-lg  ">
+        <div className="w-full max-w-xs sm:max-w-sm flex justify-center bg-white">
           <LoginForm />
         </div>
       </div>

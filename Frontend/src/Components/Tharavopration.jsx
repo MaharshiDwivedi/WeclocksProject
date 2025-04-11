@@ -175,27 +175,31 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
       }
     })
   }
-
   const handleRemarks = (row) => {
-    const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : []
-    navigate(`/home/meetings/tharav/${row.nirnay_id}/remarks`, {
-      state: {
-        tharavNo: recordData[1] || "N/A",
-        date: recordData[8] || "N/A",
-        purpose: purpose.find((data) => data.head_id == recordData[11])?.head_name || "N/A",
-        expectedAmount: recordData[3] || "N/A",
-        decisionTaken: recordData[2] || "N/A",
-        photo: recordData[4] ? `${SERVER_URL}${recordData[4]}` : null,
-        meetingNumber,
-        meetingId,
-        schoolId,
-        userId,
-        headId: recordData[11] || "N/A",
-        nirnay_id: row.nirnay_id, // Make sure this is included
-      },
-    })
+    const recordData = row.nirnay_reord ? row.nirnay_reord.split("|") : [];
+    
+    // Prepare all tharav data to pass to remarks
+    const tharavData = {
+      tharavNo: recordData[1] || "N/A",
+      date: recordData[8] || "N/A",
+      purpose: purpose.find((data) => data.head_id == recordData[11])?.head_name || "N/A",
+      expectedAmount: recordData[3] || "N/A",
+      decisionTaken: recordData[2] || "N/A",
+      photo: recordData[4] ? `${SERVER_URL}${recordData[4]}` : null,
+      meetingNumber,
+      meetingId,
+      schoolId,
+      userId,
+      headId: recordData[11] || "N/A",
+      nirnay_id: row.nirnay_id,
+      // Include the raw record data for reference
+      rawRecord: row.nirnay_reord
+    };
+  
+    navigate(`/home/meetings/tharav/${meetingNumber}/remarks`, {
+      state: tharavData
+    });
   }
-
   const validateForm = () => {
     const newErrors = {}
     let isValid = true

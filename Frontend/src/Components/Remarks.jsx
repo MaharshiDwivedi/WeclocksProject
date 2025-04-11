@@ -11,18 +11,27 @@ import { useTranslation } from "react-i18next";
 export default function Remarks() {
   const { t } = useTranslation();
   const location = useLocation();
+  
+  if (!location.state) {
+    // Redirect back if state is missing
+    const tharavId = params.index || localStorage.getItem("currentTharavId");
+    navigate(`/home/meetings/tharav/${tharavId}`);
+    return null;
+  }
+
+  // Then destructure with fallbacks
   const {
-    tharavNo,
-    date,
-    purpose,
-    expectedAmount,
-    decisionTaken,
-    photo,
+    tharavNo = "N/A",
+    date = "N/A",
+    purpose = "N/A",
+    expectedAmount = "0",
+    decisionTaken = "N/A",
+    photo = null,
     meetingNumber,
     meetingId,
-    schoolId,
-    userId,
-    headId,
+    schoolId = localStorage.getItem("school_id"),
+    userId = localStorage.getItem("user_id"),
+    headId = "N/A",
     nirnay_id,
   } = location.state || {};
 
@@ -115,6 +124,9 @@ export default function Remarks() {
       setCompletedTharavData(null);
     }
   }, [t]);
+
+
+
 
   // Fetch remarks with error handling
   const fetchRemarks = useCallback(

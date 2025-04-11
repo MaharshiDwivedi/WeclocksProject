@@ -124,19 +124,31 @@ const Home = () => {
   const getBreadcrumbs = useCallback(() => {
     const pathnames = location.pathname.split("/").filter((x) => x);
     const breadcrumbs = [{ name: t("headmaster"), path: "/home" }];
-
+  
     if (pathnames.includes("dashboard")) {
       breadcrumbs.push({ name: t("Dashboard"), path: "/home/dashboard" });
     } else if (pathnames.includes("meetings")) {
       breadcrumbs.push({ name: t("Meetings"), path: "/home/meetings" });
+      
       if (pathnames.includes("tharav")) {
-        breadcrumbs.push({
-          name: t("tharavManagement"),
-          path: location.pathname,
+        const meetingNumber = pathnames[pathnames.indexOf("tharav") + 1];
+        
+        // Always add Tharav Management breadcrumb
+        breadcrumbs.push({ 
+          name: t("tharavManagement"), 
+          path: `/home/meetings/tharav/${meetingNumber}`,
+          state: location.state
         });
-      }
-      if (pathnames.includes("remarks")) {
-        breadcrumbs.push({ name: t("remarks"), path: location.pathname });
+        
+        // Only add Remarks breadcrumb if we're actually on the remarks page
+        if (pathnames.includes("remarks") && pathnames.indexOf("remarks") === pathnames.length - 1) {
+          // For the current Remarks page breadcrumb, make it non-clickable
+          breadcrumbs.push({ 
+            name: t("remarks"), 
+            path: null, // This makes it non-clickable
+            current: true
+          });
+        }
       }
     } else if (pathnames.includes("fundreq")) {
       breadcrumbs.push({ name: t("Fund Requests"), path: "/home/fundreq" });
@@ -145,14 +157,15 @@ const Home = () => {
         name: t("committeeMembers"),
         path: "/home/newmember",
       });
-    } else if (pathnames.includes("absentmember"))
+    } else if (pathnames.includes("absentmember")) {
       breadcrumbs.push({
         name: t("Absentmember"),
         path: "/home/absentmember",
       });
-
+    }
+  
     return breadcrumbs;
-  }, [location.pathname, t]);
+  }, [location.pathname, t, location.state]);
 
   return (
     <div
@@ -295,27 +308,36 @@ const Home = () => {
 
         {/*Breadcrumbs with adjusted margin and font size */}
         <div className="bg-gradient-to-r from-blue-100 to-blue-800 px-6 py-3 shadow-sm font2 mt-5">
-          <nav className="flex" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center text-sm">
-              {getBreadcrumbs().map((crumb, index) => (
-                <li key={index} className="inline-flex items-center">
-                  {index > 0 && (
-                    <span className="mx-2 text-blue-400 font-bold">/ </span>
-                  )}
-                  <Link
-                    to={crumb.path}
-                    className={`inline-flex items-center px-2 py-1 rounded-md transition-all duration-200 ${
-                      index === getBreadcrumbs().length - 1
-                        ? "bg-blue-500 text-white font-semibold shadow-md"
-                        : "text-blue-700 hover:bg-blue-200 hover:text-blue-900"
-                    }`}
-                  >
-                    {crumb.name}
-                  </Link>
-                </li>
-              ))}
-            </ol>
-          </nav>
+        <nav className="flex" aria-label="Breadcrumb">
+  <ol className="inline-flex items-center text-sm">
+    {getBreadcrumbs().map((crumb, index) => (
+      <li key={index} className="inline-flex items-center">
+        {index > 0 && (
+          <span className="mx-2 text-blue-400 font-bold">/ </span>
+        )}
+        {crumb.path ? (
+          <Link
+            to={{
+              pathname: crumb.path,
+              state: crumb.state
+            }}
+            className={`inline-flex items-center px-2 py-1 rounded-md transition-all duration-200 ${
+              index === getBreadcrumbs().length - 1
+                ? "bg-blue-500 text-white font-semibold shadow-md cursor-default"
+                : "text-blue-700 hover:bg-blue-200 hover:text-blue-900"
+            }`}
+          >
+            {crumb.name}
+          </Link>
+        ) : (
+          <span className="inline-flex items-center px-2 py-1 rounded-md bg-blue-500 text-white font-semibold shadow-md cursor-default">
+            {crumb.name}
+          </span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
         </div>
 
         <main className="flex-1">
