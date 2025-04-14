@@ -248,8 +248,44 @@
   "totalAbsentMembers": "एकूण गैरहजर सदस्यांची संख्या",
   "noAbsentMembersFound": "कोणतेही गैरहजर सदस्य आढळले नाहीत",
 
+  "deleteMeetingConfirmation": "मीटिंग हटवण्याची पुष्टी",
+  "deleteMeeting" : "मीटिंग हटवा",
 
-
+  "swal": {
+    "delete": {
+      "title": "तुम्हाला खात्री आहे?",
+      "text": "तुम्ही यावर परत फिरू शकणार नाही!",
+      "confirm": "होय, हटवा!",
+      "cancel": "रद्द करा",
+      "success": "यशस्वीरित्या हटवले",
+      "error": "हटविण्यात अयशस्वी"
+    },
+    "submit": {
+      "confirmTitle": "तुम्हाला खात्री आहे?",
+      "updateText": "तुम्ही हे अद्ययावत करू इच्छिता?",
+      "addText": "तुम्ही हे जोडू इच्छिता?",
+      "updateConfirm": "होय, अद्ययावत करा",
+      "addConfirm": "होय, जोडा",
+      "updating": "अद्ययावत होत आहे...",
+      "adding": "जोडले जात आहे...",
+      "pleaseWait": "कृपया प्रतीक्षा करा...",
+      "updateSuccess": "यशस्वीरित्या अद्ययावत केले",
+      "addSuccess": "यशस्वीरित्या जोडले",
+      "error": "जतन करण्यात अयशस्वी"
+    },
+    "meeting": {
+      "noTharav": "मीटिंग #{number} मध्ये थराव रेकॉर्ड नाहीत",
+      "incompleteTharav": "मीटिंग #{number} मध्ये अपूर्ण थराव आहेत",
+      "validationHint": "प्रत्येक थराव पूर्ण असावा किंवा त्यावर टिप्पण्या असाव्यात",
+      "incompleteCount": "अपूर्ण थराव: {count}"
+    },
+    "validation": {
+      "required": "हे फील्ड आवश्यक आहे",
+      "invalidAmount": "रक्कम सकारात्मक असावी",
+      "invalidFile": "अवैध फाइल प्रकार किंवा आकार",
+      "minMembers": "किमान एक सदस्य आवश्यक"
+    }
+  },
 
 
   
@@ -303,7 +339,7 @@
     "confirmCompleteTharav": "तुम्हाला हा ठराव पूर्ण म्हणून चिन्हांकित करण्याची खात्री आहे का?",
     "yesCompleteIt": "होय, पूर्ण करा",
     "tharavCompletedSuccess": "ठराव यशस्वीरित्या पूर्ण म्हणून चिन्हांकित केला गेला",
-    "failedToCompleteTharav": "ठराव पूर्ण करण्यात अयशस्वी"
+    "failedToCompleteTharav": "ठराव पूर्ण करण्यात अयशस्वी",
  
 
 
@@ -312,7 +348,11 @@
 
 
 
-
+    "Update Document?": "डॉक्युमेंट अद्ययावत करायचे?",
+    "Add Document?": "डॉक्युमेंट जोडायचे?",
+    "Are you sure you want to update this document?": "तुम्हाला हे डॉक्युमेंट अद्ययावत करायचे आहे याची खात्री आहे?",
+    "Are you sure you want to add this document?": "तुम्हाला हे डॉक्युमेंट जोडायचे आहे याची खात्री आहे?",
+    "Yes, proceed": "होय, पुढे जा"
 
 
 

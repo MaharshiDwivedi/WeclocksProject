@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import DataTable from "react-data-table-component";
 import { Users, Search } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import SkeletonLoader from "./SkeletonLoader";
+import SkeletonLoader from "../../Components/Layout/SkeletonLoader";
 
 export default function AbsentMembers() {
   const { t } = useTranslation();

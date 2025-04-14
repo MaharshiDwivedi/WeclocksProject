@@ -5,7 +5,7 @@ import DataTable from "react-data-table-component"
 import { Plus, Search, X, AlertCircle, Users } from "lucide-react"
 import Swal from "sweetalert2"
 import { useTranslation } from "react-i18next"
-import SkeletonLoader from './SkeletonLoader'; 
+import SkeletonLoader from "../../Components/Layout/SkeletonLoader";
 
 export default function NewMember() {
   const { t } = useTranslation()
@@ -197,8 +197,8 @@ export default function NewMember() {
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
-    confirmButtonText: t('Yes'),
-    cancelButtonText: t('No')
+    confirmButtonText: t('yesAddIt'),
+    cancelButtonText: t('no')
   });
 
   if (!confirmResult.isConfirmed) return;

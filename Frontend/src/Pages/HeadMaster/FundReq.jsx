@@ -6,7 +6,7 @@ import Swal from "sweetalert2"
 import axios from "axios"
 import { Plus, Search, AlertCircle, X,IndianRupee } from "lucide-react"
 import { useTranslation } from "react-i18next"
-import SkeletonLoader from './SkeletonLoader'; 
+import SkeletonLoader from "../../Components/Layout/SkeletonLoader";
 
 export default function FundReq() {
   const API_URL = "http://localhost:5000/api/fundreqhm"
@@ -88,41 +88,7 @@ export default function FundReq() {
     setIsModalOpen(true)
   }
 
-  // const confirmDelete = (id) => {
-  //   setDeleteId(id)
-  //   setIsDeleteModalOpen(true)
-  // }
-
-  // const handleDelete = async (id) => {
-  //   try {
-  //     await fetch(`${API_URL}/${id}`, { method: "DELETE" })
-  //     Swal.fire({
-  //       title: t("Deleted!"),
-  //       text: t("The fund request has been deleted successfully."),
-  //       icon: "success",
-  //       timer: 1000,
-  //       showConfirmButton: false,
-  //     })
-  //     fetchDemands()
-  //     setIsDeleteModalOpen(false)
-  //   } catch (error) {
-  //     Swal.fire({
-  //       title: t("Error!"),
-  //       text: t("Failed to delete the fund request."),
-  //       icon: "error",
-  //     })
-  //     console.error("Error deleting fund request:", error)
-  //   }
-  // }
-
-
-
-
-
-
-
-
-
+ 
   const confirmDelete = async (id) => {
     const result = await Swal.fire({
         title: t("Are you sure?"),
@@ -142,12 +108,10 @@ const handleDelete = async (id) => {
     try {
         const response = await fetch(`${API_URL}/${id}`, { method: "DELETE" });
 
-        // Check if the response is successful
         if (!response.ok) {
             throw new Error("Failed to delete fund request");
         }
 
-        // Show success message using SweetAlert
         Swal.fire({
             title: t("Deleted!"),
             text: t("The fund request has been deleted successfully."),

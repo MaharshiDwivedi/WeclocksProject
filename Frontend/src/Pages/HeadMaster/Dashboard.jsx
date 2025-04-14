@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
-import BarGraph from "./BarGraph"
+import BarGraph from "../../Components/Layout/BarGraph";
 import axios from "axios"
 import { Card, CardContent } from "@mui/material"
 import { MonthPicker, MonthInput } from "react-lite-month-picker"

@@ -302,23 +302,55 @@
   "confirmCompleteTharav": "क्या आप वाकई इस ठराव को पूर्ण के रूप में चिह्नित करना चाहते हैं?",
   "yesCompleteIt": "हाँ, पूर्ण करें",
   "tharavCompletedSuccess": "ठराव सफलतापूर्वक पूर्ण के रूप में चिह्नित किया गया",
-  "failedToCompleteTharav": "ठराव पूर्ण करने में विफल"
+  "failedToCompleteTharav": "ठराव पूर्ण करने में विफल",
+
+
+
+  "deleteMeetingConfirmation": "मीटिंग हटाने की पुष्टि",
+  "deleteMeeting": "मीटिंग हटाएं",
+
+
+
+
+
+  
+      "title": "क्या आप सुनिश्चित हैं?",
+      "text": "आप इसे वापस नहीं ले सकेंगे!",
+      "confirm": "हाँ, हटाएं!",
+      "success": "सफलतापूर्वक हटाया गया",
+      "error": "हटाने में विफल",
+  
+      "confirmTitle": "क्या आप सुनिश्चित हैं?",
+      "updateText": "क्या आप इसे अपडेट करना चाहते हैं?",
+      "addText": "क्या आप इसे जोड़ना चाहते हैं?",
+      "updateConfirm": "हाँ, अपडेट करें",
+      "addConfirm": "हाँ, जोड़ें",
+      "adding": "जोड़ा जा रहा है...",
+      "pleaseWait": "कृपया प्रतीक्षा करें...",
+      "updateSuccess": "सफलतापूर्वक अपडेट किया गया",
+      "addSuccess": "सफलतापूर्वक जोड़ा गया",
+      
+   
+      "noTharav": "बैठक #{number} में कोई थराव रिकॉर्ड नहीं है",
+      "incompleteTharav": "बैठक #{number} में अधूरे थराव हैं",
+      "validationHint": "प्रत्येक थराव पूरा होना चाहिए या उस पर टिप्पणी होनी चाहिए",
+      "incompleteCount": "अधूरे थराव: {count}",
+
+      "required": "यह फ़ील्ड आवश्यक है",
+      "invalidAmount": "राशि सकारात्मक होनी चाहिए",
+      "invalidFile": "अमान्य फ़ाइल प्रकार या आकार",
+      "minMembers": "कम से कम एक सदस्य आवश्यक",
+    
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+      "Update Document?": "दस्तावेज़ अपडेट करें?",
+      "Add Document?": "दस्तावेज़ जोड़ें?",
+      "Are you sure you want to update this document?": "क्या आप वाकई इस दस्तावेज़ को अपडेट करना चाहते हैं?",
+      "Are you sure you want to add this document?": "क्या आप वाकई यह दस्तावेज़ जोड़ना चाहते हैं?",
+      "Yes, proceed": "हाँ, आगे बढ़ें"
+      
 }

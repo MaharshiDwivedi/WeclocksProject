@@ -2,7 +2,7 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { User, Lock, Eye, EyeOff } from "lucide-react";
-import Loader from "./Loader";
+import Loader from "../Components/Layout/Loader";
 
 const LoginForm = () => {
   const [username, setUsername] = useState("");
@@ -53,7 +53,7 @@ const LoginForm = () => {
   };
 
   return (
-    <div className="bg-white p-5 sm:p-8 w-full max-w-xs sm:max-w-sm rounded-lg shadow-lg">
+    <div className="bg-white p-5 sm:p-8 w-full max-w-xs sm:max-w-sm  ">
       <h2 className="text-center text-2xl sm:text-3xl font-semibold mb-6 realfont">Enter Details</h2>
 
       <form onSubmit={handleLogin}>
@@ -66,7 +66,7 @@ const LoginForm = () => {
             placeholder="USERNAME"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 border border-red-400 rounded-[4px] outline-none focus:border-red-600 realfont text-base shadow-sm"
+            className="w-full pl-10 pr-4 py-3 border border-blue-950 rounded-[4px] outline-none focus:border-blue-600 realfont text-base shadow-sm"
           />
         </div>
 
@@ -79,11 +79,11 @@ const LoginForm = () => {
             placeholder="PASSWORD"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full pl-10 pr-12 py-3 border border-red-400 rounded-[4px] outline-none focus:border-red-600 realfont text-base shadow-sm"
+            className="w-full pl-10 pr-12 py-3 border border-blue-950 rounded-[4px] outline-none focus:border-blue-600 realfont text-base shadow-sm"
           />
           <button
             type="button"
-            className="absolute right-0 top-0 h-full bg-[#e3535c] px-3 rounded-r-[4px] flex items-center justify-center hover:bg-[#8fbd56e6] transition-colors duration-200"
+            className="absolute right-0 top-0 h-full bg-blue-950 px-3 rounded-r-[4px] flex items-center justify-center hover:bg-blue-600 transition-colors duration-200 cursor-pointer"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? <EyeOff size={20} color="white" /> : <Eye size={20} color="white" />}
@@ -92,9 +92,9 @@ const LoginForm = () => {
 
         <button
           type="submit"
-          className="w-full bg-[#e3535c] text-white py-3 rounded-[4px] font-semibold hover:bg-[#8fbd56e6] transition-colors duration-200 realfont text-base shadow-md"
+          className="w-full bg-blue-950 cursor-pointer text-white py-3 rounded-[4px] font-semibold hover:bg-blue-600 transition-colors duration-200 realfont text-base shadow-md"
         >
-          Login
+          LOGIN
         </button>
       </form>
 

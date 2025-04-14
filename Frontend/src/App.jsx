@@ -7,11 +7,11 @@ import {
 
 import Bg from "./Assets/download.jpg";
 import Logo from "./Assets/logo.jpeg";
-import LoginForm from "./Components/Login";
-import Home from "./Components/Home";
-import AOHome from "./Components/AOHome";
-import Tharav from "./Components/Tharav";
-import "./i18n"; // Import i18n setup
+import LoginForm from "./Pages/Login";
+import Home from "./Pages/HeadMaster/Home";
+import AOHome from "./Pages/AccountOfficer/AOHome";
+import Tharav from "./Pages/HeadMaster/Tharav";
+import "./i18n"; 
 
 function App() {
   return (
@@ -60,7 +60,8 @@ const LoginPage = () => {
       </div>
 
       {/* Login Form Section */}
-      <div className="w-full md:w-[35%] h-[60vh] sm:h-[55vh] md:h-full flex flex-col items-center justify-center p-4 sm:p-6">
+      <div className="w-full md:w-[35%] h-[60vh] sm:h-[55vh] md:h-full flex flex-col items-center justify-center p-4 sm:p-6 ">
+        <div className="p-8  flex flex-col items-center justify-center rounded-lg shadow-xl ">
         {/* Logo - Larger size */}
         <img
           src={Logo || "/placeholder.svg"}
@@ -69,9 +70,9 @@ const LoginPage = () => {
         />
 
         {/* Login Form */}
-        <div className="w-full max-w-xs sm:max-w-sm flex justify-center bg-white">
           <LoginForm />
-        </div>
+        
+      </div>
       </div>
     </div>
   );

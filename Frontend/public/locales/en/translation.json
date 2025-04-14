@@ -300,14 +300,56 @@
   "confirmCompleteTharav": "Are you sure you want to mark this tharav as completed?",
   "yesCompleteIt": "Yes, complete it",
   "tharavCompletedSuccess": "Tharav marked as completed successfully",
-  "failedToCompleteTharav": "Failed to complete tharav"
+  "failedToCompleteTharav": "Failed to complete tharav",
 
 
 
 
 
 
+  "deleteMeetingConfirmation": "Delete Meeting Confirmation",
+   "deleteMeeting": " Delete meeting ",
 
+
+
+  
+   
+      "title": "Are you sure?",
+      "text": "You won't be able to revert this!",
+      "confirm": "Yes, delete it!",
+      "success": "Deleted successfully",
+   
+      "confirmTitle": "Are you sure?",
+      "updateText": "Do you want to update this?",
+      "addText": "Are you sure you want to add this?",
+      "updateConfirm": "Yes, update",
+      "addConfirm": "Yes, add",
+      "adding": "Adding...",
+      "pleaseWait": "Please wait...",
+      "updateSuccess": "Updated successfully",
+      "addSuccess": "Added successfully",
+      "error": "Failed to save",
+   
+ 
+      "noTharav": "Meeting #{number} has no tharav records",
+      "incompleteTharav": "Meeting #{number} has incomplete tharavs",
+      "validationHint": "Each tharav must be completed or have remarks",
+      "incompleteCount": "Incomplete tharavs: {count}",
+ 
+      "required": "This field is required",
+      "invalidAmount": "Amount must be positive",
+      "invalidFile": "Invalid file type or size",
+      "minMembers": "At least one member required",
+    
+  
+
+
+
+      "Update Document?": "Update Document?",
+      "Add Document?": "Add Document?",
+      "Are you sure you want to update this document?": "Are you sure you want to update this document?",
+      "Are you sure you want to add this document?": "Are you sure you want to add this document?",
+      "Yes, proceed": "Yes, proceed"
 
 
 }

@@ -187,7 +187,7 @@ const Home = () => {
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        <div className="w-full h-[40px] bg-blue-200 text-blue-950 text-[22px] text-center font2 flex items-center justify-center overflow-hidden">
+        <div className="w-full h-[45px] bg-blue-200 text-blue-950 text-[22px] text-center font2 flex items-center justify-center overflow-hidden">
           ITDP Nandurbar
         </div>
 
@@ -257,7 +257,7 @@ const Home = () => {
 
       {/* Main Content */}
       <div className="flex-1 ml-0 md:ml-64 flex flex-col">
-        <header className="bg-white p-2 flex justify-between items-center h-[40px] shadow-md sticky top-0 z-30">
+        <header className="bg-white p-2 flex justify-between items-center h-[45px] shadow-md sticky top-0 z-30">
           <button
             data-sidebar-toggle
             className="md:hidden flex items-center"

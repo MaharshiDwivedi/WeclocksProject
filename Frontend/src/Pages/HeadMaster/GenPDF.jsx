@@ -1,5 +1,5 @@
 import axios from "axios";
-import NotoSansDevanagari from "../Fonts/NotoSansDevanagari-Regular.ttf";
+import NotoSansDevanagari from "../../Fonts/NotoSansDevanagari-Regular.ttf";
 import {
   Page,
   Text,
@@ -10,7 +10,7 @@ import {
   Font,
   Image,
 } from "@react-pdf/renderer";
-import logo from "../assets/logo.jpeg";
+import logo from "../../assets/logo.jpeg";
 
 // Register font
 Font.register({

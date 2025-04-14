@@ -89,15 +89,15 @@ const handleSubmit = async () => {
   setFormError("");
 
   const result = await Swal.fire({
-    title: isEditMode ? t('Update Fund?') : t('Add Fund?'),
+    title: isEditMode ? t('Update Fund?') : t('Add Fund'),
     text: isEditMode 
-      ? t('Are you sure you want to update this fund?') 
-      : t('Are you sure you want to add this fund?'),
+      ? t('updateText') 
+      : t('addText'),
     icon: 'question',
     showCancelButton: true,
     confirmButtonColor: '#3085d6',
     cancelButtonColor: '#d33',
-    confirmButtonText: t('Yes, proceed'),
+    confirmButtonText: t('yesAddIt'),
     cancelButtonText: t('Cancel')
   });
 
@@ -172,12 +172,12 @@ const handleSubmit = async () => {
 
   const handleDelete = async (id) => {
     const result = await Swal.fire({
-      title: t('Are you sure?'),
+      title: t('Are you sure you want to delete this fund?'),
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#d33',
       cancelButtonColor: '#3085d6',
-      confirmButtonText: t('Yes, delete it!'),
+      confirmButtonText: t('yesDeleteIt'),
       cancelButtonText: t('Cancel')
     })
 
@@ -311,7 +311,7 @@ const handleSubmit = async () => {
               setIsEditMode(false)
               setIsModalOpen(true)
             }}
-            className="bg-white text-blue-900 hover:bg-blue-400 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont2 w-[200px] sm:w-auto justify-center sm:justify-start"
+            className="bg-white text-blue-950 hover:bg-blue-100 transition-colors px-4 py-2 rounded-md flex items-center whitespace-nowrap shadow-md hover:shadow-lg realfont2 w-[200px] sm:w-auto justify-center sm:justify-start"
           >
             <Plus className="mr-2" size={18} /> {t("Add Fund")}
           </button>

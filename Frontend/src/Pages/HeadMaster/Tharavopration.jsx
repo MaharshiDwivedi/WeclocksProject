@@ -6,7 +6,7 @@ import DataTable from "react-data-table-component"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
 import Swal from "sweetalert2"
-import SkeletonLoader from "./SkeletonLoader"
+import SkeletonLoader from "../../Components/Layout/SkeletonLoader";
 
 export default function TharavOperation({ meetingNumber, meetingId }) {
   const navigate = useNavigate()
