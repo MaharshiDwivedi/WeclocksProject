@@ -216,56 +216,6 @@ const Meetings = () => {
     setIsOpen(!isOpen);
   };
 
-
-
-
-
-
-
-  const handleDeleteMeeting = async (meetingId, event) => {
-    // Prevent navigation to meeting details page
-    event.stopPropagation();
-    
-    // Show confirmation dialog
-    const result = await Swal.fire({
-      title: t("deleteMeeting"),
-      text: t("deleteMeetingConfirmation"),
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: t("yesDeleteIt"),
-      cancelButtonText: t("cancel")
-    });
-    
-    // If user confirms deletion
-    if (result.isConfirmed) {
-      try {
-        // Call API to soft delete the meeting
-        await axios.delete(`http://localhost:5000/api/meeting/${meetingId}`);
-        
-        // Show success message
-        Swal.fire({
-          icon: "success",
-          title: t("deleted"),
-          text: t("meetingDeletedSuccess"),
-          timer: 2000,
-          showConfirmButton: false
-        });
-        
-        // Refresh meetings list
-        await fetchMeetings();
-      } catch (error) {
-        console.error("Error deleting meeting:", error);
-        Swal.fire({
-          icon: "error",
-          title: t("error"),
-          text: error.response?.data?.message || t("deleteMeetingError")
-        });
-      }
-    }
-  };
-
   // New function to check if a new meeting can be created
   const checkCanCreateNewMeeting = async () => {
     setIsCheckingMeeting(true);
@@ -615,6 +565,50 @@ const Meetings = () => {
     }
   }
 
+  const handleDeleteMeeting = async (meetingId, event) => {
+    // Prevent navigation to meeting details page
+    event.stopPropagation();
+    
+    // Show confirmation dialog
+    const result = await Swal.fire({
+      title: t("deleteMeeting"),
+      text: t("deleteMeetingConfirmation"),
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: t("yesDeleteIt"),
+      cancelButtonText: t("cancel")
+    });
+    
+    // If user confirms deletion
+    if (result.isConfirmed) {
+      try {
+        // Call API to soft delete the meeting
+        await axios.delete(`http://localhost:5000/api/meeting/${meetingId}`);
+        
+        // Show success message
+        Swal.fire({
+          icon: "success",
+          title: t("Deleted"),
+          text: t("Meetingdeletedsuccessfully"),
+          timer: 2000,
+          showConfirmButton: false
+        });
+        
+        // Refresh meetings list
+        await fetchMeetings();
+      } catch (error) {
+        console.error("Error deleting meeting:", error);
+        Swal.fire({
+          icon: "error",
+          title: t("error"),
+          text: error.response?.data?.message || t("deleteMeetingError")
+        });
+      }
+    }
+  };
+
 
   const resetForm = () => {
     setIsOpen(false)
@@ -637,7 +631,7 @@ const Meetings = () => {
       <SkeletonLoader />
     ) : (
 <div className="min-h-screen p-3 md:p-6 space-y-4 md:space-y-6">
-       <div className="bg-white  rounded-[14px] mx-auto w-[75%] max-w-6xl overflow-y-auto max-h-[85vh] shadow-md"> 
+       <div className="bg-white  rounded-[14px] mx-auto w-[75%] max-w-6xl overflow-y-auto max-h-[85vh] shadow-md pb-[80px]"> 
         <div className="  bg-blue-950 text-white p-3 md:p-4 flex justify-between items-center">
   <h2 className="text-xl md:text-3xl font-bold realfont2">{t("smcMeetings")}</h2>
   <button

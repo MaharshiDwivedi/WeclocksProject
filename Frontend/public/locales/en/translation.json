@@ -317,7 +317,6 @@
       "title": "Are you sure?",
       "text": "You won't be able to revert this!",
       "confirm": "Yes, delete it!",
-      "success": "Deleted successfully",
    
       "confirmTitle": "Are you sure?",
       "updateText": "Do you want to update this?",

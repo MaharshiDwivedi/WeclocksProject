@@ -285,7 +285,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
   
     // Add confirmation dialog
     const confirmResult = await Swal.fire({
-      title: isEditing ? t("Update Tharav?") : t("Add Tharav?"),
+      title: isEditing ? t("updateTharav") : t("addTharav"),
       text: isEditing 
         ? t("Do you really want to update this tharav?") 
         : t("Do you really want to add this tharav?"),
@@ -293,7 +293,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: isEditing ? t("Yes, update it!") : t("Yes, add it!"),
+      confirmButtonText: isEditing ? t("Yes, Update") : t("Yes, Add"),
       cancelButtonText: t("Cancel"),
     })
   
@@ -923,7 +923,7 @@ export default function TharavOperation({ meetingNumber, meetingId }) {
                     className={`w-full p-2 sm:p-2.5 border ${
                       errors.deadStockNumber ? "border-red-500" : "border-gray-300"
                     } rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm h-10 sm:h-12 text-sm sm:text-base`}
-                    placeholder={t("Stock number if applicable")}
+                    placeholder={t("Stock number")}
                   />
                   {errors.deadStockNumber && (
                     <p className="text-red-500 text-xs mt-1 sm:mt-1.5 flex items-center">

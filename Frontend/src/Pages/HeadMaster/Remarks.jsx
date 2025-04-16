@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 export default function Remarks() {
   const { t } = useTranslation();
   const location = useLocation();
-  
+
   if (!location.state) {
     // Redirect back if state is missing
     const tharavId = params.index || localStorage.getItem("currentTharavId");
@@ -19,7 +19,7 @@ export default function Remarks() {
     return null;
   }
 
-  // Then destructure with fallbacks
+  // Destructure with fallbacks
   const {
     tharavNo = "N/A",
     date = "N/A",
@@ -125,9 +125,6 @@ export default function Remarks() {
     }
   }, [t]);
 
-
-
-
   // Fetch remarks with error handling
   const fetchRemarks = useCallback(
     async (tharavId) => {
@@ -189,7 +186,11 @@ export default function Remarks() {
     e.preventDefault();
 
     if (!remarkText || !actualExpense) {
-      Swal.fire(t("error"), t("requiredFields"), "error");
+      Swal.fire({
+        title: t("error"),
+        text: t("requiredFields"),
+        icon: "error"
+      });
       return;
     }
 
@@ -233,14 +234,18 @@ export default function Remarks() {
       setRemarkPhoto(null);
       setIsAddRemarkModalOpen(false);
 
-      Swal.fire(t("success"), t("remarkAddedSuccess"), "success");
+      Swal.fire({
+        title: t("Success"),
+        text: t("remarkAddedSuccess"),
+        icon: "success"
+      });
     } catch (err) {
       console.error(t("failedToAddRemark"), err);
-      Swal.fire(
-        t("error"),
-        err.response?.data?.message || t("failedToAddRemark"),
-        "error"
-      );
+      Swal.fire({
+        title: t("error"),
+        text: err.response?.data?.message || t("failedToAddRemark"),
+        icon: "error"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -423,9 +428,13 @@ export default function Remarks() {
     }
   };
 
-  // View image handler
+  // View image handler (Fixed)
   const handleViewImage = (imagePath) => {
-    setSelectedImage(`http://localhost:5000/${imagePath}`);
+    // Ensure the image path is correctly formatted
+    const normalizedPath = imagePath.startsWith('/')
+      ? imagePath
+      : `/Uploads/remarks/${imagePath}`;
+    setSelectedImage(`http://localhost:5000${normalizedPath}`);
     setIsViewImageModalOpen(true);
   };
 
@@ -453,318 +462,290 @@ export default function Remarks() {
 
   return (
     <div className="container mx-auto px-4 py-8 realfont w-[1200px]">
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
-        )}
+      {/* Error Message */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+          {error}
+        </div>
+      )}
 
-        {/* Remarks Section */}
-        <div className="shadow-lg rounded-[14px] overflow-hidden">
-          <div className="bg-blue-950 text-white p-3 md:p-4 flex flex-col gap-4">
-            <div className="bg-blue-950 rounded-xl p-4 mb-6">
-              <h1 className="text-3xl font-bold text-white mb-3">
-                {t("tharavNo")} {tharavNo}
-              </h1>
+      {/* Remarks Section */}
+      <div className="shadow-lg rounded-[14px] overflow-hidden">
+        <div className="bg-blue-950 text-white p-3 md:p-4 flex flex-col gap-4">
+          <div className="bg-blue-950 rounded-xl p-4 mb-6">
+            <h1 className="text-3xl font-bold text-white mb-3">
+              {t("tharavNo")} {tharavNo}
+            </h1>
 
-              <div className="flex  gap-[200px] ">
-                {/* Date */}
-                <div className="col-span-1">
-                  <label className="block text-s font-semibold text-neutral-400">
-                    {t("date")}
-                  </label>
-                  <p className="text-m text-white font-medium">
-                    {formatDate(date)}
-                  </p>
-                </div>
-
-                <div className="col-span-1">
-                  <label className="block text-s font-semibold text-neutral-400">
-                    {t("expectedAmount")}
-                  </label>
-                  <p className="text-m text-white font-medium">
-                    {formatCurrency(expectedAmount)}
-                  </p>
-                </div>
-
-                <div className="col-span-2 md:col-span-4">
-                  <label className="block text-s font-semibold text-neutral-400">
-                    {t("purpose")}
-                  </label>
-                  <p className="text-m text-white font-medium">
-                    {purpose || t("na")}
-                  </p>
-                </div>
-
-                <div className="col-span-2 md:col-span-4">
-                  <label className="block text-s font-semibold text-neutral-400">
-                    {t("decisionTaken")}
-                  </label>
-                  <p className="text-m text-white font-medium">
-                    {decisionTaken || t("na")}
-                  </p>
-                </div>
+            <div className="flex gap-[200px]">
+              <div className="col-span-1">
+                <label className="block text-s font-semibold text-neutral-400">
+                  {t("date")}
+                </label>
+                <p className="text-m text-white font-medium">
+                  {formatDate(date)}
+                </p>
               </div>
-
-              {/* Buttons - now in a compact row */}
-              <div className="mt-[30px] flex flex-wrap gap-2 ml-[400px] -mb-[39px]">
-                {!isTharavCompleted && (
-                  <button
-                    onClick={() => setIsCompleteModalOpen(true)}
-                    className="bg-green-600 font-bold h-[50px] text-white px-3 py-1 text-lg cursor-pointer rounded-lg hover:bg-green-700 transition-all flex items-center gap-1"
-                    disabled={isLoading}
-                  >
-                    <CheckCircle size={14} />
-                    {t("completeTharav")}
-                  </button>
-                )}
-                {photo && (
-                  <button
-                    onClick={() => setIsModalOpen(true)}
-                    className="bg-blue-500 text-white w-[150px] px-3 py-1 text-lg cursor-pointer rounded-lg hover:bg-blue-600 flex items-center gap-1"
-                  >
-                    <Image size={22} />
-                    {t("viewPhoto")}
-                  </button>
-                )}
+              <div className="col-span-1">
+                <label className="block text-s font-semibold text-neutral-400">
+                  {t("expectedAmount")}
+                </label>
+                <p className="text-m text-white font-medium">
+                  {formatCurrency(expectedAmount)}
+                </p>
               </div>
+              <div className="col-span-2 md:col-span-4">
+                <label className="block text-s font-semibold text-neutral-400">
+                  {t("purpose")}
+                </label>
+                <p className="text-m text-white font-medium">
+                  {purpose || t("na")}
+                </p>
+              </div>
+              <div className="col-span-2 md:col-span-4">
+                <label className="block text-s font-semibold text-neutral-400">
+                  {t("decisionTaken")}
+                </label>
+                <p className="text-m text-white font-medium">
+                  {decisionTaken || t("na")}
+                </p>
+              </div>
+            </div>
 
-              {/* Completion Card */}
-              {isTharavCompleted && (
-                <div className="mt-[65px] rounded-md border border-green-300 bg-green-100 p-3 relative">
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-1.5 rounded font-medium text-s">
-                    {completedTharavData?.complete_date &&
-                      new Date(
-                        completedTharavData.complete_date
-                      ).toLocaleDateString("en-IN", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                  </div>
+            <div className="mt-[30px] flex flex-wrap gap-2 ml-[400px] -mb-[39px]">
+              {!isTharavCompleted && (
+                <button
+                  onClick={() => setIsCompleteModalOpen(true)}
+                  className="bg-green-600 font-bold h-[50px] text-white px-3 py-1 text-lg cursor-pointer rounded-lg hover:bg-green-700 transition-all flex items-center gap-1"
+                  disabled={isLoading}
+                >
+                  <CheckCircle size={14} />
+                  {t("completeTharav")}
+                </button>
+              )}
+              {photo && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="bg-blue-500 text-white w-[150px] px-3 py-1 text-lg cursor-pointer rounded-lg hover:bg-blue-600 flex items-center gap-1"
+                >
+                  <Image size={22} />
+                  {t("viewPhoto")}
+                </button>
+              )}
+            </div>
 
-                  <div className="text-center mt-4">
-                    <h2 className="text-lg font-bold text-green-800">
-                      {t("tharavCompleted")}
-                    </h2>
-                  </div>
-
-                  <div className="flex mt-4 items-start justify-between flex-wrap gap-3">
-                    <p className="text-sm text-green-800 font-medium">
-                      {t("finalRemark")}:{" "}
-                      <span className="text-black">
-                        {completedTharavData?.completed_remarks ||
-                          t("noFinalRemark")}
-                      </span>
-                    </p>
-                    {completedTharavData?.complete_tharav_img && (
-                      <div className="flex flex-col items-center">
-                        <button
-                          onClick={() => setShowImageModal(true)}
-                          className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center"
-                        >
-                          <Image className="w-6 h-6 text-white" />
-                        </button>
-                        <span className="mt-1 text-sm font-medium">{t("photo")}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Image Modal */}
-                  {showImageModal && (
-                    <div
-                      className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center z-50"
-                      onClick={() => setShowImageModal(false)}
-                    >
-                      <div className="relative max-w-3xl max-h-[90vh]">
-                        <button
-                          className="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowImageModal(false);
-                          }}
-                        >
-                          &times;
-                        </button>
-                        <img
-                          src={`http://localhost:5000${completedTharavData.complete_tharav_img}`}
-                          alt={t("completedTharav")}
-                          className="max-w-full max-h-[80vh] object-contain"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
+            {isTharavCompleted && (
+              <div className="mt-[65px] rounded-md border border-green-300 bg-green-100 p-3 relative">
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-4 py-1.5 rounded font-medium text-s">
+                  {completedTharavData?.complete_date &&
+                    new Date(completedTharavData.complete_date).toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                </div>
+                <div className="text-center mt-4">
+                  <h2 className="text-lg font-bold text-green-800">{t("tharavCompleted")}</h2>
+                </div>
+                <div className="flex mt-4 items-start justify-between flex-wrap gap-3">
+                  <p className="text-sm text-green-800 font-medium">
+                    {t("finalRemark")}: <span className="text-black">{completedTharavData?.completed_remarks || t("noFinalRemark")}</span>
+                  </p>
+                  {completedTharavData?.complete_tharav_img && (
+                    <div className="flex flex-col items-center">
+                      <button
+                        onClick={() => setShowImageModal(true)}
+                        className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center"
+                      >
+                        <Image className="w-6 h-6 text-white" />
+                      </button>
+                      <span className="mt-1 text-sm font-medium">{t("photo")}</span>
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-
-            {/* Remarks Header */}
-            <div className="flex justify-between items-center">
-              <h2 className="text-xl md:text-2xl font-bold realfont2 flex items-center gap-2">
-                <SquareCheckBig size={18} />
-                {t("remarks")}
-              </h2>
-              {!isTharavCompleted ? (
-                <button
-                  onClick={() => setIsAddRemarkModalOpen(true)}
-                  className="realfont2 bg-white text-blue-950 px-4 py-2 rounded-lg hover:bg-blue-100 flex items-center gap-2 transition-colors shadow-md"
-                  disabled={isLoading}
-                >
-                  <Plus size={18} />
-                  {isLoading ? t("processing") : t("addRemark")}
-                </button>
-              ) : (
-                <span className="text-gray-500 text-sm"> </span>
-              )}
-            </div>
+                {showImageModal && (
+                  <div
+                    className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center z-50"
+                    onClick={() => setShowImageModal(false)}
+                  >
+                    <div className="relative max-w-3xl max-h-[90vh]">
+                      <button
+                        className="absolute -top-10 right-0 text-white text-2xl hover:text-gray-300"
+                        onClick={(e) => { e.stopPropagation(); setShowImageModal(false); }}
+                      >
+                        &times;
+                      </button>
+                      <img
+                        src={`http://localhost:5000${completedTharavData.complete_tharav_img}`}
+                        alt={t("completedTharav")}
+                        className="max-w-full max-h-[80vh] object-contain"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
-          {isLoading && !remarks.length ? (
-            <div className="text-center py-8">
-              <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-2"></div>
-              <p>{t("loadingRemarks")}</p>
-            </div>
-          ) : remarks.length > 0 ? (
-            <div className="overflow-x-auto">
-              <DataTable
-                columns={[
-                  {
-                    name: t("date"),
-                    selector: (row) => row.date,
-                    sortable: true,
-                    minWidth: "120px",
-                    cell: (row) => (
-                      <div className="py-2">{formatDate(row.date)}</div>
-                    ),
-                  },
-                  {
-                    name: t("remarks"),
-                    selector: (row) => row.text,
-                    sortable: true,
-                    minWidth: "200px",
-                    wrap: true,
-                    cell: (row) => (
-                      <div
-                        className="py-2 truncate max-w-[150px] sm:max-w-[200px] md:max-w-[300px]"
-                        title={row.text}
-                      >
-                        {row.text}
-                      </div>
-                    ),
-                  },
-                  {
-                    name: t("actualExpense"),
-                    selector: (row) => row.amount,
-                    sortable: true,
-                    minWidth: "120px",
-                    cell: (row) => (
-                      <div className="py-2">{formatCurrency(row.amount)}</div>
-                    ),
-                  },
-                  {
-                    name: t("photo"),
-                    selector: (row) => row.photo,
-                    sortable: false,
-                    minWidth: "100px",
-                    cell: (row) => (
-                      <div className="py-2">
-                        {row.photo ? (
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl md:text-2xl font-bold realfont2 flex items-center gap-2">
+              <SquareCheckBig size={18} />
+              {t("remarks")}
+            </h2>
+            {!isTharavCompleted ? (
+              <button
+                onClick={() => setIsAddRemarkModalOpen(true)}
+                className="realfont2 bg-white text-blue-950 px-4 py-2 rounded-lg hover:bg-blue-100 flex items-center gap-2 transition-colors shadow-md"
+                disabled={isLoading}
+              >
+                <Plus size={18} />
+                {isLoading ? t("processing") : t("addRemark")}
+              </button>
+            ) : (
+              <span className="text-gray-500 text-sm"></span>
+            )}
+          </div>
+        </div>
+
+        {isLoading && !remarks.length ? (
+          <div className="text-center py-8">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mb-2"></div>
+            <p>{t("loadingRemarks")}</p>
+          </div>
+        ) : remarks.length > 0 ? (
+          <div className="overflow-x-auto">
+            <DataTable
+              columns={[
+                {
+                  name: t("date"),
+                  selector: (row) => row.date,
+                  sortable: true,
+                  minWidth: "120px",
+                  cell: (row) => <div className="py-2">{formatDate(row.date)}</div>,
+                },
+                {
+                  name: t("remarks"),
+                  selector: (row) => row.text,
+                  sortable: true,
+                  minWidth: "200px",
+                  wrap: true,
+                  cell: (row) => (
+                    <div
+                      className="py-2 truncate max-w-[150px] sm:max-w-[200px] md:max-w-[300px]"
+                      title={row.text}
+                    >
+                      {row.text}
+                    </div>
+                  ),
+                },
+                {
+                  name: t("actualExpense"),
+                  selector: (row) => row.amount,
+                  sortable: true,
+                  minWidth: "120px",
+                  cell: (row) => <div className="py-2">{formatCurrency(row.amount)}</div>,
+                },
+                {
+                  name: t("photo"),
+                  selector: (row) => row.photo,
+                  sortable: false,
+                  minWidth: "100px",
+                  cell: (row) => (
+                    <div className="py-2">
+                      {row.photo ? (
+                        <button
+                          onClick={() => handleViewImage(row.photo)}
+                          className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
+                        >
+                          {t("view")}
+                        </button>
+                      ) : (
+                        <span className="text-gray-400">{t("noPhoto")}</span>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  name: t("actions"),
+                  sortable: false,
+                  minWidth: "140px",
+                  cell: (row) => (
+                    <div className="py-2 flex gap-2">
+                      {!isTharavCompleted ? (
+                        <>
                           <button
-                            onClick={() => handleViewImage(row.photo)}
+                            onClick={() => handleEditRemark(row)}
                             className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
                           >
-                            {t("view")}
+                            {t("edit")}
                           </button>
-                        ) : (
-                          <span className="text-gray-400">{t("noPhoto")}</span>
-                        )}
-                      </div>
-                    ),
+                          <button
+                            onClick={() => handleDeleteRemark(row.id)}
+                            className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors"
+                          >
+                            {t("delete")}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-gray-500 text-sm">{t("tharavIsCompleted")}</span>
+                      )}
+                    </div>
+                  ),
+                },
+              ]}
+              data={remarks}
+              pagination
+              paginationPerPage={10}
+              paginationRowsPerPageOptions={[10, 20, 30]}
+              highlightOnHover
+              responsive
+              defaultSortFieldId={0}
+              progressPending={isLoading}
+              customStyles={{
+                headCells: {
+                  style: {
+                    backgroundColor: "#f3f4f6",
+                    fontSize: "16px",
+                    fontWeight: "600",
+                    justifyContent: "center",
+                    paddingLeft: "8px",
+                    paddingRight: "8px",
                   },
-                  {
-                    name: t("actions"),
-                    sortable: false,
-                    minWidth: "140px",
-                    cell: (row) => (
-                      <div className="py-2 flex gap-2">
-                        {!isTharavCompleted ? (
-                          <>
-                            <button
-                              onClick={() => handleEditRemark(row)}
-                              className="text-blue-600 px-3 py-1 rounded-md hover:bg-blue-600 hover:text-white transition-colors"
-                            >
-                              {t("edit")}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRemark(row.id)}
-                              className="text-red-600 px-3 py-1 rounded-md hover:bg-red-600 hover:text-white transition-colors"
-                            >
-                              {t("delete")}
-                            </button>
-                          </>
-                        ) : (
-                          <span className="text-gray-500 text-sm">
-                            {t("tharavIsCompleted")}
-                          </span>
-                        )}
-                      </div>
-                    ),
+                },
+                cells: {
+                  style: {
+                    fontSize: "14px",
+                    color: "#333",
+                    justifyContent: "center",
+                    paddingLeft: "4px",
+                    paddingRight: "4px",
+                    fontFamily: "Poppins",
+                    fontWeight: "400",
                   },
-                ]}
-                data={remarks}
-                pagination
-                paginationPerPage={10}
-                paginationRowsPerPageOptions={[10, 20, 30]}
-                highlightOnHover
-                responsive
-                defaultSortFieldId={0}
-                progressPending={isLoading}
-                customStyles={{
-                  headCells: {
-                    style: {
-                      backgroundColor: "#f3f4f6",
-                      fontSize: "16px",
-                      fontWeight: "600",
-                      justifyContent: "center",
-                      paddingLeft: "8px",
-                      paddingRight: "8px",
-                    },
+                },
+                pagination: {
+                  style: {
+                    fontSize: "13px",
+                    minHeight: "56px",
+                    borderTopStyle: "solid",
+                    borderTopWidth: "1px",
+                    borderTopColor: "#f3f4f6",
                   },
-                  cells: {
-                    style: {
-                      fontSize: "14px",
-                      color: "#333",
-                      justifyContent: "center",
-                      paddingLeft: "4px",
-                      paddingRight: "4px",
-                      fontFamily: "Poppins",
-                      fontWeight: "400",
-                    },
-                  },
-                  pagination: {
-                    style: {
-                      fontSize: "13px",
-                      minHeight: "56px",
-                      borderTopStyle: "solid",
-                      borderTopWidth: "1px",
-                      borderTopColor: "#f3f4f6",
-                    },
-                  },
-                }}
-              />
+                },
+              }}
+            />
+          </div>
+        ) : (
+          <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="text-gray-500">
+              {error ? t("errorLoadingRemarks") : t("noRemarksAdded")}
             </div>
-          ) : (
-            <div className="text-center py-12 bg-gray-50 rounded-lg border border-gray-200">
-              <div className="text-gray-500">
-                {error ? t("errorLoadingRemarks") : t("noRemarksAdded")}
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
       {/* Tharav Photo Modal */}
       {isModalOpen && (
@@ -828,15 +809,16 @@ export default function Remarks() {
             <h3 className="text-lg font-semibold mb-4">{t("remarkPhoto")}</h3>
             <img
               src={selectedImage || "/placeholder.svg"}
-              alt={t("remark")}
-              className="w-full object-contain rounded-lg"
+              alt={t("remarkPhoto")}
+              className="w-full max-h-[80vh] object-contain rounded-lg"
             />
           </div>
         </div>
       )}
 
+      {/* Complete Tharav Modal */}
       {isCompleteModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4 ">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[2px] flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg p-6 max-w-md w-full shadow-md">
             <button
               onClick={() => setIsCompleteModalOpen(false)}
@@ -865,12 +847,19 @@ export default function Remarks() {
                 </label>
                 <input
                   type="file"
-                  onChange={(e) =>
-                    setFinalRemarkPhoto(e.target.files?.[0] || null)
-                  }
+                  onChange={(e) => setFinalRemarkPhoto(e.target.files?.[0] || null)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   accept="image/*"
                 />
+                {finalRemarkPhoto && (
+                  <div className="mt-4">
+                    <img
+                      src={URL.createObjectURL(finalRemarkPhoto)}
+                      alt={t("uploadedCompletionImage")}
+                      className="max-h-40 rounded-lg border border-gray-300"
+                    />
+                  </div>
+                )}
               </div>
               <div className="flex gap-3">
                 <button
@@ -905,14 +894,10 @@ export default function Remarks() {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold text-blue-950 mb-6">
-              {t("addRemark")}
-            </h2>
+            <h2 className="text-2xl font-bold text-blue-950 mb-6">{t("addRemark")}</h2>
             <form onSubmit={handleAddRemark}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("date")}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("date")}</label>
                 <input
                   type="date"
                   value={remarkDate}
@@ -922,9 +907,7 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("remarks")}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("remarks")}</label>
                 <textarea
                   value={remarkText}
                   onChange={(e) => setRemarkText(e.target.value)}
@@ -934,9 +917,7 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("actualExpense")} (₹)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("actualExpense")} (₹)</label>
                 <input
                   type="number"
                   value={actualExpense}
@@ -948,15 +929,22 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("uploadPhoto")}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("uploadPhoto")}</label>
                 <input
                   type="file"
                   onChange={(e) => setRemarkPhoto(e.target.files?.[0] || null)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   accept="image/*"
                 />
+                {remarkPhoto && (
+                  <div className="mt-4">
+                    <img
+                      src={URL.createObjectURL(remarkPhoto)}
+                      alt={t("uploadedImage")}
+                      className="max-h-40 rounded-lg border border-gray-300"
+                    />
+                  </div>
+                )}
               </div>
               {error && (
                 <div className="mb-4 p-2 bg-red-100 text-red-700 rounded-md text-sm">
@@ -985,9 +973,9 @@ export default function Remarks() {
         </div>
       )}
 
-      {/* Edit Remark Modal */}
+      {/* Edit Remark Modal (Fixed) */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 bg-transparent backdrop-blur-4px] flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-transparent backdrop-blur-[4px] flex items-center justify-center z-50 p-4">
           <div className="relative bg-white rounded-lg p-6 max-w-md w-full">
             <button
               onClick={() => {
@@ -1000,14 +988,10 @@ export default function Remarks() {
             >
               &times;
             </button>
-            <h2 className="text-2xl font-bold text-blue-950 mb-6">
-              {t("editRemark")}
-            </h2>
+            <h2 className="text-2xl font-bold text-blue-950 mb-6">{t("editRemark")}</h2>
             <form onSubmit={handleEditSubmit}>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("date")}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("date")}</label>
                 <input
                   type="date"
                   value={remarkDate}
@@ -1017,9 +1001,7 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("remarks")}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("remarks")}</label>
                 <textarea
                   value={remarkText}
                   onChange={(e) => setRemarkText(e.target.value)}
@@ -1029,9 +1011,7 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("actualExpense")} (₹)
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("actualExpense")} (₹)</label>
                 <input
                   type="number"
                   value={actualExpense}
@@ -1043,22 +1023,29 @@ export default function Remarks() {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  {t("uploadNewPhotoOptional")}
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t("uploadNewPhotoOptional")}</label>
                 <input
                   type="file"
                   onChange={(e) => setRemarkPhoto(e.target.files?.[0] || null)}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   accept="image/*"
                 />
-                {editingRemark?.photo && !remarkPhoto && (
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">{t("currentPhoto")}:</p>
+                {remarkPhoto && (
+                  <div className="mt-4">
                     <img
-                      src={`http://localhost:5000/${editingRemark.photo}`}
-                      alt={t("currentRemarkProof")}
-                      className="mt-1 max-h-32 rounded-lg border border-gray-300"
+                      src={URL.createObjectURL(remarkPhoto)}
+                      alt={t("newRemarkPhoto")}
+                      className="max-h-40 rounded-lg border border-gray-300"
+                    />
+                  </div>
+                )}
+                {editingRemark?.photo && !remarkPhoto && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-1">{t("currentPhoto")}</p>
+                    <img
+                      src={`http://localhost:5000${editingRemark.photo.startsWith('/') ? editingRemark.photo : `/Uploads/remarks/${editingRemark.photo}`}`}
+                      alt={t("currentRemarkPhoto")}
+                      className="max-h-40 rounded-lg border border-gray-300"
                     />
                   </div>
                 )}
@@ -1074,6 +1061,7 @@ export default function Remarks() {
                   onClick={() => {
                     setIsEditModalOpen(false);
                     setEditingRemark(null);
+                    setRemarkPhoto(null);
                   }}
                   className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
                   disabled={isLoading}
