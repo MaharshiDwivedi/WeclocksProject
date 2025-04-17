@@ -307,7 +307,7 @@ const Home = () => {
         </header>
 
         {/*Breadcrumbs with adjusted margin and font size */}
-        <div className="bg-gradient-to-r from-blue-100 to-blue-800 px-6 py-3 shadow-sm font2 mt-5">
+        <div className="bg-gradient-to-r from-blue-100 to-blue-950 px-6 py-3 shadow-sm font2 mt-5 m-9 rounded-lg">
         <nav className="flex" aria-label="Breadcrumb">
   <ol className="inline-flex items-center text-sm">
     {getBreadcrumbs().map((crumb, index) => (
@@ -321,9 +321,9 @@ const Home = () => {
               pathname: crumb.path,
               state: crumb.state
             }}
-            className={`inline-flex items-center px-2 py-1 rounded-md transition-all duration-200 ${
+            className={`inline-flex items-center px-2 py-1 rounded-[4px] transition-all duration-200 ${
               index === getBreadcrumbs().length - 1
-                ? "bg-blue-500 text-white font-semibold shadow-md cursor-default"
+                ? "bg-blue-950 text-white font-semibold shadow-md cursor-default"
                 : "text-blue-700 hover:bg-blue-200 hover:text-blue-900"
             }`}
           >
